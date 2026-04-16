@@ -1,0 +1,41 @@
+import { useState } from 'react'
+
+export default function NavHeader({ onNavigate }) {
+  const [query, setQuery] = useState('')
+
+  return (
+    <header className="nav-header">
+      <div className="logo" onClick={() => onNavigate('home')}>
+        <div className="logo-icon">
+          <span className="logo-d">D</span>
+          <span className="logo-dot" />
+        </div>
+        <span className="logo-text">Da-On</span>
+      </div>
+
+      <div className="search-wrap">
+        <input
+          className="search-input"
+          type="text"
+          placeholder="찾고 싶은 상품을 검색해 보세요"
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+        />
+        <button className="search-btn" aria-label="검색">
+          <i className="ri-search-line" />
+        </button>
+      </div>
+
+      <div className="cart-wrap">
+        <span className="cart-label">장바구니</span>
+        <div className="cart-badge">5</div>
+      </div>
+
+      <div className="mypage-link">마이페이지</div>
+      <div className="login-btn" onClick={() => onNavigate('login')}>로그인</div>
+      <div className="register-btn" onClick={() => onNavigate('register')}>회원가입</div>
+
+      <div className="nav-border" />
+    </header>
+  )
+}

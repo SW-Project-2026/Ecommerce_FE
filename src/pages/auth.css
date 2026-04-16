@@ -1,0 +1,378 @@
+/* ══════════ AUTH PAGES ══════════ */
+/* Color tokens (from Figma)
+   --dark-panel : #12121F  (register left bg)
+   --dark-text  : #1F1F2E  (heading, label)
+   --muted      : #9999B2  (subtitle, placeholder)
+   --border     : #CCCCE5  (input underline, divider)
+   --accent     : #FF6B6B  (link, brand)
+   --white      : #FFFFFF
+*/
+
+.auth-page {
+  width: 1440px;
+  min-height: 900px;
+  display: flex;
+  margin: 0 auto;
+  font-family: 'Inter', sans-serif;
+}
+
+/* ── Left Panel ── */
+.auth-left {
+  width: 576px;
+  min-height: 900px;
+  flex-shrink: 0;
+  padding: 44px 56px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+.auth-left--login    { background: #1C2E5C; }
+.auth-left--register { background: #12121F; }
+
+.auth-brand {
+  cursor: pointer;
+  flex-shrink: 0;
+  width: fit-content;
+}
+.auth-brand-name {
+  font-weight: 800;
+  font-size: 30px;
+  color: #FFFFFF;
+  letter-spacing: -0.5px;
+  line-height: 1;
+}
+.auth-brand-line {
+  width: 44px;
+  height: 3px;
+  background: #FF6B6B;
+  border-radius: 2px;
+  margin: 10px 0 8px;
+}
+.auth-brand-tagline {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.48);
+  letter-spacing: 0.3px;
+}
+
+.auth-hero {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-bottom: 80px;
+}
+.auth-hero h1 {
+  font-weight: 700;
+  font-size: 46px;
+  line-height: 1.2;
+  color: #FFFFFF;
+}
+.auth-hero p {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.75);
+  margin-top: 16px;
+  line-height: 1.7;
+}
+
+/* ── Decorative circles ── */
+.auth-deco-circle {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+/* 로그인 — 아웃라인 원 (상단) */
+.auth-deco-circle--outline {
+  background: transparent;
+  border: 1.5px solid rgba(255, 255, 255, 0.13);
+}
+/* 로그인 — 로즈 원 (하단) */
+.auth-deco-circle--rose {
+  background: rgba(255, 107, 107, 0.18);
+}
+/* 회원가입 — 어두운 와인/적갈색 */
+.auth-left--register .auth-deco-circle {
+  background: rgba(80, 10, 20, 0.15);
+}
+
+/* ── Benefit list (register) ── */
+.benefit-list {
+  margin-top: 44px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.benefit-item {
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  padding: 14px 18px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.85);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ── Right Panel ── */
+.auth-right {
+  flex: 1;
+  background: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.auth-topnav {
+  text-align: right;
+  padding: 28px 48px 0;
+  font-size: 13px;
+  color: #9999B2;
+  flex-shrink: 0;
+}
+.auth-topnav span {
+  color: #FF6B6B;
+  font-weight: 600;
+  cursor: pointer;
+  margin-left: 6px;
+}
+.auth-topnav span:hover { text-decoration: underline; }
+
+/* ── Form wrapper ── */
+.auth-form-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 32px 120px 60px;
+}
+.auth-form-wrap--register {
+  justify-content: flex-start;
+  padding-top: 24px;
+}
+
+.auth-form-wrap h2 {
+  font-weight: 700;
+  font-size: 32px;
+  color: #1F1F2E;
+  margin-bottom: 8px;
+}
+.auth-form-wrap > p,
+.auth-form-wrap .form-subtitle {
+  font-size: 13px;
+  color: #9999B2;
+  margin-bottom: 28px;
+}
+
+/* ── Form Elements ── */
+.form-group { margin-bottom: 18px; }
+.form-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1F1F2E;
+  margin-bottom: 6px;
+}
+
+/* 인풋: 하단 라인만 (Figma 스타일) */
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="password"],
+.form-group input[type="tel"] {
+  width: 100%;
+  height: 42px;
+  border: none;
+  border-bottom: 1.5px solid #CCCCE5;
+  border-radius: 0;
+  padding: 0 4px;
+  font-size: 14px;
+  color: #1F1F2E;
+  font-family: 'Inter', sans-serif;
+  outline: none;
+  background: transparent;
+  transition: border-color 0.15s;
+}
+.form-group input::placeholder { color: #9999B2; }
+.form-group input:focus { border-bottom-color: #FF6B6B; }
+
+.form-row {
+  display: flex;
+  gap: 20px;
+}
+.form-row .form-group { flex: 1; }
+
+/* Password with toggle */
+.pw-wrap { position: relative; }
+.pw-wrap input { padding-right: 36px; }
+.pw-toggle {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9999B2;
+  font-size: 18px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+/* Options row */
+.form-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 4px 0 24px;
+}
+.form-options label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #9999B2;
+  cursor: pointer;
+}
+.form-options label input[type="checkbox"] {
+  accent-color: #FF6B6B;
+}
+.form-options span {
+  font-size: 13px;
+  color: #9999B2;
+  cursor: pointer;
+}
+.form-options span:hover { color: #1F1F2E; }
+
+/* Primary button */
+.btn-primary {
+  width: 100%;
+  height: 52px;
+  background: #1F1F2E;
+  color: #FFFFFF;
+  font-weight: 600;
+  font-size: 15px;
+  border-radius: 10px;
+  cursor: pointer;
+  border: none;
+  font-family: 'Inter', sans-serif;
+  transition: background 0.15s;
+}
+.btn-primary:hover { background: #2e2e42; }
+
+/* Divider */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 22px 0;
+  font-size: 13px;
+  color: #9999B2;
+}
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #CCCCE5;
+}
+
+/* Terms notice */
+.terms-notice {
+  font-size: 11px;
+  color: #9999B2;
+  text-align: center;
+  margin-bottom: 14px;
+  line-height: 1.6;
+}
+
+/* Social buttons */
+.social-row {
+  display: flex;
+  gap: 10px;
+}
+.btn-social {
+  flex: 1;
+  height: 48px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: opacity 0.15s;
+}
+.btn-social:hover { opacity: 0.85; }
+.btn-google {
+  background: #FFFFFF;
+  border: 1.5px solid #CCCCE5;
+  color: #1F1F2E;
+}
+.btn-kakao {
+  background: #FEE500;
+  border: none;
+  color: #3C1E1E;
+  font-weight: 600;
+}
+
+/* ── Agreements ── */
+.agreement-section { margin: 16px 0; }
+.agreement-all {
+  padding: 12px 14px;
+  background: #F7F7FB;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1F1F2E;
+  cursor: pointer;
+  margin-bottom: 8px;
+  border: 1px solid #CCCCE5;
+}
+.agreement-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 6px;
+  font-size: 13px;
+  color: #9999B2;
+  cursor: pointer;
+}
+.agreement-all input[type="checkbox"],
+.agreement-item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #FF6B6B;
+  flex-shrink: 0;
+}
+
+/* ══════════ AUTH RESPONSIVE ══════════ */
+@media (max-width: 1024px) {
+  .auth-page { width: 100%; }
+  .auth-left { width: 360px; padding: 36px 40px; }
+  .auth-hero h1 { font-size: 36px; }
+  .auth-form-wrap { padding: 24px 60px 48px; }
+}
+
+@media (max-width: 768px) {
+  .auth-page { flex-direction: column; min-height: 100vh; }
+  .auth-left { width: 100%; min-height: 240px; padding: 32px 28px; }
+  .auth-hero { padding-bottom: 24px; }
+  .auth-hero h1 { font-size: 30px; }
+  .benefit-list { display: none; }
+  .auth-right { flex: 1; }
+  .auth-form-wrap { padding: 20px 28px 40px; justify-content: flex-start; }
+  .auth-form-wrap--register { padding-top: 20px; }
+  .social-row { flex-direction: column; }
+}
+
+@media (max-width: 480px) {
+  .auth-left { min-height: 200px; }
+  .auth-form-wrap { padding: 16px 20px 32px; }
+  .auth-form-wrap h2 { font-size: 26px; }
+}
