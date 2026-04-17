@@ -16,18 +16,36 @@ import './App.css'
 export default function App() {
   const [page, setPage] = useState('home')
   const [searchQuery, setSearchQuery] = useState('')
+  const [category, setCategory] = useState({ id: 'all', label: '전체' })
 
   function handleNavigate(target, payload) {
-    if (target === 'search') setSearchQuery(payload)
+    if (target === 'search') {
+      setSearchQuery(payload)
+      setCategory({ id: 'all', label: '전체' })
+    }
+    if (target === 'list') {
+      setCategory(payload)
+      setSearchQuery('')
+    }
+    if (target === 'home') {
+      setSearchQuery('')
+      setCategory({ id: 'all', label: '전체' })
+    }
     setPage(target)
   }
 
   if (page === 'login') return <LoginPage onNavigate={handleNavigate} />
   if (page === 'register') return <RegisterPage onNavigate={handleNavigate} />
-  if (page === 'search') return (
+
+  if (page === 'search' || page === 'list') return (
     <div className="page">
       <NavHeader onNavigate={handleNavigate} />
-      <SearchPage query={searchQuery} onNavigate={handleNavigate} />
+      <CategoryBar onNavigate={handleNavigate} activeCategory={category.id} />
+      <SearchPage
+        query={searchQuery}
+        category={category}
+        onNavigate={handleNavigate}
+      />
       <Footer />
     </div>
   )
@@ -35,7 +53,7 @@ export default function App() {
   return (
     <div className="page">
       <NavHeader onNavigate={handleNavigate} />
-      <CategoryBar />
+      <CategoryBar onNavigate={handleNavigate} activeCategory="home" />
       <HeroBanner />
       <RecommendSection />
       <AdBanner />

@@ -549,3 +549,153 @@ a { text-decoration: none; }
   position: absolute; left: 60px; top: 224.52px;
   font-size: 11px; color: #9E9E9E;
 }
+
+/* ══════════ 검색 결과 페이지 ══════════ */
+.sp-wrap {
+  width: 1340px;
+  margin: 0 auto;
+  padding-bottom: 80px;
+}
+
+/* 결과바 */
+.sp-result-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  border-bottom: 1px solid #E5E7EB;
+  margin-bottom: 32px;
+}
+.sp-result-count {
+  font-size: 14px;
+  color: #374151;
+}
+.sp-result-count b {
+  font-weight: 700;
+  color: #111827;
+}
+.sp-total {
+  margin-left: 6px;
+  color: #9EA6B4;
+}
+.sp-sort {
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid #E5E7EB;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #374151;
+  background: #fff;
+  cursor: pointer;
+  outline: none;
+}
+
+/* 상품 그리드 */
+.sp-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px 20px;
+}
+.sp-card {
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  transition: transform 0.15s ease;
+}
+.sp-card:hover { transform: translateY(-4px); }
+
+.sp-card-thumb {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: #F7F8FA;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.sp-card-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.sp-heart {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  width: 28px;
+  height: 28px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+.sp-heart i { font-size: 18px; }
+
+.sp-card-info {
+  padding: 10px 4px 0;
+}
+.sp-mall {
+  font-size: 11px;
+  color: #9EA6B4;
+  margin-bottom: 4px;
+}
+.sp-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #111827;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-clamp: 2;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+.sp-price {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+}
+
+/* 상태 메시지 */
+.sp-status {
+  text-align: center;
+  padding: 80px 0;
+  font-size: 14px;
+  color: #9EA6B4;
+}
+.sp-error { color: #EF4444; }
+
+/* 페이지네이션 */
+.sp-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 56px;
+}
+.sp-page-btn {
+  width: 36px;
+  height: 36px;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 14px;
+  color: #374151;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+.sp-page-btn:hover { border-color: #FF6B6B; color: #FF6B6B; }
+.sp-page-btn.active {
+  background: #FF6B6B;
+  border-color: #FF6B6B;
+  color: #fff;
+  font-weight: 700;
+}

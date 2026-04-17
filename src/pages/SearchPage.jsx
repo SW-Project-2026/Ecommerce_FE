@@ -66,7 +66,7 @@ function Pagination({ current, total, onChange }) {
   )
 }
 
-export default function SearchPage({ query, onNavigate }) {
+export default function SearchPage({ query, category, onNavigate }) {
   const [products, setProducts] = useState([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
@@ -74,35 +74,41 @@ export default function SearchPage({ query, onNavigate }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
-  useEffect(() => {
-    setPage(1)
-  }, [query])
+  const effectiveQuery = query || (category?.id !== 'all' ? category?.label : '')
 
   useEffect(() => {
-    if (!query) return
+    setPage(1)
+  }, [query, category])
+
+  useEffect(() => {
+    if (!effectiveQuery) return
     setLoading(true)
     setError(null)
     const start = (page - 1) * DISPLAY + 1
-    searchProducts({ query, display: DISPLAY, start, sort })
+    searchProducts({ query: effectiveQuery, display: DISPLAY, start, sort })
       .then(data => {
         setProducts(data.products)
         setTotal(data.total)
       })
       .catch(() => setError('상품을 불러오지 못했어요.'))
       .finally(() => setLoading(false))
-  }, [query, page, sort])
+  }, [effectiveQuery, page, sort])
 
   function handleSort(e) {
     setSort(e.target.value)
     setPage(1)
   }
 
+  const resultLabel = query
+    ? <><b>"{query}"</b> 검색 결과</>
+    : <><b>{category?.label}</b> 상품</>
+
   return (
     <div className="sp-wrap">
       {/* 결과바 */}
       <div className="sp-result-bar">
         <span className="sp-result-count">
-          <b>"{query}"</b> 검색 결과
+          {resultLabel}
           {total > 0 && <span className="sp-total"> 총 {total.toLocaleString()}개</span>}
         </span>
         <select className="sp-sort" value={sort} onChange={handleSort}>
@@ -115,10 +121,13 @@ export default function SearchPage({ query, onNavigate }) {
       {/* 상품 그리드 */}
       {loading && <div className="sp-status">검색 중...</div>}
       {error && <div className="sp-status sp-error">{error}</div>}
-      {!loading && !error && products.length === 0 && (
+      {!effectiveQuery && (
+        <div className="sp-status">검색어 또는 카테고리를 선택해주세요.</div>
+      )}
+      {effectiveQuery && !loading && !error && products.length === 0 && (
         <div className="sp-status">검색 결과가 없어요.</div>
       )}
-      {!loading && !error && products.length > 0 && (
+      {effectiveQuery && !loading && !error && products.length > 0 && (
         <div className="sp-grid">
           {products.map(p => <ProductCard key={p.productId} product={p} />)}
         </div>
