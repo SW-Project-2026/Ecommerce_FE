@@ -3,6 +3,16 @@ import { useState } from 'react'
 export default function NavHeader({ onNavigate }) {
   const [query, setQuery] = useState('')
 
+  function handleSearch() {
+    const trimmed = query.trim()
+    if (!trimmed) return
+    onNavigate('search', trimmed)
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === 'Enter') handleSearch()
+  }
+
   return (
     <header className="nav-header">
       <div className="logo" onClick={() => onNavigate('home')}>
@@ -20,8 +30,9 @@ export default function NavHeader({ onNavigate }) {
           placeholder="찾고 싶은 상품을 검색해 보세요"
           value={query}
           onChange={e => setQuery(e.target.value)}
+          onKeyDown={handleKeyDown}
         />
-        <button className="search-btn" aria-label="검색">
+        <button className="search-btn" aria-label="검색" onClick={handleSearch}>
           <i className="ri-search-line" />
         </button>
       </div>
