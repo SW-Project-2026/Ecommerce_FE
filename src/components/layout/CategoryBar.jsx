@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from 'react'
 const CATEGORIES = [
   { id: 'home',    label: '홈',          left: 60,  isHome: true },
   { id: 'all',     label: '전체',        left: 106 },
-  { id: 'digital', label: '가전·디지털', left: 161 },
+  { id: 'digital', label: '가전·디지털', dbKey: '가전/디지털', left: 161 },
   { id: 'fashion', label: '패션',        left: 250 },
   { id: 'beauty',  label: '뷰티',        left: 322 },
   { id: 'food',    label: '식품',        left: 394 },
@@ -38,7 +38,7 @@ export default function CategoryBar({ onNavigate, activeCategory }) {
     if (cat.isHome) {
       onNavigate('home')
     } else {
-      onNavigate('list', { id: cat.id, label: cat.label })
+      onNavigate('list', { id: cat.id, label: cat.label, dbKey: cat.dbKey })
     }
   }
 

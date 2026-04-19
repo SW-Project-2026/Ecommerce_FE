@@ -11,12 +11,15 @@ import BestSection from './components/sections/BestSection'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import SearchPage from './pages/SearchPage'
+import ProductDetailPage from './pages/ProductDetailPage'
 import './App.css'
 
 export default function App() {
   const [page, setPage] = useState('home')
   const [searchQuery, setSearchQuery] = useState('')
   const [category, setCategory] = useState({ id: 'all', label: '전체' })
+  const [productId, setProductId] = useState(null)
+  const [prevCategory, setPrevCategory] = useState(null)
 
   function handleNavigate(target, payload) {
     if (target === 'search') {
@@ -31,14 +34,31 @@ export default function App() {
       setSearchQuery('')
       setCategory({ id: 'all', label: '전체' })
     }
+    if (target === 'product') {
+      setPrevCategory(page === 'list' ? category : null)
+      setProductId(payload)
+    }
     setPage(target)
   }
+
+  if (page === 'product') return (
+    <div className="page page-list">
+      <NavHeader onNavigate={handleNavigate} />
+      <CategoryBar onNavigate={handleNavigate} activeCategory={category.id} />
+      <ProductDetailPage
+        productId={productId}
+        onNavigate={handleNavigate}
+        prevCategory={prevCategory}
+      />
+      <Footer />
+    </div>
+  )
 
   if (page === 'login') return <LoginPage onNavigate={handleNavigate} />
   if (page === 'register') return <RegisterPage onNavigate={handleNavigate} />
 
   if (page === 'search' || page === 'list') return (
-    <div className="page">
+    <div className="page page-list">
       <NavHeader onNavigate={handleNavigate} />
       <CategoryBar onNavigate={handleNavigate} activeCategory={category.id} />
       <SearchPage
