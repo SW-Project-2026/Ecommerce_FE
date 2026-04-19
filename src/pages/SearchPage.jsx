@@ -1,24 +1,18 @@
 import { useEffect, useState } from 'react'
-import { searchProducts } from '../api/products'
+import { searchProducts, getProducts } from '../api/products'
 
 const DISPLAY = 20
-const SORT_OPTIONS = [
+const NAVER_SORT_OPTIONS = [
   { value: 'sim',  label: '정확도순' },
   { value: 'date', label: '최신순' },
   { value: 'asc',  label: '가격 낮은순' },
   { value: 'dsc',  label: '가격 높은순' },
 ]
 
-function ProductCard({ product }) {
+function NaverCard({ product }) {
   const [liked, setLiked] = useState(false)
-
   return (
-    <a
-      href={product.link}
-      target="_blank"
-      rel="noreferrer"
-      className="sp-card"
-    >
+    <a href={product.link} target="_blank" rel="noreferrer" className="sp-card">
       <div className="sp-card-thumb">
         <img src={product.image} alt={product.title} loading="lazy" />
         <button
@@ -38,13 +32,37 @@ function ProductCard({ product }) {
   )
 }
 
-function Pagination({ current, total, onChange }) {
-  const pages = Math.min(Math.ceil(total / DISPLAY), 50)
-  if (pages <= 1) return null
+function DbCard({ product, onNavigate }) {
+  const [liked, setLiked] = useState(false)
+  const image = product.imageUrls?.[0]
+  return (
+    <div className="sp-card" onClick={() => onNavigate?.('product', product.productId)} style={{ cursor: 'pointer' }}>
+      <div className="sp-card-thumb">
+        {image
+          ? <img src={image} alt={product.name} loading="lazy" />
+          : <div className="sp-no-image" />}
+        <button
+          className="sp-heart"
+          onClick={e => { e.preventDefault(); e.stopPropagation(); setLiked(p => !p) }}
+          aria-label="찜하기"
+        >
+          <i className={liked ? 'ri-heart-fill' : 'ri-heart-line'} style={{ color: '#FF6B6B' }} />
+        </button>
+      </div>
+      <div className="sp-card-info">
+        {product.productCategory && <div className="sp-mall">{product.productCategory}</div>}
+        <div className="sp-title">{product.name}</div>
+        <div className="sp-price">{product.price.toLocaleString()}원</div>
+      </div>
+    </div>
+  )
+}
 
+function Pagination({ current, totalPages, onChange }) {
+  if (totalPages <= 1) return null
   const block = Math.floor((current - 1) / 3)
   const start = block * 3 + 1
-  const end = Math.min(start + 2, pages)
+  const end = Math.min(start + 2, totalPages)
   const nums = []
   for (let i = start; i <= end; i++) nums.push(i)
 
@@ -59,7 +77,7 @@ function Pagination({ current, total, onChange }) {
           {n}
         </button>
       ))}
-      {end < pages && (
+      {end < totalPages && (
         <button className="sp-page-btn" onClick={() => onChange(end + 1)}>»</button>
       )}
     </div>
@@ -69,37 +87,57 @@ function Pagination({ current, total, onChange }) {
 export default function SearchPage({ query, category, onNavigate }) {
   const [products, setProducts] = useState([])
   const [total, setTotal] = useState(0)
+  const [totalPages, setTotalPages] = useState(0)
   const [page, setPage] = useState(1)
   const [sort, setSort] = useState('sim')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
-  const effectiveQuery = query || (category?.id !== 'all' ? category?.label : '')
+  const isSearch = !!query
+  const isList = !query && category?.id && category.id !== 'home'
 
   useEffect(() => {
     setPage(1)
+    setSort('sim')
   }, [query, category])
 
   useEffect(() => {
-    if (!effectiveQuery) return
-    setLoading(true)
-    setError(null)
-    const start = (page - 1) * DISPLAY + 1
-    searchProducts({ query: effectiveQuery, display: DISPLAY, start, sort })
-      .then(data => {
-        setProducts(data.products)
-        setTotal(data.total)
-      })
-      .catch(() => setError('상품을 불러오지 못했어요.'))
-      .finally(() => setLoading(false))
-  }, [effectiveQuery, page, sort])
+    if (isSearch) {
+      setLoading(true)
+      setError(null)
+      const start = (page - 1) * DISPLAY + 1
+      searchProducts({ query, display: DISPLAY, start, sort })
+        .then(data => {
+          setProducts(data.products)
+          setTotal(data.total)
+          setTotalPages(Math.min(Math.ceil(data.total / DISPLAY), 50))
+        })
+        .catch(() => setError('상품을 불러오지 못했어요.'))
+        .finally(() => setLoading(false))
+      return
+    }
+
+    if (isList) {
+      setLoading(true)
+      setError(null)
+      const cat = category?.id !== 'all' ? (category?.dbKey ?? category?.label) : undefined
+      getProducts({ page: page - 1, size: DISPLAY, category: cat })
+        .then(data => {
+          setProducts(data.content)
+          setTotal(data.totalElements)
+          setTotalPages(data.totalPages)
+        })
+        .catch(() => setError('상품을 불러오지 못했어요.'))
+        .finally(() => setLoading(false))
+    }
+  }, [query, category, page, sort])
 
   function handleSort(e) {
     setSort(e.target.value)
     setPage(1)
   }
 
-  const resultLabel = query
+  const resultLabel = isSearch
     ? <><b>"{query}"</b> 검색 결과</>
     : <><b>{category?.label}</b> 상품</>
 
@@ -111,30 +149,39 @@ export default function SearchPage({ query, category, onNavigate }) {
           {resultLabel}
           {total > 0 && <span className="sp-total"> 총 {total.toLocaleString()}개</span>}
         </span>
-        <select className="sp-sort" value={sort} onChange={handleSort}>
-          {SORT_OPTIONS.map(o => (
-            <option key={o.value} value={o.value}>{o.label}</option>
-          ))}
-        </select>
+        {isSearch && (
+          <select className="sp-sort" value={sort} onChange={handleSort}>
+            {NAVER_SORT_OPTIONS.map(o => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
+        )}
       </div>
 
       {/* 상품 그리드 */}
-      {loading && <div className="sp-status">검색 중...</div>}
+      {loading && <div className="sp-status">불러오는 중...</div>}
       {error && <div className="sp-status sp-error">{error}</div>}
-      {!effectiveQuery && (
+      {!loading && !error && !isSearch && !isList && (
         <div className="sp-status">검색어 또는 카테고리를 선택해주세요.</div>
       )}
-      {effectiveQuery && !loading && !error && products.length === 0 && (
-        <div className="sp-status">검색 결과가 없어요.</div>
+      {!loading && !error && (isSearch || isList) && products.length === 0 && (
+        <div className="sp-status">상품이 없어요.</div>
       )}
-      {effectiveQuery && !loading && !error && products.length > 0 && (
+      {!loading && !error && products.length > 0 && (
         <div className="sp-grid">
-          {products.map(p => <ProductCard key={p.productId} product={p} />)}
+          {products.map(p =>
+            isSearch
+              ? <NaverCard key={p.productId} product={p} />
+              : <DbCard key={p.productId} product={p} onNavigate={onNavigate} />
+          )}
         </div>
       )}
 
-      {/* 페이지네이션 */}
-      <Pagination current={page} total={total} onChange={n => { setPage(n); window.scrollTo(0, 0) }} />
+      <Pagination
+        current={page}
+        totalPages={totalPages}
+        onChange={n => { setPage(n); window.scrollTo(0, 0) }}
+      />
     </div>
   )
 }
