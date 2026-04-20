@@ -10,7 +10,7 @@ import TimeBasedSection from './components/sections/TimeBasedSection'
 import BestSection from './components/sections/BestSection'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
-import SearchPage from './pages/SearchPage'
+import ProductListPage from './pages/ProductListPage'
 import ProductDetailPage from './pages/ProductDetailPage'
 import './App.css'
 
@@ -61,7 +61,7 @@ export default function App() {
     <div className="page page-list">
       <NavHeader onNavigate={handleNavigate} />
       <CategoryBar onNavigate={handleNavigate} activeCategory={category.id} />
-      <SearchPage
+      <ProductListPage
         query={searchQuery}
         category={category}
         onNavigate={handleNavigate}

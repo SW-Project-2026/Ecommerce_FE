@@ -8,8 +8,8 @@ export async function searchProducts({ query, display = 10, start = 1, sort = 's
   return json.data
 }
 
-export async function getProducts({ page = 0, size = 20, category } = {}) {
-  const params = new URLSearchParams({ page, size, sort: 'createdAt,desc' })
+export async function getProducts({ page = 0, size = 20, category, sort = 'createdAt,desc' } = {}) {
+  const params = new URLSearchParams({ page, size, sort })
   if (category) params.append('category', category)
   const res = await fetch(`${BASE}/api/products?${params}`)
   if (!res.ok) throw new Error('상품 목록 조회 실패')
