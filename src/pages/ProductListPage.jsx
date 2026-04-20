@@ -34,7 +34,7 @@ function NaverCard({ product }) {
 
 function DbCard({ product, onNavigate }) {
   const [liked, setLiked] = useState(false)
-  const image = product.imageUrls?.[0]
+  const image = product.imageUrl
   return (
     <div className="sp-card" onClick={() => onNavigate?.('product', product.productId)} style={{ cursor: 'pointer' }}>
       <div className="sp-card-thumb">
@@ -90,6 +90,7 @@ export default function SearchPage({ query, category, onNavigate }) {
   const [totalPages, setTotalPages] = useState(0)
   const [page, setPage] = useState(1)
   const [sort, setSort] = useState('sim')
+  const [dbSort, setDbSort] = useState('createdAt,desc')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
@@ -99,6 +100,7 @@ export default function SearchPage({ query, category, onNavigate }) {
   useEffect(() => {
     setPage(1)
     setSort('sim')
+    setDbSort('createdAt,desc')
   }, [query, category])
 
   useEffect(() => {
@@ -121,7 +123,7 @@ export default function SearchPage({ query, category, onNavigate }) {
       setLoading(true)
       setError(null)
       const cat = category?.id !== 'all' ? (category?.dbKey ?? category?.label) : undefined
-      getProducts({ page: page - 1, size: DISPLAY, category: cat })
+      getProducts({ page: page - 1, size: DISPLAY, category: cat, sort: dbSort })
         .then(data => {
           setProducts(data.content)
           setTotal(data.totalElements)
@@ -130,10 +132,15 @@ export default function SearchPage({ query, category, onNavigate }) {
         .catch(() => setError('상품을 불러오지 못했어요.'))
         .finally(() => setLoading(false))
     }
-  }, [query, category, page, sort])
+  }, [query, category, page, sort, dbSort])
 
   function handleSort(e) {
     setSort(e.target.value)
+    setPage(1)
+  }
+
+  function handleDbSort(value) {
+    setDbSort(value)
     setPage(1)
   }
 
@@ -155,6 +162,26 @@ export default function SearchPage({ query, category, onNavigate }) {
               <option key={o.value} value={o.value}>{o.label}</option>
             ))}
           </select>
+        )}
+        {isList && (
+          <div className="sp-db-sort">
+            {[
+              { value: 'createdAt,desc', label: '유사도순' },
+              { value: 'createdAt,asc',  label: '최신순' },
+              { value: 'price,asc',      label: '낮은가격' },
+              { value: 'price,desc',     label: '높은가격' },
+            ].map((o, i, arr) => (
+              <span key={o.value} className="sp-db-sort-item">
+                <button
+                  className={`sp-db-sort-btn${dbSort === o.value ? ' active' : ''}`}
+                  onClick={() => handleDbSort(o.value)}
+                >
+                  {o.label}
+                </button>
+                {i < arr.length - 1 && <span className="sp-db-sort-divider">|</span>}
+              </span>
+            ))}
+          </div>
         )}
       </div>
 
