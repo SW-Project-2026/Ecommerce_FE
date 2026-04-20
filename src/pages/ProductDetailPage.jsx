@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { getProduct } from '../api/products'
 
+const RELATED_VISIBLE = 5
+
 function Breadcrumb({ category, productName, onNavigate }) {
   return (
     <div className="pdp-breadcrumb">
@@ -13,6 +15,28 @@ function Breadcrumb({ category, productName, onNavigate }) {
         </>
       )}
       <span className="pdp-bc-current">{productName}</span>
+    </div>
+  )
+}
+
+function RelatedProducts() {
+  return (
+    <div className="pdp-related">
+      <h3 className="pdp-related-title">연관 상품</h3>
+      <div className="pdp-related-row">
+        <div className="pdp-related-grid">
+          {Array.from({ length: RELATED_VISIBLE }).map((_, i) => (
+            <div key={i} className="pdp-related-card">
+              <div className="pdp-related-thumb pdp-no-image" />
+              <div className="pdp-related-name pdp-skeleton" />
+              <div className="pdp-related-price pdp-skeleton" />
+            </div>
+          ))}
+        </div>
+        <button className="pdp-related-arrow">
+          <i className="ri-arrow-right-s-line" />
+        </button>
+      </div>
     </div>
   )
 }
@@ -53,7 +77,6 @@ export default function ProductDetailPage({ productId, onNavigate, prevCategory 
       />
 
       <div className="pdp-content">
-        {/* 이미지 갤러리 */}
         <div className="pdp-gallery">
           <div className="pdp-main-img">
             {image
@@ -62,7 +85,6 @@ export default function ProductDetailPage({ productId, onNavigate, prevCategory 
           </div>
         </div>
 
-        {/* 상품 정보 */}
         <div className="pdp-info">
           {product.productCategory && (
             <div className="pdp-brand">{product.productCategory}</div>
@@ -73,7 +95,6 @@ export default function ProductDetailPage({ productId, onNavigate, prevCategory 
             <span className="pdp-price">{product.price.toLocaleString()}원</span>
           </div>
 
-          {/* 배송 정보 박스 */}
           <div className="pdp-info-box">
             <div className="pdp-info-row">
               <span className="pdp-info-label">반품/교환</span>
@@ -85,7 +106,6 @@ export default function ProductDetailPage({ productId, onNavigate, prevCategory 
             </div>
           </div>
 
-          {/* 수량 */}
           <div className="pdp-qty-row">
             <span className="pdp-qty-label">수량</span>
             <div className="pdp-qty-ctrl">
@@ -103,13 +123,11 @@ export default function ProductDetailPage({ productId, onNavigate, prevCategory 
             </div>
           </div>
 
-          {/* 총 상품금액 */}
           <div className="pdp-total-row">
             <span className="pdp-total-label">총 상품금액</span>
             <span className="pdp-total-price">{total}원</span>
           </div>
 
-          {/* 버튼 */}
           <button className="pdp-buy-btn" disabled={soldOut}>
             {soldOut ? '품절' : '바로 구매하기'}
           </button>
@@ -125,7 +143,6 @@ export default function ProductDetailPage({ productId, onNavigate, prevCategory 
         </div>
       </div>
 
-      {/* 탭 */}
       <div className="pdp-tabs">
         {[
           { key: 'detail', label: '상품 상세' },
@@ -158,6 +175,8 @@ export default function ProductDetailPage({ productId, onNavigate, prevCategory 
           </div>
         )}
       </div>
+
+      <RelatedProducts />
     </div>
   )
 }
