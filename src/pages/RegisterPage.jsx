@@ -72,10 +72,10 @@ export default function RegisterPage({ onNavigate }) {
               />
             </div>
             <div className="form-group">
-              <label>닉네임</label>
+              <label>사용자 아이디</label>
               <input
                 type="text"
-                placeholder="나만의 닉네임"
+                placeholder="ID"
                 value={form.nickname}
                 onChange={e => updateForm('nickname', e.target.value)}
               />
@@ -108,7 +108,7 @@ export default function RegisterPage({ onNavigate }) {
               <div className="pw-wrap">
                 <input
                   type={showPw ? 'text' : 'password'}
-                  placeholder="8자 이상"
+                  placeholder="8자 이상 20자 이하 입력"
                   value={form.password}
                   onChange={e => updateForm('password', e.target.value)}
                 />

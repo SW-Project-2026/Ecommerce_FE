@@ -2,7 +2,7 @@ import { useState } from 'react'
 import './auth.css'
 
 export default function LoginPage({ onNavigate }) {
-  const [email, setEmail] = useState('')
+  const [nickname, setNickname] = useState('')
   const [password, setPassword] = useState('')
   const [showPw, setShowPw] = useState(false)
   const [autoLogin, setAutoLogin] = useState(false)
@@ -35,15 +35,15 @@ export default function LoginPage({ onNavigate }) {
 
         <div className="auth-form-wrap">
           <h2>로그인</h2>
-          <p>이메일과 비밀번호를 입력해 주세요</p>
+          <p>아이디와 비밀번호를 입력해 주세요</p>
 
           <div className="form-group">
-            <label>이메일</label>
+            <label>아이디</label>
             <input
-              type="email"
-              placeholder="example@shopnow.com"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
+              type="text"
+              placeholder="아이디를 입력하세요"
+              value={nickname}
+              onChange={e => setNickname(e.target.value)}
             />
           </div>
 
