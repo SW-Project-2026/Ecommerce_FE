@@ -59,7 +59,7 @@ export default function ProductDetailPage({ productId, onNavigate, prevCategory 
       .finally(() => setLoading(false))
   }, [productId])
 
-  const total = product ? (product.price * qty).toLocaleString() : '0'
+  const total = product ? (product.minPrice * qty).toLocaleString() : '0'
 
   if (loading) return <div className="sp-status">불러오는 중...</div>
   if (error) return <div className="sp-status sp-error">{error}</div>
@@ -92,7 +92,10 @@ export default function ProductDetailPage({ productId, onNavigate, prevCategory 
           <h1 className="pdp-name">{product.name}</h1>
 
           <div className="pdp-price-area">
-            <span className="pdp-price">{product.price.toLocaleString()}원</span>
+            <span className="pdp-price">{product.minPrice.toLocaleString()}원</span>
+            {product.maxPrice > product.minPrice && (
+              <span className="pdp-max-price">최고가 {product.maxPrice.toLocaleString()}원</span>
+            )}
           </div>
 
           <div className="pdp-info-box">
