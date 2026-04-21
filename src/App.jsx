@@ -20,6 +20,24 @@ export default function App() {
   const [category, setCategory] = useState({ id: 'all', label: '전체' })
   const [productId, setProductId] = useState(null)
   const [prevCategory, setPrevCategory] = useState(null)
+  const [auth, setAuth] = useState(() => {
+    const token = localStorage.getItem('accessToken')
+    const role = localStorage.getItem('role')
+    return token ? { token, role } : null
+  })
+
+  function handleLogin(data) {
+    localStorage.setItem('accessToken', data.accessToken)
+    localStorage.setItem('role', data.role)
+    setAuth({ token: data.accessToken, role: data.role })
+  }
+
+  function handleLogout() {
+    localStorage.removeItem('accessToken')
+    localStorage.removeItem('role')
+    setAuth(null)
+    setPage('home')
+  }
 
   function handleNavigate(target, payload) {
     if (target === 'search') {
@@ -54,8 +72,8 @@ export default function App() {
     </div>
   )
 
-  if (page === 'login') return <LoginPage onNavigate={handleNavigate} />
-  if (page === 'register') return <RegisterPage onNavigate={handleNavigate} />
+  if (page === 'login') return <LoginPage onNavigate={handleNavigate} onLogin={handleLogin} />
+  if (page === 'register') return <RegisterPage onNavigate={handleNavigate} onLogin={handleLogin} />
 
   if (page === 'search' || page === 'list') return (
     <div className="page page-list">
