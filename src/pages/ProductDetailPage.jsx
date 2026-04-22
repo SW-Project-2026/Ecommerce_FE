@@ -61,7 +61,7 @@ function RelatedProducts() {
   )
 }
 
-export default function ProductDetailPage({ productId, onNavigate, prevCategory }) {
+export default function ProductDetailPage({ productId, onNavigate, prevCategory, onAddToCart }) {
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -155,7 +155,7 @@ export default function ProductDetailPage({ productId, onNavigate, prevCategory 
             {soldOut ? '품절' : '바로 구매하기'}
           </button>
           <div className="pdp-sub-btns">
-            <button className="pdp-cart-btn" disabled={soldOut}>장바구니 담기</button>
+            <button className="pdp-cart-btn" disabled={soldOut} onClick={() => { onAddToCart?.(product, qty); onNavigate('cart') }}>장바구니 담기</button>
             <button
               className={`pdp-like-btn${liked ? ' active' : ''}`}
               onClick={() => setLiked(p => !p)}

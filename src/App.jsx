@@ -12,6 +12,9 @@ import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import ProductListPage from './pages/ProductListPage'
 import ProductDetailPage from './pages/ProductDetailPage'
+import CartPage from './pages/CartPage'
+import OrderCompletePage from './pages/OrderCompletePage'
+import MyPage from './pages/MyPage'
 import './App.css'
 
 export default function App() {
@@ -20,6 +23,8 @@ export default function App() {
   const [category, setCategory] = useState({ id: 'all', label: '전체' })
   const [productId, setProductId] = useState(null)
   const [prevCategory, setPrevCategory] = useState(null)
+  const [cart, setCart] = useState([])
+  const [orderInfo, setOrderInfo] = useState(null)
   const [auth, setAuth] = useState(() => {
     const token = localStorage.getItem('accessToken')
     const role = localStorage.getItem('role')
@@ -37,6 +42,20 @@ export default function App() {
     localStorage.removeItem('role')
     setAuth(null)
     setPage('home')
+  }
+
+  function handleAddToCart(product, qty = 1) {
+    setCart(prev => {
+      const existing = prev.find(i => i.product.productId === product.productId)
+      if (existing) {
+        return prev.map(i =>
+          i.product.productId === product.productId
+            ? { ...i, qty: i.qty + qty }
+            : i
+        )
+      }
+      return [...prev, { product, qty }]
+    })
   }
 
   function handleNavigate(target, payload) {
@@ -59,14 +78,46 @@ export default function App() {
     setPage(target)
   }
 
+  const cartCount = cart.reduce((s, i) => s + i.qty, 0)
+
+  if (page === 'cart') return (
+    <div className="page page-list">
+      <NavHeader onNavigate={handleNavigate} cartCount={cartCount} auth={auth} onLogout={handleLogout} />
+      <CartPage
+        cart={cart}
+        onNavigate={handleNavigate}
+        onCartChange={setCart}
+        onOrderComplete={info => setOrderInfo(info)}
+      />
+      <Footer />
+    </div>
+  )
+
+  if (page === 'mypage') return (
+    <div className="page page-list">
+      <NavHeader onNavigate={handleNavigate} cartCount={cartCount} auth={auth} onLogout={handleLogout} />
+      <MyPage onNavigate={handleNavigate} auth={auth} />
+      <Footer />
+    </div>
+  )
+
+  if (page === 'order-complete') return (
+    <div className="page page-list">
+      <NavHeader onNavigate={handleNavigate} cartCount={0} auth={auth} onLogout={handleLogout} />
+      <OrderCompletePage orderInfo={orderInfo} onNavigate={handleNavigate} />
+      <Footer />
+    </div>
+  )
+
   if (page === 'product') return (
     <div className="page page-list">
-      <NavHeader onNavigate={handleNavigate} />
+      <NavHeader onNavigate={handleNavigate} cartCount={cartCount} auth={auth} onLogout={handleLogout} />
       <CategoryBar onNavigate={handleNavigate} activeCategory={category.id} />
       <ProductDetailPage
         productId={productId}
         onNavigate={handleNavigate}
         prevCategory={prevCategory}
+        onAddToCart={handleAddToCart}
       />
       <Footer />
     </div>
@@ -77,7 +128,7 @@ export default function App() {
 
   if (page === 'search' || page === 'list') return (
     <div className="page page-list">
-      <NavHeader onNavigate={handleNavigate} />
+      <NavHeader onNavigate={handleNavigate} cartCount={cartCount} auth={auth} onLogout={handleLogout} />
       <CategoryBar onNavigate={handleNavigate} activeCategory={category.id} />
       <ProductListPage
         query={searchQuery}
@@ -90,7 +141,7 @@ export default function App() {
 
   return (
     <div className="page">
-      <NavHeader onNavigate={handleNavigate} />
+      <NavHeader onNavigate={handleNavigate} cartCount={cartCount} auth={auth} onLogout={handleLogout} />
       <CategoryBar onNavigate={handleNavigate} activeCategory="home" />
       <HeroBanner />
       <RecommendSection />
