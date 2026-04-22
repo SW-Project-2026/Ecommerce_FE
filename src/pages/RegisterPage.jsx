@@ -1,9 +1,10 @@
 import { useState } from 'react'
+import { signup } from '../api/auth'
 import './auth.css'
 
-export default function RegisterPage({ onNavigate }) {
+export default function RegisterPage({ onNavigate, onLogin }) {
   const [form, setForm] = useState({
-    name: '', nickname: '', email: '',
+    name: '', loginId: '', email: '',
     phone: '', password: '', passwordConfirm: '',
   })
   const [showPw, setShowPw] = useState(false)
@@ -11,6 +12,8 @@ export default function RegisterPage({ onNavigate }) {
   const [agreements, setAgreements] = useState({
     all: false, terms: false, privacy: false, marketing: false,
   })
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
   function updateForm(key, value) {
     setForm(prev => ({ ...prev, [key]: value }))
@@ -25,6 +28,30 @@ export default function RegisterPage({ onNavigate }) {
     const updated = { ...agreements, [key]: !agreements[key] }
     updated.all = updated.terms && updated.privacy && updated.marketing
     setAgreements(updated)
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    if (!agreements.terms || !agreements.privacy) {
+      setError('필수 약관에 동의해주세요.')
+      return
+    }
+    if (form.password !== form.passwordConfirm) {
+      setError('비밀번호가 일치하지 않아요.')
+      return
+    }
+    setLoading(true)
+    setError('')
+    try {
+      const phone = form.phone.replace(/-/g, '')
+      const data = await signup({ ...form, loginId: form.loginId, phone })
+      onLogin(data)
+      onNavigate('home')
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -57,7 +84,7 @@ export default function RegisterPage({ onNavigate }) {
           <span onClick={() => onNavigate('login')}>로그인</span>
         </div>
 
-        <div className="auth-form-wrap auth-form-wrap--register">
+        <form className="auth-form-wrap auth-form-wrap--register" onSubmit={handleSubmit}>
           <h2>회원가입</h2>
           <p className="form-subtitle">여러 정보를 입력하여 계정을 만들어보세요</p>
 
@@ -69,15 +96,17 @@ export default function RegisterPage({ onNavigate }) {
                 placeholder="홍길동"
                 value={form.name}
                 onChange={e => updateForm('name', e.target.value)}
+                maxLength={20}
               />
             </div>
             <div className="form-group">
-              <label>닉네임</label>
+              <label>아이디</label>
               <input
                 type="text"
-                placeholder="나만의 닉네임"
-                value={form.nickname}
-                onChange={e => updateForm('nickname', e.target.value)}
+                placeholder="ID"
+                value={form.loginId}
+                onChange={e => updateForm('loginId', e.target.value)}
+                maxLength={20}
               />
             </div>
           </div>
@@ -108,7 +137,7 @@ export default function RegisterPage({ onNavigate }) {
               <div className="pw-wrap">
                 <input
                   type={showPw ? 'text' : 'password'}
-                  placeholder="8자 이상"
+                  placeholder="8자 이상 20자 이하 입력"
                   value={form.password}
                   onChange={e => updateForm('password', e.target.value)}
                 />
@@ -172,12 +201,16 @@ export default function RegisterPage({ onNavigate }) {
             </div>
           </div>
 
-          <button className="btn-primary">회원가입 완료</button>
+          {error && <p className="auth-error">{error}</p>}
+
+          <button className="btn-primary" type="submit" disabled={loading}>
+            {loading ? '가입 중...' : '회원가입 완료'}
+          </button>
 
           <p className="terms-notice" style={{ marginTop: 14 }}>
             가입 시 Da-On 서비스약관 및 개인정보처리방침에 동의하는 것으로 간주합니다
           </p>
-        </div>
+        </form>
       </div>
     </div>
   )

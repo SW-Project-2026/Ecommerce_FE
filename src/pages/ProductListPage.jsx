@@ -150,6 +150,23 @@ export default function SearchPage({ query, category, onNavigate }) {
 
   return (
     <div className="sp-wrap">
+      {/* 브레드크럼 */}
+      <div className="pdp-breadcrumb" style={{ marginBottom: 16 }}>
+        <span onClick={() => onNavigate('home')} className="pdp-bc-link">홈</span>
+        {isList && category?.label && (
+          <>
+            <span className="pdp-bc-sep"> &gt; </span>
+            <span className="pdp-bc-current">{category.label}</span>
+          </>
+        )}
+        {isSearch && (
+          <>
+            <span className="pdp-bc-sep"> &gt; </span>
+            <span className="pdp-bc-current">검색: {query}</span>
+          </>
+        )}
+      </div>
+
       {/* 결과바 */}
       <div className="sp-result-bar">
         <span className="sp-result-count">

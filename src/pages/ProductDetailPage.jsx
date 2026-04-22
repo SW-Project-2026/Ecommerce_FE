@@ -3,18 +3,38 @@ import { getProduct } from '../api/products'
 
 const RELATED_VISIBLE = 5
 
-function Breadcrumb({ category, productName, onNavigate }) {
+const KEYWORD_TO_LABEL = {
+  '가전/디지털': '가전·디지털',
+  '패션': '패션',
+  '뷰티': '뷰티',
+  '식품': '식품',
+  '생활용품': '생활용품',
+  '스포츠': '스포츠',
+}
+
+function Breadcrumb({ product, prevCategory, onNavigate }) {
+  const topLabel = KEYWORD_TO_LABEL[product.searchKeyword] ?? product.searchKeyword
+  const topCategory = prevCategory ?? (product.searchKeyword
+    ? { id: product.searchKeyword, label: topLabel, dbKey: product.searchKeyword }
+    : null)
+
   return (
     <div className="pdp-breadcrumb">
       <span onClick={() => onNavigate('home')} className="pdp-bc-link">홈</span>
-      <span className="pdp-bc-sep"> &gt; </span>
-      {category && (
+      {topCategory && (
         <>
-          <span onClick={() => onNavigate('list', category)} className="pdp-bc-link">{category.label}</span>
           <span className="pdp-bc-sep"> &gt; </span>
+          <span onClick={() => onNavigate('list', topCategory)} className="pdp-bc-link">{topLabel}</span>
         </>
       )}
-      <span className="pdp-bc-current">{productName}</span>
+      {product.category2 && (
+        <>
+          <span className="pdp-bc-sep"> &gt; </span>
+          <span className="pdp-bc-current">{product.category2}</span>
+        </>
+      )}
+      <span className="pdp-bc-sep"> &gt; </span>
+      <span className="pdp-bc-current">{product.name}</span>
     </div>
   )
 }
@@ -71,8 +91,8 @@ export default function ProductDetailPage({ productId, onNavigate, prevCategory 
   return (
     <div className="pdp-wrap">
       <Breadcrumb
-        category={prevCategory}
-        productName={product.name}
+        product={product}
+        prevCategory={prevCategory}
         onNavigate={onNavigate}
       />
 
@@ -86,8 +106,8 @@ export default function ProductDetailPage({ productId, onNavigate, prevCategory 
         </div>
 
         <div className="pdp-info">
-          {product.productCategory && (
-            <div className="pdp-brand">{product.productCategory}</div>
+          {product.brand && (
+            <div className="pdp-brand">{product.brand}</div>
           )}
           <h1 className="pdp-name">{product.name}</h1>
 
