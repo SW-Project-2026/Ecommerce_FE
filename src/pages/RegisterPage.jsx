@@ -44,7 +44,7 @@ export default function RegisterPage({ onNavigate, onLogin }) {
     setError('')
     try {
       const phone = form.phone.replace(/-/g, '')
-      const data = await signup({ ...form, loginId: form.loginId, phone })
+      const data = await signup({ ...form, phone, marketingAgreed: agreements.marketing })
       onLogin(data)
       onNavigate('home')
     } catch (err) {

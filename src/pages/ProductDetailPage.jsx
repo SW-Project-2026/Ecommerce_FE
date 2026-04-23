@@ -3,20 +3,10 @@ import { getProduct } from '../api/products'
 
 const RELATED_VISIBLE = 5
 
-const KEYWORD_TO_LABEL = {
-  '가전/디지털': '가전·디지털',
-  '패션': '패션',
-  '뷰티': '뷰티',
-  '식품': '식품',
-  '생활용품': '생활용품',
-  '스포츠': '스포츠',
-}
 
 function Breadcrumb({ product, prevCategory, onNavigate }) {
-  const topLabel = KEYWORD_TO_LABEL[product.searchKeyword] ?? product.searchKeyword
-  const topCategory = prevCategory ?? (product.searchKeyword
-    ? { id: product.searchKeyword, label: topLabel, dbKey: product.searchKeyword }
-    : null)
+  const topCategory = prevCategory ?? null
+  const topLabel = topCategory?.label ?? ''
 
   return (
     <div className="pdp-breadcrumb">
@@ -27,10 +17,10 @@ function Breadcrumb({ product, prevCategory, onNavigate }) {
           <span onClick={() => onNavigate('list', topCategory)} className="pdp-bc-link">{topLabel}</span>
         </>
       )}
-      {product.category2 && (
+      {product.mallName && (
         <>
           <span className="pdp-bc-sep"> &gt; </span>
-          <span className="pdp-bc-current">{product.category2}</span>
+          <span className="pdp-bc-current">{product.mallName}</span>
         </>
       )}
       <span className="pdp-bc-sep"> &gt; </span>
