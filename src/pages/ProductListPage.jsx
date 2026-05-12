@@ -52,7 +52,7 @@ function DbCard({ product, onNavigate }) {
       <div className="sp-card-info">
         {product.productCategory && <div className="sp-mall">{product.productCategory}</div>}
         <div className="sp-title">{product.name}</div>
-        <div className="sp-price">{product.minPrice.toLocaleString()}원</div>
+        <div className="sp-price">{(product.minPrice ?? 0).toLocaleString()}원</div>
       </div>
     </div>
   )

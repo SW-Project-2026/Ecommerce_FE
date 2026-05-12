@@ -1,0 +1,469 @@
+/* ══════════ ROOT: 세로 방향 (NavHeader / Body) ══════════ */
+.cl-root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: #F5F7FA;
+  font-family: 'Noto Sans KR', sans-serif;
+}
+
+/* ══════════ NAV HEADER — 전체 너비, 맨 위 흰색 바 ══════════ */
+.cl-nav-header {
+  box-sizing: border-box;
+  width: 100%;
+  height: 64px;
+  background: #FFFFFF;
+  border-bottom: 1px solid #EBEDF0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px 0 0;   /* 우측만 패딩 (로고쪽은 220px 블록이 담당) */
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+/* 로고 블록 — 사이드바와 같은 너비(220px)로 고정 */
+.cl-nav-header-logo {
+  width: 220px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 20px;
+  flex-shrink: 0;
+}
+
+/* 로고 아이콘 (파란 원) */
+.cl-logo-icon {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  background: #1C2E5C;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cl-logo-d {
+  font-family: 'Inter', sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+  color: #FFFFFF;
+  line-height: 1;
+}
+
+.cl-logo-dot {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: #1C2E5C;
+  border: 1.5px solid #FFFFFF;
+  border-radius: 50%;
+  bottom: -2px;
+  right: -2px;
+}
+
+/* 로고 텍스트 */
+.cl-logo-text {
+  font-family: 'Inter', sans-serif;
+  font-weight: 800;
+  font-size: 20px;
+  color: #1C2E5C;
+}
+
+.cl-admin-label {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-weight: 400;
+  font-size: 12px;
+  color: #666666;
+}
+
+/* ══════════ BODY — 사이드바 | 메인 가로 배치 ══════════ */
+.cl-body {
+  display: flex;
+  flex-direction: row;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ══════════ SIDEBAR ══════════ */
+.cl-sidebar {
+  width: 220px;
+  min-height: 100%;
+  background: #21242E;
+  flex-shrink: 0;
+}
+
+.cl-nav {
+  display: flex;
+  flex-direction: column;
+  padding-top: 30px;
+}
+
+.cl-nav-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 40px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-weight: 400;
+  font-size: 13px;
+  color: #99A3B8;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  user-select: none;
+}
+
+.cl-nav-item:hover {
+  background: rgba(79, 110, 247, 0.15);
+  color: #FFFFFF;
+}
+
+.cl-nav-parent-open {
+  background: rgba(79, 110, 247, 0.2);
+  color: #99A3B8;
+}
+
+.cl-nav-parent-open:hover {
+  background: rgba(79, 110, 247, 0.3);
+}
+
+.cl-nav-arrow {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid #99A3B8;
+  border-bottom: 2px solid #99A3B8;
+  transform: rotate(45deg);   /* 닫힘: > 방향 (오른쪽) */
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+
+/* 열림: 아래쪽 화살표 */
+.cl-nav-parent-open .cl-nav-arrow {
+  transform: rotate(225deg);
+}
+
+.cl-nav-sub {
+  padding-left: 52px;
+  font-size: 13px;
+}
+
+.cl-nav-active {
+  background: #4F6EF7 !important;
+  color: #FFFFFF !important;
+}
+
+.cl-nav-active:hover {
+  background: #3d5de0 !important;
+}
+
+/* ══════════ MAIN ══════════ */
+.cl-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ══════════ PAGE HEADER — 흰색 바 (제목 + 버튼) ══════════ */
+.cl-page-header {
+  box-sizing: border-box;
+  width: 100%;
+  height: 72px;
+  background: #FFFFFF;
+  border-bottom: 1px solid #EBEDF0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  flex-shrink: 0;
+}
+
+.cl-page-title {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+  color: #121212;
+  margin: 0 0 4px 0;
+}
+
+.cl-page-sub {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-weight: 400;
+  font-size: 12px;
+  color: #9EA6B5;
+  margin: 0;
+}
+
+.cl-btn-primary {
+  height: 36px;
+  padding: 0 16px;
+  background: #3F76E4;
+  border-radius: 6px;
+  border: none;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  color: #FFFFFF;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.cl-btn-primary:hover {
+  background: #2d5ed0;
+}
+
+/* ══════════ CONTENT — 회색 배경 영역 ══════════ */
+.cl-content {
+  flex: 1;
+  padding: 28px;
+  overflow-y: auto;
+}
+
+/* ══════════ CARD ══════════ */
+.cl-card {
+  background: #FFFFFF;
+  border-radius: 12px;
+  box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+/* ══════════ TOOLBAR ══════════ */
+.cl-toolbar {
+  display: flex;
+  align-items: center;
+  height: 57px;
+  padding: 0 20px;
+  border-bottom: 1px solid #EBEDF0;
+  /* 검색 왼쪽, 탭 가운데, 우측은 공간 */
+  position: relative;
+}
+
+.cl-search-wrap {
+  display: flex;
+  align-items: center;
+  width: 240px;
+  height: 35px;
+  background: #F5F6FA;
+  border-radius: 6px;
+  overflow: visible;
+  flex-shrink: 0;
+}
+
+.cl-search {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 0 12px;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: #333;
+}
+
+.cl-search::placeholder {
+  color: #9EA6B4;
+}
+
+.cl-search-btn {
+  width: 36px;
+  height: 35px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9EA6B5;
+  flex-shrink: 0;
+  overflow: visible;  /* 돋보기 잘림 방지 */
+  padding: 0 10px;
+}
+
+.cl-search-btn:hover {
+  color: #4F6EF7;
+}
+
+/* 탭 — absolute로 가운데 배치 */
+.cl-tabs {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  height: 57px;
+}
+
+.cl-tab {
+  height: 57px;
+  padding: 0 20px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-weight: 400;
+  font-size: 12px;
+  color: #666666;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.cl-tab:hover {
+  color: #4F6EF7;
+}
+
+.cl-tab-active {
+  font-weight: 700;
+  color: #4F6EF7;
+  border-bottom-color: #3F76E4;
+}
+
+/* ══════════ TABLE ══════════ */
+.cl-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.cl-table thead tr {
+  background: #FAFCFF;
+  border-bottom: 1px solid #EBEDF0;
+}
+
+.cl-table th {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  color: #666666;
+  padding: 16px 10px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.cl-table td {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  color: #666666;
+  padding: 16px 10px;
+  text-align: center;
+  border-bottom: 1px solid #F0F2F5;
+  vertical-align: middle;
+}
+
+.cl-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.cl-table tbody tr:hover {
+  background: #FDFEFF;
+}
+
+.cl-row-selected {
+  background: #F0F5FF !important;
+}
+
+.cl-radio {
+  width: 13px;
+  height: 14px;
+  cursor: pointer;
+  accent-color: #3F76E4;
+}
+
+.cl-campaign-id {
+  color: #3F76E4;
+  cursor: pointer;
+}
+
+.cl-campaign-id:hover {
+  text-decoration: underline;
+}
+
+.cl-campaign-name {
+  font-weight: 700 !important;
+  color: #111111 !important;
+}
+
+/* ══════════ BADGES ══════════ */
+.cl-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 10px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.badge-designing  { background: #FEEDD3; color: #EF8C1E; }
+.badge-running    { background: #CFE4F9; color: #405793; }
+.badge-simulated  { background: #C8F3D4; color: #1C9E42; }
+.badge-waiting    { background: #F0F2F5; color: #7A84A0; }
+.badge-paused     { background: #FFF0F0; color: #D94F4F; }
+.badge-ended      { background: #F0F2F5; color: #9AA3B5; }
+
+/* ══════════ PAGINATION ══════════ */
+.cl-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 20px 0 24px;
+  border-top: 1px solid #F0F2F5;
+}
+
+.cl-page-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: #F3F3F3;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  color: #000000;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.cl-page-btn:hover {
+  background: #e0e0e0;
+}
+
+.cl-page-active {
+  background: #3F76E4;
+  color: #FFFFFF;
+  font-weight: 700;
+}
+
+.cl-page-next {
+  font-size: 15px;
+  color: #9AA3B5;
+}
+
+.cl-page-prev {
+  font-size: 15px;
+  color: #9AA3B5;
+}
+
+.cl-page-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.cl-table-state {
+  text-align: center;
+  padding: 40px 0;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 13px;
+  color: #9EA6B5;
+}
+
+.cl-table-error {
+  color: #D94F4F;
+}

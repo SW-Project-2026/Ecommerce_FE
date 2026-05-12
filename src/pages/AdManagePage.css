@@ -1,0 +1,332 @@
+/* ── MAIN ── */
+.ad-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #F5F7FA;
+  min-width: 0;
+}
+
+/* ── PAGE HEADER ── */
+.ad-page-header {
+  box-sizing: border-box;
+  width: 100%;
+  height: 72px;
+  background: #FFFFFF;
+  border-bottom: 1px solid #EBEDF0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  flex-shrink: 0;
+}
+
+.ad-page-title {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+  color: #121212;
+  margin: 0 0 4px 0;
+}
+
+.ad-page-sub {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-weight: 400;
+  font-size: 12px;
+  color: #9EA6B5;
+  margin: 0;
+}
+
+.ad-btn-primary {
+  height: 36px;
+  padding: 0 18px;
+  background: #4F6EF7;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  color: #FFFFFF;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.ad-btn-primary:hover { background: #3d5de0; }
+
+/* ── CONTENT ── */
+.ad-content {
+  flex: 1;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+}
+
+/* ── STAT CARDS ── */
+.ad-stat-row {
+  display: flex;
+  gap: 16px;
+}
+
+.ad-stat-card {
+  flex: 1;
+  background: #FFFFFF;
+  border-radius: 12px;
+  box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.05);
+  padding: 18px 20px 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.ad-stat-bar {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 3px;
+  border-radius: 12px 12px 0 0;
+}
+
+.ad-stat-label {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  color: #9EA6B5;
+  margin: 0 0 6px 0;
+}
+
+.ad-stat-value {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 22px;
+  color: #121212;
+  margin: 0 0 6px 0;
+}
+
+.ad-stat-sub {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 11px;
+  margin: 0;
+}
+
+/* ── TABLE CARD ── */
+.ad-table-card {
+  background: #FFFFFF;
+  border-radius: 12px;
+  box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+/* ── TAB ROW ── */
+.ad-tab-row {
+  padding: 0 20px;
+  border-bottom: 1px solid #EBEDF0;
+  display: flex;
+}
+
+.ad-tab-active {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  color: #4F6EF7;
+  padding: 16px 4px 14px;
+  border-bottom: 3px solid #4F6EF7;
+  cursor: default;
+}
+
+/* ── TABLE ── */
+.ad-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ad-table thead tr {
+  background: #F7FAFF;
+  border-bottom: 1px solid #EBEDF0;
+}
+
+.ad-table th {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  color: #9EA6B5;
+  padding: 12px 16px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.ad-table th:nth-child(4),
+.ad-table th:nth-child(5),
+.ad-table th:nth-child(6),
+.ad-table th:nth-child(7),
+.ad-table th:nth-child(8) { text-align: center; }
+
+.ad-table td {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 12px;
+  color: #121212;
+  padding: 14px 16px;
+  border-bottom: 1px solid #EBEDF0;
+  vertical-align: middle;
+}
+
+.ad-table tbody tr:last-child td { border-bottom: none; }
+.ad-table tbody tr:hover { background: #FDFEFF; }
+
+.ad-row-alt { background: #FAFCFF; }
+.ad-row-alt:hover { background: #F5F8FF !important; }
+
+/* ── CELL STYLES ── */
+.ad-td-name {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ad-name {
+  font-weight: 700;
+  color: #121212;
+}
+
+.ad-sub {
+  font-size: 10px;
+  color: #9EA6B5;
+}
+
+.ad-td-trigger { color: #666666 !important; font-size: 11px !important; }
+.ad-td-num     { text-align: center; font-family: 'Inter', sans-serif !important; }
+.ad-td-ctr     { text-align: center; font-family: 'Inter', sans-serif !important; font-weight: 700 !important; color: #4F6EF7 !important; }
+
+/* ── TYPE BADGES ── */
+.ad-type-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 22px;
+  border-radius: 4px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.ad-type-push   { background: #E6F0FF; color: #4F6EF7; }
+.ad-type-kakao  { background: #FFF7ED; color: #A66B0F; }
+.ad-type-banner { background: #EDEDFF; color: #4738B8; }
+
+/* ── STATUS BADGES ── */
+.ad-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 22px;
+  border-radius: 4px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.ad-status-active { background: #EDFAED; color: #1C9E42; }
+.ad-status-paused { background: #F2F2F2; color: #666666; }
+
+/* ── ACTION BUTTONS ── */
+.ad-action-btns {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+
+.ad-btn-edit {
+  height: 24px;
+  padding: 0 12px;
+  background: #F2F2F2;
+  border: none;
+  border-radius: 4px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  color: #666666;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.ad-btn-edit:hover { background: #e0e0e0; }
+
+.ad-btn-stop {
+  height: 24px;
+  padding: 0 12px;
+  background: #FFEDED;
+  border: none;
+  border-radius: 4px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  color: #B82B2B;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.ad-btn-stop:hover { background: #ffd5d5; }
+
+.ad-btn-resume {
+  height: 24px;
+  padding: 0 12px;
+  background: #EDFAED;
+  border: none;
+  border-radius: 4px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  color: #1C9E42;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.ad-btn-resume:hover { background: #d5f5d5; }
+
+/* ── LIMIT BAR ── */
+.ad-limit-bar {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  padding: 18px 20px;
+  border-top: 1px solid #EBEDF0;
+  background: #FFFFFF;
+}
+
+.ad-limit-title {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  color: #121212;
+  white-space: nowrap;
+}
+
+.ad-limit-item {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 12px;
+  color: #666666;
+  white-space: nowrap;
+}
+
+.ad-btn-setting {
+  margin-left: auto;
+  height: 32px;
+  padding: 0 18px;
+  background: #F2F2F2;
+  border: none;
+  border-radius: 6px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  color: #666666;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.ad-btn-setting:hover { background: #e0e0e0; }

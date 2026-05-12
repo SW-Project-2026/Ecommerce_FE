@@ -1,0 +1,326 @@
+/* ── MAIN ── */
+.db-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #0D0F14;
+  min-width: 0;
+}
+
+/* ── PAGE HEADER ── */
+.db-page-header {
+  box-sizing: border-box;
+  width: 100%;
+  height: 64px;
+  background: #151820;
+  border-bottom: 1px solid #252A38;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  flex-shrink: 0;
+}
+
+.db-page-title {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  color: #F0F2FF;
+  margin: 0 0 3px 0;
+}
+
+.db-page-sub {
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  font-size: 11px;
+  color: #8892AA;
+  margin: 0;
+}
+
+/* LIVE 뱃지 */
+.db-live-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #0D2010;
+  border-radius: 12px;
+  padding: 5px 14px;
+  transition: opacity 0.4s;
+}
+
+.db-live-on { opacity: 1; }
+.db-live-badge:not(.db-live-on) { opacity: 0.5; }
+
+.db-live-dot {
+  width: 7px;
+  height: 7px;
+  background: #22C55E;
+  border-radius: 50%;
+}
+
+.db-live-text {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 10px;
+  color: #22C55E;
+  letter-spacing: 0.5px;
+}
+
+/* ── CONTENT ── */
+.db-content {
+  flex: 1;
+  padding: 20px 24px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+}
+
+/* ── STAT CARDS ── */
+.db-stat-row {
+  display: flex;
+  gap: 12px;
+}
+
+.db-stat-card {
+  flex: 1;
+  background: #1A1E2A;
+  border-radius: 12px;
+  padding: 16px 16px 14px;
+  position: relative;
+  overflow: hidden;
+}
+
+.db-stat-bar {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 3px;
+  border-radius: 12px 12px 0 0;
+}
+
+.db-stat-label {
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  font-size: 10px;
+  color: #8892AA;
+  margin: 0 0 8px 0;
+}
+
+.db-stat-value {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 22px;
+  color: #F0F2FF;
+  margin: 0 0 6px 0;
+  line-height: 1.2;
+}
+
+.db-stat-sub {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  color: #22C55E;
+  margin: 0;
+}
+
+/* ── CHART ROW ── */
+.db-chart-row {
+  display: flex;
+  gap: 16px;
+}
+
+/* ── CARD BASE ── */
+.db-card {
+  background: #1A1E2A;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.db-card-wide   { flex: 1.7; min-width: 0; }
+.db-card-narrow { flex: 1;   min-width: 0; }
+.db-card-full   { width: 100%; }
+
+.db-card-head {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.db-card-title {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  color: #F0F2FF;
+}
+
+.db-card-sub {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  color: #8892AA;
+}
+
+/* ── BAR CHART ── */
+.db-bar-chart {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+  align-items: flex-end;
+}
+
+.db-bar-y-labels {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 150px;
+  padding-bottom: 18px;
+}
+
+.db-y-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 9px;
+  color: #4B5468;
+  text-align: right;
+  width: 28px;
+}
+
+.db-bar-area {
+  flex: 1;
+  display: flex;
+  gap: 6px;
+  align-items: flex-end;
+  position: relative;
+}
+
+/* 가로 그리드 라인 */
+.db-bar-area::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 18px 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    #252A38 0px, #252A38 1px,
+    transparent 1px, transparent 25%
+  );
+  pointer-events: none;
+}
+
+.db-bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.db-bar-track {
+  width: 100%;
+  height: 130px;
+  display: flex;
+  align-items: flex-end;
+  position: relative;
+}
+
+.db-bar-fill {
+  width: 100%;
+  background: rgba(79, 110, 247, 0.3);
+  border-radius: 3px 3px 0 0;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  transition: height 0.6s ease;
+}
+
+.db-bar-dot {
+  width: 6px;
+  height: 6px;
+  background: #4F6EF7;
+  border-radius: 3px;
+  position: absolute;
+  top: -3px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.db-bar-time {
+  font-family: 'Inter', sans-serif;
+  font-size: 8px;
+  color: #4B5468;
+  white-space: nowrap;
+}
+
+/* ── DONUT AREA ── */
+.db-donut-area {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 0;
+}
+
+.db-donut-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.db-legend-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.db-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.db-legend-text {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  color: #8892AA;
+}
+
+/* ── CAMPAIGN TABLE ── */
+.db-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.db-table thead tr {
+  border-bottom: 1px solid #252A38;
+}
+
+.db-table th {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 10px;
+  color: #8892AA;
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.db-table td {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  color: #8892AA;
+  padding: 10px 12px;
+  border-bottom: 1px solid #252A38;
+}
+
+.db-table tbody tr:last-child td { border-bottom: none; }
+
+.db-table tbody tr:hover td { background: #1f2436; }
+
+.db-td-name {
+  font-weight: 600 !important;
+  color: #F0F2FF !important;
+}
+
+.db-td-coupon {
+  color: #22C55E !important;
+  font-weight: 600 !important;
+}

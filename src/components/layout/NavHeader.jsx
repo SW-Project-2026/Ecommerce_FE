@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { clickSearchButton } from '../../snippets/clickSearchButton' // 추가
 
 export default function NavHeader({ onNavigate, cartCount = 0, auth, onLogout }) {
   const [query, setQuery] = useState('')
@@ -6,6 +7,7 @@ export default function NavHeader({ onNavigate, cartCount = 0, auth, onLogout })
   function handleSearch() {
     const trimmed = query.trim()
     if (!trimmed) return
+    clickSearchButton(trimmed) // 추가
     onNavigate('search', trimmed)
   }
 
