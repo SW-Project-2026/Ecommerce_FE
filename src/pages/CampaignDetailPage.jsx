@@ -43,6 +43,17 @@ const SEGMENT_DISPLAY_MAP = {
   NEW: "신규고객유치", VIP: "VIP 고객", GENERAL: "일반 고객", DORMANT: "휴면 고객", ALL: "전체",
 };
 
+const CYCLE_DISPLAY_MAP = { DAILY: "매일", WEEKLY: "매주", MONTHLY: "매달" };
+const CYCLE_MAP = { "매일": "DAILY", "매주": "WEEKLY", "매달": "MONTHLY" };
+const WEEKDAY_DISPLAY_MAP = {
+  MONDAY: "월", TUESDAY: "화", WEDNESDAY: "수",
+  THURSDAY: "목", FRIDAY: "금", SATURDAY: "토", SUNDAY: "일",
+};
+const WEEKDAY_MAP = {
+  "월": "MONDAY", "화": "TUESDAY", "수": "WEDNESDAY",
+  "목": "THURSDAY", "금": "FRIDAY", "토": "SATURDAY", "일": "SUNDAY",
+};
+
 const STATUS_DISPLAY = {
   IN_PROGRESS: { cls: "cdp-badge-running", label: "수행중" },
   PAUSED:      { cls: "cdp-badge-paused",  label: "일시정지" },
@@ -77,39 +88,20 @@ const MONTHDAY_OPTIONS    = Array.from({ length: 31 }, (_, i) => String(i + 1));
 
 let filterIdCounter = 100;
 const newFilter = () => ({
-  id: ++filterIdCounter, event: "", field: "", dataType: "", operator: "", value: "", period: "7",
+  id: ++filterIdCounter, eventId: null, event: "", field: "", dataType: "", operator: "", value: "", period: "7",
 });
 
 function today() {
   return new Date().toISOString().split("T")[0];
 }
 
-function toBatchCycle(schedule) {
-  const h = parseInt(schedule.hour, 10);
-  const m = parseInt(schedule.minute, 10);
-  const totalMinutes = h * 60 + m;
-  switch (schedule.cycle) {
-    case "매일": return totalMinutes + 24 * 60;
-    case "매주": return totalMinutes + 7 * 24 * 60;
-    case "매달": return totalMinutes + 30 * 24 * 60;
-    default:     return totalMinutes;
-  }
-}
-
-// batchCycle 숫자를 schedule 객체로 역산
-function fromBatchCycle(batchCycle) {
-  if (!batchCycle) return { cycle: "매일", hour: "09", minute: "00", dayOfWeek: "월", dayOfMonth: "1" };
-
-  if (batchCycle > 30 * 24 * 60) {
-    const remaining = batchCycle - 30 * 24 * 60;
-    return { cycle: "매달", hour: String(Math.floor(remaining / 60)).padStart(2, "0"), minute: String(remaining % 60).padStart(2, "0"), dayOfWeek: "월", dayOfMonth: "1" };
-  } else if (batchCycle > 7 * 24 * 60) {
-    const remaining = batchCycle - 7 * 24 * 60;
-    return { cycle: "매주", hour: String(Math.floor(remaining / 60)).padStart(2, "0"), minute: String(remaining % 60).padStart(2, "0"), dayOfWeek: "월", dayOfMonth: "1" };
-  } else {
-    const remaining = batchCycle - 24 * 60;
-    return { cycle: "매일", hour: String(Math.floor(remaining / 60)).padStart(2, "0"), minute: String(remaining % 60).padStart(2, "0"), dayOfWeek: "월", dayOfMonth: "1" };
-  }
+function initBatchSchedule(campaign) {
+  const cycle      = CYCLE_DISPLAY_MAP[campaign?.batchCycle] ?? "매일";
+  const timeStr    = campaign?.batchTime ?? "09:00";
+  const [hour, minute] = timeStr.split(":").map(s => s.padStart(2, "0"));
+  const dayOfWeek  = WEEKDAY_DISPLAY_MAP[campaign?.batchDayOfWeek] ?? "월";
+  const dayOfMonth = campaign?.batchDayOfMonth ? String(campaign.batchDayOfMonth) : "1";
+  return { cycle, hour, minute: minute ?? "00", dayOfWeek, dayOfMonth };
 }
 
 function DeleteModal({ campaignName, onConfirm, onCancel }) {
@@ -195,25 +187,35 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
   const [desc,      setDesc]      = useState(campaign?.description ?? "");
   const [status,    setStatus]    = useState(campaign?.status ?? "IN_PROGRESS");
 
-  const initFilters = (campaign?.filters ?? []).map((f, i) => ({
-    id:       100 + i,
-    event:    f.eventName  ?? "",
-    field:    f.fieldName  ?? "",
-    dataType: f.fieldType  ?? "",
-    operator: OPERATOR_DISPLAY_MAP[f.operator] ?? f.operator ?? "",
-    value:    f.value      ?? "",
-    period:   String(f.periodDays ?? 7),
-  }));
-  const [filters,     setFilters]     = useState(initFilters);
-  const [filterLogic, setFilterLogic] = useState(campaign?.filterLogicalOperator ?? "AND");
+  // filters는 events 로드 후 useEffect에서 eventId 포함해서 설정
+  const [filters,     setFilters]     = useState([]);
+  const [filterLogic, setFilterLogic] = useState(campaign?.filterLogicalOperator ?? campaign?.logicalOperator ?? "AND");
   const [targetCount, setTargetCount] = useState(null);
+
+  // events 로드 완료 후 필터에 eventId 매핑
+  useEffect(() => {
+    if (events.length === 0) return;
+    const mapped = (campaign?.filters ?? []).map((f, i) => {
+      const ev = events.find(e => e.eventName === f.eventName);
+      return {
+        id:       100 + i,
+        eventId:  ev?.eventId ?? null,
+        event:    f.eventName  ?? "",
+        field:    f.fieldName  ?? "",
+        dataType: f.fieldType  ?? "",
+        operator: OPERATOR_DISPLAY_MAP[f.operator] ?? f.operator ?? "",
+        value:    f.value      ?? "",
+        period:   String(f.periodDays ?? 7),
+      };
+    });
+    setFilters(mapped);
+  }, [events]);
 
   const [rewardTab,       setRewardTab]       = useState("쿠폰");
   const [selectedCoupons, setSelectedCoupons] = useState([1]);
 
   const [processType,   setProcessType]   = useState(campaign?.collectionType === "BATCH" ? "batch" : "realtime");
-  // batchCycle 역산해서 초기값 설정
-  const [batchSchedule, setBatchSchedule] = useState(fromBatchCycle(campaign?.batchCycle));
+  const [batchSchedule, setBatchSchedule] = useState(initBatchSchedule(campaign));
   const updateBatch = (k, v) => setBatchSchedule(p => ({ ...p, [k]: v }));
 
   const [saving,   setSaving]   = useState(false);
@@ -226,7 +228,13 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
     setFilters(p => p.map(f => {
       if (f.id !== id) return f;
       const u = { ...f, [key]: val };
-      if (key === "event") { u.field = ""; u.dataType = ""; u.operator = ""; }
+      if (key === "event") {
+        const ev = events.find(e => e.eventName === val);
+        u.eventId  = ev?.eventId ?? null;
+        u.field    = "";
+        u.dataType = "";
+        u.operator = "";
+      }
       if (key === "field") {
         const fields  = eventFieldMap[u.event] ?? [];
         const matched = fields.find(fld => fld.fieldName === val);
@@ -244,6 +252,11 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
     setStartDate(val);
     if (endDate < val) setEndDate(val);
   };
+
+  function getBatchCycle()      { return CYCLE_MAP[batchSchedule.cycle] ?? "DAILY"; }
+  function getBatchTime()       { return `${batchSchedule.hour}:${batchSchedule.minute}`; }
+  function getBatchDayOfWeek()  { return batchSchedule.cycle === "매주" ? (WEEKDAY_MAP[batchSchedule.dayOfWeek] ?? null) : null; }
+  function getBatchDayOfMonth() { return batchSchedule.cycle === "매달" ? parseInt(batchSchedule.dayOfMonth, 10) : null; }
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -264,7 +277,7 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
     setApiError(null);
     try {
       const apiFilters = filters.map(f => ({
-        eventKey:       f.event,
+        eventId:        f.eventId,
         eventFieldName: f.field,
         operator:       OPERATOR_MAP[f.operator] ?? f.operator,
         value:          f.value,
@@ -279,8 +292,10 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
         startedAt:             startDate,
         endedAt:               endDate,
         collectionType:        COLLECTION_TYPE_MAP[processType],
-        batchCycle:            processType === "batch" ? toBatchCycle(batchSchedule) : null,
-        isDuplicate:           false,
+        batchCycle:            processType === "batch" ? getBatchCycle()      : null,
+        batchTime:             processType === "batch" ? getBatchTime()       : null,
+        batchDayOfWeek:        processType === "batch" ? getBatchDayOfWeek()  : null,
+        batchDayOfMonth:       processType === "batch" ? getBatchDayOfMonth() : null,
         filterLogicalOperator: filterLogic,
         filters:               apiFilters,
       });

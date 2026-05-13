@@ -20,7 +20,10 @@ export default function LoginPage({ onNavigate, onLogin }) {
     try {
       const data = await login({ loginId, password })
       onLogin(data)
-      onNavigate('home')
+      // ADMIN이 아닌 경우에만 home으로 이동 (ADMIN은 handleLogin에서 처리)
+      if (data.role !== 'ADMIN') {
+        onNavigate('home')
+      }
     } catch (err) {
       setError(err.message)
     } finally {

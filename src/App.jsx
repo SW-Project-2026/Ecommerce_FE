@@ -35,6 +35,12 @@ export default function App() {
     localStorage.setItem('accessToken', data.accessToken)
     localStorage.setItem('role', data.role)
     setAuth({ token: data.accessToken, role: data.role })
+
+    // ADMIN이면 어드민 페이지로 이동
+    if (data.role === 'ADMIN') {
+      window.location.href = '/#admin'
+      window.location.reload()
+    }
   }
 
   function handleLogout() {

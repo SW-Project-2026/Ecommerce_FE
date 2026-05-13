@@ -10,8 +10,6 @@ function authHeaders() {
 }
 
 // ── 캠페인 목록 조회 ──
-// status, campaignGoalType, customerSegment, collectionType 은 모두 선택사항
-// null/undefined/빈문자열이면 파라미터 자체를 보내지 않음 (BE enum 파싱 에러 방지)
 export async function campaignList({ status, campaignGoalType, customerSegment, collectionType } = {}) {
   const params = new URLSearchParams()
   if (status)           params.append('status', status)
@@ -31,6 +29,10 @@ export async function campaignList({ status, campaignGoalType, customerSegment, 
 }
 
 // ── 캠페인 단건 조회 ──
+// response: campaignId, campaignName, description, campaignGoalType, customerSegment,
+//           status, collectionType, batchCycle, batchTime, batchDayOfWeek, batchDayOfMonth,
+//           isDuplicate, startedAt, endedAt, createdBy, createdAt, logicalOperator,
+//           filters[{ filterId, eventName, fieldName, fieldType, operator, value, periodDays, logicalOperator }]
 export async function campaignDetail({ campaignId }) {
   const res = await fetch(`${BASE}/api/campaigns/${campaignId}`, {
     method: 'GET',
@@ -43,18 +45,24 @@ export async function campaignDetail({ campaignId }) {
 }
 
 // ── 캠페인 생성 ──
-// filters 배열 각 항목: { eventKey, eventFieldName, operator, value, periodDays }
-// filterLogicalOperator: "AND" | "OR" (최상위 필드, 모든 필터에 공통 적용)
+// batchCycle: "DAILY" | "WEEKLY" | "MONTHLY"
+// batchTime: "HH:mm"
+// batchDayOfWeek: "MONDAY" | "TUESDAY" | ... (WEEKLY일 때만)
+// batchDayOfMonth: 1~31 (MONTHLY일 때만)
+// logicalOperator: "AND" | "OR"
+// filters[]: { eventId, eventFieldName, operator, value, periodDays }
 export async function campaignCreate({
   campaignName,
   description,
   campaignGoalType,
-  customerSegment,    // 오타 수정: customerSegement → customerSegment
+  customerSegment,
   startedAt,
   endedAt,
   collectionType,
   batchCycle,
-  isDuplicate,
+  batchTime,
+  batchDayOfWeek,
+  batchDayOfMonth,
   filterLogicalOperator,
   filters,
 }) {
@@ -69,8 +77,10 @@ export async function campaignCreate({
       startedAt,
       endedAt,
       collectionType,
-      batchCycle,
-      isDuplicate,
+      batchCycle:       batchCycle     || null,
+      batchTime:        batchTime      || null,
+      batchDayOfWeek:   batchDayOfWeek || null,
+      batchDayOfMonth:  batchDayOfMonth || null,
       filterLogicalOperator,
       filters,
     }),
@@ -82,6 +92,8 @@ export async function campaignCreate({
 }
 
 // ── 캠페인 수정 ──
+// batchCycle, batchTime, batchDayOfWeek, batchDayOfMonth 생성과 동일
+// filters[]: { eventId, eventFieldName, operator, value, logicalOperator, periodDays }
 export async function campaignUpdate({
   campaignId,
   campaignName,
@@ -92,7 +104,9 @@ export async function campaignUpdate({
   endedAt,
   collectionType,
   batchCycle,
-  isDuplicate,
+  batchTime,
+  batchDayOfWeek,
+  batchDayOfMonth,
   filterLogicalOperator,
   filters,
 }) {
@@ -107,8 +121,10 @@ export async function campaignUpdate({
       startedAt,
       endedAt,
       collectionType,
-      batchCycle,
-      isDuplicate,
+      batchCycle:       batchCycle     || null,
+      batchTime:        batchTime      || null,
+      batchDayOfWeek:   batchDayOfWeek || null,
+      batchDayOfMonth:  batchDayOfMonth || null,
       filterLogicalOperator,
       filters,
     }),
@@ -121,7 +137,7 @@ export async function campaignUpdate({
 }
 
 // ── 캠페인 상태 변경 ──
-// status: "PENDING" | "IN_PROGRESS" | "PAUSED" | "ENDED"
+// status: "IN_PROGRESS" | "PAUSED" | "ENDED"
 export async function campaignStatusUpdate({ campaignId, status }) {
   const res = await fetch(
     `${BASE}/api/campaigns/${campaignId}/status?status=${status}`,
@@ -138,7 +154,6 @@ export async function campaignStatusUpdate({ campaignId, status }) {
 }
 
 // ── 캠페인 삭제 ──
-// BE가 204 No Content를 반환하므로 json() 파싱 없음
 export async function campaignDelete({ campaignId }) {
   const res = await fetch(`${BASE}/api/campaigns/${campaignId}`, {
     method: 'DELETE',
@@ -146,7 +161,6 @@ export async function campaignDelete({ campaignId }) {
   })
   if (res.status === 404) throw new Error('존재하지 않는 캠페인')
   if (!res.ok) {
-    // 204가 아닌 에러의 경우에만 json 파싱 시도
     try {
       const json = await res.json()
       throw new Error(json.message || '캠페인 삭제 실패')
@@ -154,5 +168,4 @@ export async function campaignDelete({ campaignId }) {
       throw new Error('캠페인 삭제 실패')
     }
   }
-  // 204 No Content - 반환값 없음
 }
