@@ -63,8 +63,8 @@ const COUPONS = [
   { id: 3, name: "무료 배송 쿠폰",      code: "FREESHIP",  discount: "배송비 무료",   expiry: "~ 2025-05-15" },
   { id: 4, name: "여름 시즌 특별 할인", code: "SUMMER10",  discount: "10,000원 할인", expiry: "~ 2025-05-15" },
 ];
-const CAT1_OPTIONS = ["조기정착", "이탈방지", "재구매"];
-const CAT2_OPTIONS = {
+const CAT1_OPTIONS    = ["조기정착", "이탈방지", "재구매"];
+const CAT2_OPTIONS    = {
   "조기정착": ["신규고객유치", "휴면 고객"],
   "이탈방지": ["VIP 고객", "일반 고객"],
   "재구매":   ["일반 고객", "휴면 고객"],
@@ -80,6 +80,10 @@ const newFilter = () => ({
   id: ++filterIdCounter, event: "", field: "", dataType: "", operator: "", value: "", period: "7",
 });
 
+function today() {
+  return new Date().toISOString().split("T")[0];
+}
+
 function toBatchCycle(schedule) {
   const h = parseInt(schedule.hour, 10);
   const m = parseInt(schedule.minute, 10);
@@ -89,6 +93,22 @@ function toBatchCycle(schedule) {
     case "매주": return totalMinutes + 7 * 24 * 60;
     case "매달": return totalMinutes + 30 * 24 * 60;
     default:     return totalMinutes;
+  }
+}
+
+// batchCycle 숫자를 schedule 객체로 역산
+function fromBatchCycle(batchCycle) {
+  if (!batchCycle) return { cycle: "매일", hour: "09", minute: "00", dayOfWeek: "월", dayOfMonth: "1" };
+
+  if (batchCycle > 30 * 24 * 60) {
+    const remaining = batchCycle - 30 * 24 * 60;
+    return { cycle: "매달", hour: String(Math.floor(remaining / 60)).padStart(2, "0"), minute: String(remaining % 60).padStart(2, "0"), dayOfWeek: "월", dayOfMonth: "1" };
+  } else if (batchCycle > 7 * 24 * 60) {
+    const remaining = batchCycle - 7 * 24 * 60;
+    return { cycle: "매주", hour: String(Math.floor(remaining / 60)).padStart(2, "0"), minute: String(remaining % 60).padStart(2, "0"), dayOfWeek: "월", dayOfMonth: "1" };
+  } else {
+    const remaining = batchCycle - 24 * 60;
+    return { cycle: "매일", hour: String(Math.floor(remaining / 60)).padStart(2, "0"), minute: String(remaining % 60).padStart(2, "0"), dayOfWeek: "월", dayOfMonth: "1" };
   }
 }
 
@@ -192,7 +212,8 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
   const [selectedCoupons, setSelectedCoupons] = useState([1]);
 
   const [processType,   setProcessType]   = useState(campaign?.collectionType === "BATCH" ? "batch" : "realtime");
-  const [batchSchedule, setBatchSchedule] = useState({ cycle: "매일", hour: "09", minute: "00", dayOfWeek: "월", dayOfMonth: "1" });
+  // batchCycle 역산해서 초기값 설정
+  const [batchSchedule, setBatchSchedule] = useState(fromBatchCycle(campaign?.batchCycle));
   const updateBatch = (k, v) => setBatchSchedule(p => ({ ...p, [k]: v }));
 
   const [saving,   setSaving]   = useState(false);
@@ -218,6 +239,11 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
 
   const toggleCoupon     = id => setSelectedCoupons(p => p.includes(id) ? p.filter(c => c !== id) : [...p, id]);
   const handleCat1Change = v  => { setCat1(v); setCat2(CAT2_OPTIONS[v]?.[0] ?? ""); };
+
+  const handleStartDateChange = (val) => {
+    setStartDate(val);
+    if (endDate < val) setEndDate(val);
+  };
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -345,9 +371,9 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
             <label className="cdp-label">수행 일자</label>
             {isReadOnly ? <span className="cdp-value">{startDate} ~ {endDate}</span>
               : <>
-                  <input type="date" className="cdp-input cdp-input-date" value={startDate} onChange={e => setStartDate(e.target.value)} />
+                  <input type="date" className="cdp-input cdp-input-date" value={startDate} min={today()} onChange={e => handleStartDateChange(e.target.value)} />
                   <span className="cdp-tilde">~</span>
-                  <input type="date" className="cdp-input cdp-input-date" value={endDate} onChange={e => setEndDate(e.target.value)} />
+                  <input type="date" className="cdp-input cdp-input-date" value={endDate} min={startDate} onChange={e => setEndDate(e.target.value)} />
                 </>}
           </div>
           <div className="cdp-field-col">
@@ -532,14 +558,14 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
               <div className="cdp-batch-group">
                 <span className="cdp-batch-label">주기</span>
                 <select className="cdp-batch-select" value={batchSchedule.cycle} onChange={e => updateBatch("cycle", e.target.value)} disabled={isReadOnly}>
-                  {BATCH_CYCLE_OPTIONS.map(o => <option key={o}>{o}</option>)}
+                  {BATCH_CYCLE_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
                 </select>
               </div>
               {batchSchedule.cycle === "매주" && (
                 <div className="cdp-batch-group">
                   <span className="cdp-batch-label">요일</span>
                   <select className="cdp-batch-select" value={batchSchedule.dayOfWeek} onChange={e => updateBatch("dayOfWeek", e.target.value)} disabled={isReadOnly}>
-                    {WEEKDAY_OPTIONS.map(d => <option key={d}>{d}요일</option>)}
+                    {WEEKDAY_OPTIONS.map(d => <option key={d} value={d}>{d}요일</option>)}
                   </select>
                 </div>
               )}
@@ -547,20 +573,20 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
                 <div className="cdp-batch-group">
                   <span className="cdp-batch-label">날짜</span>
                   <select className="cdp-batch-select" value={batchSchedule.dayOfMonth} onChange={e => updateBatch("dayOfMonth", e.target.value)} disabled={isReadOnly}>
-                    {MONTHDAY_OPTIONS.map(d => <option key={d}>{d}일</option>)}
+                    {MONTHDAY_OPTIONS.map(d => <option key={d} value={d}>{d}일</option>)}
                   </select>
                 </div>
               )}
               <div className="cdp-batch-group">
                 <span className="cdp-batch-label">시</span>
                 <select className="cdp-batch-select" value={batchSchedule.hour} onChange={e => updateBatch("hour", e.target.value)} disabled={isReadOnly}>
-                  {HOUR_OPTIONS.map(h => <option key={h}>{h}시</option>)}
+                  {HOUR_OPTIONS.map(h => <option key={h} value={h}>{h}시</option>)}
                 </select>
               </div>
               <div className="cdp-batch-group">
                 <span className="cdp-batch-label">분</span>
                 <select className="cdp-batch-select" value={batchSchedule.minute} onChange={e => updateBatch("minute", e.target.value)} disabled={isReadOnly}>
-                  {MINUTE_OPTIONS.map(m => <option key={m}>{m}분</option>)}
+                  {MINUTE_OPTIONS.map(m => <option key={m} value={m}>{m}분</option>)}
                 </select>
               </div>
             </div>

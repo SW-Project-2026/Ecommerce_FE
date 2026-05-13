@@ -13,7 +13,7 @@ export const clickSearchButton = async (query, userId = null) => {
       headers: { 'Content-Type': 'application/json' }, // JSON 형식으로 전송
       body: JSON.stringify({
         event_name: 'search_button_click', // 이벤트 이름
-        keyword: query, // 검색어
+        searchKeyword: query, // 검색어
         user_id: userId, // 유저 ID (비로그인시 null)
         event_timestamp: new Date().toISOString() // 버튼 클릭 시간
       })

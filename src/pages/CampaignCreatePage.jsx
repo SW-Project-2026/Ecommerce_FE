@@ -60,6 +60,9 @@ const CAT2_OPTIONS = {
   "재구매":   ["일반 고객", "휴면 고객"],
 };
 
+const HOUR_OPTIONS   = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"));
+const MINUTE_OPTIONS = ["00", "10", "20", "30", "40", "50"];
+
 let filterIdCounter = 0;
 const newFilter = () => ({
   id: ++filterIdCounter,
@@ -83,16 +86,19 @@ function toBatchCycle(schedule) {
   }
 }
 
+// 오늘 날짜를 YYYY-MM-DD 형식으로 반환
+function today() {
+  return new Date().toISOString().split("T")[0];
+}
+
 export default function CampaignCreatePage({ onNavigate }) {
-  // ── 기본 정보 ──
   const [name,      setName]      = useState("");
   const [cat1,      setCat1]      = useState("조기정착");
   const [cat2,      setCat2]      = useState("신규고객유치");
-  const [startDate, setStartDate] = useState("2026-04-16");
-  const [endDate,   setEndDate]   = useState("2026-04-30");
+  const [startDate, setStartDate] = useState(today());
+  const [endDate,   setEndDate]   = useState(today());
   const [desc,      setDesc]      = useState("");
 
-  // ── 이벤트 API 데이터 ──
   const [events,        setEvents]        = useState([]);
   const [eventsLoading, setEventsLoading] = useState(false);
 
@@ -109,12 +115,10 @@ export default function CampaignCreatePage({ onNavigate }) {
     return acc;
   }, {});
 
-  // ── 필터링 ──
   const [filters,     setFilters]     = useState([]);
   const [filterLogic, setFilterLogic] = useState("AND");
   const [targetCount, setTargetCount] = useState(null);
 
-  // ── 리워드: 탭 + 단일 선택 ──
   const [rewardTab,      setRewardTab]      = useState("쿠폰");
   const [selectedReward, setSelectedReward] = useState({ type: null, id: null });
 
@@ -131,18 +135,15 @@ export default function CampaignCreatePage({ onNavigate }) {
     }
   };
 
-  // ── 처리방식 ──
   const [processType,   setProcessType]   = useState("realtime");
   const [batchSchedule, setBatchSchedule] = useState({
     cycle: "매일", hour: "09", minute: "00", dayOfWeek: "월", dayOfMonth: "1",
   });
   const updateBatch = (key, val) => setBatchSchedule(prev => ({ ...prev, [key]: val }));
 
-  // ── API 상태 ──
   const [saving,    setSaving]    = useState(false);
   const [saveError, setSaveError] = useState(null);
 
-  // ── 필터 조작 ──
   const addFilter    = () => setFilters(prev => [...prev, newFilter()]);
   const removeFilter = (id) => setFilters(prev => prev.filter(f => f.id !== id));
   const updateFilter = (id, key, val) => {
@@ -166,7 +167,11 @@ export default function CampaignCreatePage({ onNavigate }) {
 
   const handleCat1Change = (v) => { setCat1(v); setCat2(CAT2_OPTIONS[v]?.[0] ?? ""); };
 
-  // ── 저장하기 ──
+  const handleStartDateChange = (val) => {
+    setStartDate(val);
+    if (endDate < val) setEndDate(val);
+  };
+
   const handleSave = async () => {
     setSaving(true);
     setSaveError(null);
@@ -211,7 +216,7 @@ export default function CampaignCreatePage({ onNavigate }) {
         </div>
       </div>
 
-      {/* ══════════ 기본 정보 입력 ══════════ */}
+      {/* 기본 정보 입력 */}
       <div className="cc-section">
         <div className="cc-section-head">기본 정보 입력</div>
         <div className="cc-section-body">
@@ -233,9 +238,9 @@ export default function CampaignCreatePage({ onNavigate }) {
 
           <div className="cc-field-row">
             <label className="cc-label">수행 일자 <span className="cc-req">*</span></label>
-            <input type="date" className="cc-input cc-input-date" value={startDate} onChange={e => setStartDate(e.target.value)} />
+            <input type="date" className="cc-input cc-input-date" value={startDate} min={today()} onChange={e => handleStartDateChange(e.target.value)} />
             <span className="cc-tilde">~</span>
-            <input type="date" className="cc-input cc-input-date" value={endDate} onChange={e => setEndDate(e.target.value)} />
+            <input type="date" className="cc-input cc-input-date" value={endDate} min={startDate} onChange={e => setEndDate(e.target.value)} />
           </div>
 
           <div className="cc-field-col">
@@ -246,7 +251,7 @@ export default function CampaignCreatePage({ onNavigate }) {
         </div>
       </div>
 
-      {/* ══════════ 필터링 설정 ══════════ */}
+      {/* 필터링 설정 */}
       <div className="cc-section">
         <div className="cc-section-head">
           필터링 설정
@@ -349,7 +354,7 @@ export default function CampaignCreatePage({ onNavigate }) {
         </div>
       </div>
 
-      {/* ══════════ 리워드 / 광고 설정 ══════════ */}
+      {/* 리워드 / 광고 설정 */}
       <div className="cc-section">
         <div className="cc-section-head">
           리워드 / 광고 설정
@@ -394,7 +399,7 @@ export default function CampaignCreatePage({ onNavigate }) {
         </div>
       </div>
 
-      {/* ══════════ 처리 방식 설정 ══════════ */}
+      {/* 처리 방식 설정 */}
       <div className="cc-section cc-section-last">
         <div className="cc-process-title">처리 방식 설정</div>
         <div className="cc-process-sub">캠페인 조건 충족 고객에게 리워드를 전달하는 방식을 선택합니다</div>
@@ -439,14 +444,14 @@ export default function CampaignCreatePage({ onNavigate }) {
               <div className="cc-batch-group">
                 <span className="cc-batch-label">주기</span>
                 <select className="cc-batch-select" value={batchSchedule.cycle} onChange={e => updateBatch("cycle", e.target.value)}>
-                  {["매일", "매주", "매달"].map(o => <option key={o}>{o}</option>)}
+                  {["매일", "매주", "매달"].map(o => <option key={o} value={o}>{o}</option>)}
                 </select>
               </div>
               {batchSchedule.cycle === "매주" && (
                 <div className="cc-batch-group">
                   <span className="cc-batch-label">요일</span>
                   <select className="cc-batch-select" value={batchSchedule.dayOfWeek} onChange={e => updateBatch("dayOfWeek", e.target.value)}>
-                    {["월", "화", "수", "목", "금", "토", "일"].map(d => <option key={d}>{d}요일</option>)}
+                    {["월", "화", "수", "목", "금", "토", "일"].map(d => <option key={d} value={d}>{d}요일</option>)}
                   </select>
                 </div>
               )}
@@ -454,20 +459,20 @@ export default function CampaignCreatePage({ onNavigate }) {
                 <div className="cc-batch-group">
                   <span className="cc-batch-label">날짜</span>
                   <select className="cc-batch-select" value={batchSchedule.dayOfMonth} onChange={e => updateBatch("dayOfMonth", e.target.value)}>
-                    {Array.from({ length: 31 }, (_, i) => String(i + 1)).map(d => <option key={d}>{d}일</option>)}
+                    {Array.from({ length: 31 }, (_, i) => String(i + 1)).map(d => <option key={d} value={d}>{d}일</option>)}
                   </select>
                 </div>
               )}
               <div className="cc-batch-group">
                 <span className="cc-batch-label">시</span>
                 <select className="cc-batch-select" value={batchSchedule.hour} onChange={e => updateBatch("hour", e.target.value)}>
-                  {Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0")).map(h => <option key={h}>{h}시</option>)}
+                  {HOUR_OPTIONS.map(h => <option key={h} value={h}>{h}시</option>)}
                 </select>
               </div>
               <div className="cc-batch-group">
                 <span className="cc-batch-label">분</span>
                 <select className="cc-batch-select" value={batchSchedule.minute} onChange={e => updateBatch("minute", e.target.value)}>
-                  {["00", "10", "20", "30", "40", "50"].map(m => <option key={m}>{m}분</option>)}
+                  {MINUTE_OPTIONS.map(m => <option key={m} value={m}>{m}분</option>)}
                 </select>
               </div>
             </div>
