@@ -57,6 +57,10 @@ export default function CampaignListPage() {
   const [selectedNo,       setSelectedNo]       = useState(null);
   const [currentPage,      setCurrentPage]      = useState(1);
 
+  // ── 수정용 데이터 state ──
+  const [editCoupon, setEditCoupon] = useState(null); // 수정할 쿠폰 데이터
+  const [editAd,     setEditAd]     = useState(null); // 수정할 광고 데이터
+
   const [campaignData, setCampaignData] = useState([]);
   const [loading,      setLoading]      = useState(false);
   const [error,        setError]        = useState(null);
@@ -65,14 +69,9 @@ export default function CampaignListPage() {
     if (activePage !== "캠페인 목록") return;
     setLoading(true);
     setError(null);
-
     const apiStatus = STATUS_TAB_TO_API[activeTab] ?? undefined;
-
     campaignList({ status: apiStatus })
-      .then(data => {
-        setCampaignData(Array.isArray(data) ? data : []);
-        setCurrentPage(1);
-      })
+      .then(data => { setCampaignData(Array.isArray(data) ? data : []); setCurrentPage(1); })
       .catch(err => {
         if (err.message.includes('401') || err.message.includes('Unauthorized')) {
           setError('로그인이 필요합니다. 관리자 계정으로 로그인해주세요.');
@@ -83,9 +82,7 @@ export default function CampaignListPage() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => {
-    fetchCampaigns();
-  }, [activePage, activeTab]);
+  useEffect(() => { fetchCampaigns(); }, [activePage, activeTab]);
 
   const handleCampaignDetailClick = async (campaignId) => {
     setDetailLoading(true);
@@ -106,7 +103,6 @@ export default function CampaignListPage() {
     (row.campaignName ?? "").includes(searchText) ||
     String(row.campaignId ?? "").includes(searchText)
   );
-
   const totalPages = Math.max(1, Math.ceil(filteredData.length / PAGE_SIZE));
   const pagedData  = filteredData.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
@@ -118,6 +114,9 @@ export default function CampaignListPage() {
     if (item.key === "광고 관리")   { setAdOpen((p) => !p);       return; }
     if (item.group === "coupon") setCouponOpen(true);
     if (item.group === "ad")     setAdOpen(true);
+    // 사이드바 클릭 시 수정 데이터 초기화
+    if (item.key === "쿠폰 등록") setEditCoupon(null);
+    if (item.key === "광고 등록") setEditAd(null);
     setActivePage(item.key);
   };
 
@@ -141,12 +140,10 @@ export default function CampaignListPage() {
           if (item.depth === 1 && item.group === "campaign" && !campaignOpen) return null;
           if (item.depth === 1 && item.group === "coupon"   && !couponOpen)   return null;
           if (item.depth === 1 && item.group === "ad"       && !adOpen)       return null;
-
           const isActive       = item.key === activePage;
           const isCampaignOpen = item.key === "캠페인 관리" && campaignOpen;
           const isCouponOpen   = item.key === "쿠폰 관리"   && couponOpen;
           const isAdOpen       = item.key === "광고 관리"   && adOpen;
-
           return (
             <div
               key={i}
@@ -226,7 +223,17 @@ export default function CampaignListPage() {
   if (activePage === "쿠폰 목록") {
     return (
       <Layout>
-        <CouponListPage onNavigate={(page) => setActivePage(page === "create" ? "쿠폰 등록" : page)} />
+        <CouponListPage
+          onNavigate={(page, data) => {
+            if (page === "create") {
+              // 수정 시 data(쿠폰 데이터) 저장 후 등록 페이지로 이동
+              setEditCoupon(data ?? null);
+              setActivePage("쿠폰 등록");
+            } else {
+              setActivePage(page);
+            }
+          }}
+        />
       </Layout>
     );
   }
@@ -234,7 +241,13 @@ export default function CampaignListPage() {
   if (activePage === "쿠폰 등록") {
     return (
       <Layout>
-        <CouponCreatePage onNavigate={(page) => setActivePage(page === "list" ? "쿠폰 목록" : page)} />
+        <CouponCreatePage
+          coupon={editCoupon}
+          onNavigate={(page) => {
+            setEditCoupon(null);
+            setActivePage(page === "list" ? "쿠폰 목록" : page);
+          }}
+        />
       </Layout>
     );
   }
@@ -250,7 +263,17 @@ export default function CampaignListPage() {
   if (activePage === "광고 목록" || activePage === "광고 관리") {
     return (
       <Layout>
-        <AdManagePage onNavigate={(page) => setActivePage(page === "create" ? "광고 등록" : page)} />
+        <AdManagePage
+          onNavigate={(page, data) => {
+            if (page === "create") {
+              // 수정 시 data(광고 데이터) 저장 후 등록 페이지로 이동
+              setEditAd(data ?? null);
+              setActivePage("광고 등록");
+            } else {
+              setActivePage(page);
+            }
+          }}
+        />
       </Layout>
     );
   }
@@ -258,7 +281,13 @@ export default function CampaignListPage() {
   if (activePage === "광고 등록") {
     return (
       <Layout>
-        <AdCreatePage onNavigate={(page) => setActivePage(page === "list" ? "광고 목록" : page)} />
+        <AdCreatePage
+          ad={editAd}
+          onNavigate={(page) => {
+            setEditAd(null);
+            setActivePage(page === "list" ? "광고 목록" : page);
+          }}
+        />
       </Layout>
     );
   }

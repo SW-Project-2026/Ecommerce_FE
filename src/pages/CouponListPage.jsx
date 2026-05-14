@@ -1,28 +1,53 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./CouponListPage.css";
+import { couponList, couponDelete } from "../api/coupons";
 
-const MOCK_COUPONS = [
-  { name: "신규가입 웰컴쿠폰", code: "WELCOME25", discount: "5,000원",  validDays: 30, issueType: "자동 지급",  quantity: "무제한" },
-  { name: "4월 봄맞이 할인",   code: "SPRING04",  discount: "10%",      validDays: 14, issueType: "다운로드",   quantity: "5,000" },
-  { name: "심사숙고 긴급쿠폰", code: "HURRY30M",  discount: "8%",       validDays: 1,  issueType: "자동 지급",  quantity: "무제한" },
-  { name: "VIP 전용 혜택",     code: "VIP2025",   discount: "15,000원", validDays: 60, issueType: "자동 지급",  quantity: "300" },
-  { name: "이탈방지 쿠폰",     code: "COMEBACK",  discount: "7%",       validDays: 7,  issueType: "다운로드",   quantity: "1,200" },
-  { name: "재구매 감사 쿠폰",  code: "THANKS10",  discount: "10,000원", validDays: 30, issueType: "자동 지급",  quantity: "무제한" },
-  { name: "생일 축하 쿠폰",    code: "BDAY2025",  discount: "20%",      validDays: 1,  issueType: "자동 지급",  quantity: "무제한" },
-];
+const DISCOUNT_TYPE_DISPLAY  = { FIXED: "정액할인", RATE: "정률할인" };
+const ISSUANCE_METHOD_DISPLAY = { AUTO: "자동 지급", DOWNLOAD: "다운로드" };
 
 export default function CouponListPage({ onNavigate }) {
+  const [coupons,     setCoupons]     = useState([]);
+  const [loading,     setLoading]     = useState(false);
+  const [error,       setError]       = useState(null);
   const [searchText,  setSearchText]  = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const totalPages = 5;
+  const PAGE_SIZE = 10;
 
-  const filteredData = MOCK_COUPONS.filter((c) => {
-    return !searchText || c.name.includes(searchText) || c.code.includes(searchText);
-  });
+  useEffect(() => {
+    fetchCoupons();
+  }, []);
+
+  async function fetchCoupons() {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await couponList();
+      setCoupons(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleDelete(couponId) {
+    if (!window.confirm("쿠폰을 삭제하시겠습니까?")) return;
+    try {
+      await couponDelete({ couponId });
+      setCoupons(prev => prev.filter(c => c.couponId !== couponId));
+    } catch (err) {
+      alert(err.message);
+    }
+  }
+
+  const filtered = coupons.filter(c =>
+    !searchText || c.name?.includes(searchText) || c.code?.includes(searchText)
+  );
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paginated  = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   return (
     <div className="cp-main">
-      {/* ── 흰색 Page Header ── */}
       <div className="cp-page-header">
         <div>
           <h1 className="cp-page-title">쿠폰 관리</h1>
@@ -31,10 +56,7 @@ export default function CouponListPage({ onNavigate }) {
         <button className="cp-btn-primary" onClick={() => onNavigate("create")}>+ 쿠폰 등록</button>
       </div>
 
-      {/* ── 회색 콘텐츠 ── */}
       <div className="cp-content">
-
-        {/* 검색 */}
         <div className="cp-search-card">
           <span className="cp-search-label">검색</span>
           <div className="cp-search-wrap">
@@ -42,51 +64,57 @@ export default function CouponListPage({ onNavigate }) {
               className="cp-search"
               placeholder="쿠폰명 또는 코드 검색"
               value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
+              onChange={e => { setSearchText(e.target.value); setCurrentPage(1); }}
             />
           </div>
         </div>
 
-        {/* 테이블 */}
         <div className="cp-table-card">
-          <table className="cp-table">
-            <thead>
-              <tr>
-                <th>쿠폰명</th>
-                <th>쿠폰코드</th>
-                <th>할인금액</th>
-                <th>유효기간</th>
-                <th>발급방식</th>
-                <th>발급수량</th>
-                <th>액션</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredData.map((c, i) => (
-                <tr key={i} className={i % 2 === 1 ? "cp-row-alt" : ""}>
-                  <td className="cp-td-name">{c.name}</td>
-                  <td className="cp-td-code">{c.code}</td>
-                  <td>{c.discount}</td>
-                  <td>{c.validDays}일</td>
-                  <td>{c.issueType}</td>
-                  <td>{c.quantity === "무제한" ? "무제한" : `${c.quantity}건`}</td>
-                  <td>
-                    <div className="cp-action-btns">
-                      <button className="cp-btn-edit">수정</button>
-                      <button className="cp-btn-delete">삭제</button>
-                    </div>
-                  </td>
+          {loading && <div className="cp-loading">불러오는 중...</div>}
+          {error   && <div className="cp-error">{error}</div>}
+          {!loading && !error && (
+            <table className="cp-table">
+              <thead>
+                <tr>
+                  <th>고유번호</th>
+                  <th>쿠폰명</th>
+                  <th>쿠폰코드</th>
+                  <th>할인유형</th>
+                  <th>할인금액</th>
+                  <th>유효기간</th>
+                  <th>발급방식</th>
+                  <th>발급수량</th>
+                  <th>액션</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {paginated.length === 0 ? (
+                  <tr><td colSpan={9} style={{ textAlign: "center", padding: 24 }}>쿠폰이 없습니다</td></tr>
+                ) : paginated.map((c, i) => (
+                  <tr key={c.couponId} className={i % 2 === 1 ? "cp-row-alt" : ""}>
+                    <td className="cp-td-id">{c.couponId}</td>
+                    <td className="cp-td-name">{c.name}</td>
+                    <td className="cp-td-code">{c.code}</td>
+                    <td>{DISCOUNT_TYPE_DISPLAY[c.discountType] ?? c.discountType}</td>
+                    <td>{c.discountType === "RATE" ? `${c.discountAmount}%` : `${c.discountAmount?.toLocaleString()}원`}</td>
+                    <td>{c.expiredAt}일</td>
+                    <td>{ISSUANCE_METHOD_DISPLAY[c.issuanceMethod] ?? c.issuanceMethod}</td>
+                    <td>{c.issueLimit === null ? "무제한" : `${c.issueLimit?.toLocaleString()}건`}</td>
+                    <td>
+                      <div className="cp-action-btns">
+                        <button className="cp-btn-edit" onClick={() => onNavigate("create", c)}>수정</button>
+                        <button className="cp-btn-delete" onClick={() => handleDelete(c.couponId)}>삭제</button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
 
-          {/* 페이지네이션 */}
           <div className="cp-pagination">
-            <button className="cp-page-nav" onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}>
-              &lt; 이전
-            </button>
-            {[1, 2, 3, 4, 5].map((p) => (
+            <button className="cp-page-nav" onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}>&lt; 이전</button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
               <button
                 key={p}
                 className={`cp-page-btn ${currentPage === p ? "cp-page-active" : ""}`}
@@ -95,12 +123,9 @@ export default function CouponListPage({ onNavigate }) {
                 {p}
               </button>
             ))}
-            <button className="cp-page-nav" onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}>
-              다음 &gt;
-            </button>
+            <button className="cp-page-nav" onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}>다음 &gt;</button>
           </div>
         </div>
-
       </div>
     </div>
   );

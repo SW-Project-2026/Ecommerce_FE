@@ -1,34 +1,61 @@
 import { useState, useEffect } from "react";
 import "./AdCreatePage.css";
 import { getProduct, getProducts, searchProducts } from "../api/products";
+import { adCreate, adUpdate } from "../api/ads";
 
 const AD_TARGET_TYPES = ["상품", "카테고리", "키워드"];
 
+const TARGET_TYPE_MAP = {
+  "상품":    "PRODUCT",
+  "카테고리": "CATEGORY",
+  "키워드":  "KEYWORD",
+};
+
+const TARGET_TYPE_DISPLAY_MAP = {
+  PRODUCT:  "상품",
+  CATEGORY: "카테고리",
+  KEYWORD:  "키워드",
+};
+
 const CATEGORY_OPTIONS = [
-  "가전/디지털", "패션", "뷰티", "식품", "생활용품", "스포츠"
+  { label: "가전/디지털", value: "DIGITAL_APPLIANCE" },
+  { label: "패션의류",    value: "FASHION_CLOTHING" },
+  { label: "패션잡화",    value: "FASHION_ACCESSORY" },
+  { label: "뷰티",        value: "BEAUTY" },
+  { label: "식품",        value: "FOOD" },
+  { label: "생활건강",    value: "LIVING_HEALTH" },
+  { label: "스포츠레저",  value: "SPORTS_LEISURE" },
+  { label: "가구인테리어", value: "FURNITURE_INTERIOR" },
 ];
 
 const CATEGORY_DB_KEY = {
-  "가전/디지털": "디지털/가전",
-  "패션":        "패션의류",
-  "뷰티":        "화장품/미용",
-  "식품":        "식품",
-  "생활용품":    "생활/건강",
-  "스포츠":      "스포츠/레저",
+  DIGITAL_APPLIANCE:  "디지털/가전",
+  FASHION_CLOTHING:   "패션의류",
+  FASHION_ACCESSORY:  "패션잡화",
+  BEAUTY:             "화장품/미용",
+  FOOD:               "식품",
+  LIVING_HEALTH:      "생활/건강",
+  SPORTS_LEISURE:     "스포츠/레저",
+  FURNITURE_INTERIOR: "가구/인테리어",
 };
 
-export default function AdCreatePage({ onNavigate }) {
+// ad prop이 있으면 수정 모드, 없으면 생성 모드
+export default function AdCreatePage({ onNavigate, ad }) {
+  const isEdit = !!ad;
+
   const [form, setForm] = useState({
-    name:        "",
-    targetType:  "상품",
-    productId:   "",
-    category:    "",
-    keyword:     "",
+    name:       ad?.adName    ?? "",
+    targetType: TARGET_TYPE_DISPLAY_MAP[ad?.targetType] ?? "상품",
+    productId:  ad?.productId != null ? String(ad.productId) : "",
+    category:   ad?.category  ?? "",
+    keyword:    ad?.keyword   ?? "",
   });
 
-  const [previewImage,   setPreviewImage]   = useState(null);  // 미리보기 이미지 URL
+  const [previewImage,   setPreviewImage]   = useState(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewError,   setPreviewError]   = useState(null);
+  const [saving,         setSaving]         = useState(false);
+  const [saveError,      setSaveError]      = useState(null);
 
   const update = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
@@ -38,7 +65,7 @@ export default function AdCreatePage({ onNavigate }) {
     setPreviewError(null);
   };
 
-  // ── 상품 ID로 이미지 조회 ──
+  // 상품 ID로 이미지 조회
   const handleProductIdBlur = async () => {
     if (!form.productId.trim()) return;
     setPreviewLoading(true);
@@ -55,7 +82,7 @@ export default function AdCreatePage({ onNavigate }) {
     }
   };
 
-  // ── 카테고리 변경 시 랜덤 이미지 조회 ──
+  // 카테고리 변경 시 랜덤 이미지 조회
   useEffect(() => {
     if (!form.category) { setPreviewImage(null); return; }
     setPreviewLoading(true);
@@ -72,7 +99,7 @@ export default function AdCreatePage({ onNavigate }) {
       .finally(() => setPreviewLoading(false));
   }, [form.category]);
 
-  // ── 키워드 입력 후 blur 시 랜덤 이미지 조회 ──
+  // 키워드 blur 시 랜덤 이미지 조회
   const handleKeywordBlur = async () => {
     if (!form.keyword.trim()) return;
     setPreviewLoading(true);
@@ -90,10 +117,40 @@ export default function AdCreatePage({ onNavigate }) {
     }
   };
 
+  const handleSubmit = async () => {
+    if (!form.name.trim())                                         return setSaveError("광고명을 입력해주세요.");
+    if (form.targetType === "상품"    && !form.productId.trim())  return setSaveError("상품 ID를 입력해주세요.");
+    if (form.targetType === "카테고리" && !form.category)          return setSaveError("카테고리를 선택해주세요.");
+    if (form.targetType === "키워드"  && !form.keyword.trim())    return setSaveError("키워드를 입력해주세요.");
+
+    setSaving(true);
+    setSaveError(null);
+    try {
+      const payload = {
+        adName:     form.name,
+        targetType: TARGET_TYPE_MAP[form.targetType],
+        productId:  form.targetType === "상품"    ? parseInt(form.productId, 10) : null,
+        category:   form.targetType === "카테고리" ? form.category               : null,
+        keyword:    form.targetType === "키워드"  ? form.keyword                : null,
+      };
+
+      if (isEdit) {
+        await adUpdate({ adId: ad.adId, ...payload });
+      } else {
+        await adCreate(payload);
+      }
+      onNavigate("list");
+    } catch (err) {
+      setSaveError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const previewTarget = () => {
     if (form.targetType === "상품")    return form.productId ? `상품 ID: ${form.productId}` : "–";
-    if (form.targetType === "카테고리") return form.category || "–";
-    if (form.targetType === "키워드")  return form.keyword   || "–";
+    if (form.targetType === "카테고리") return CATEGORY_OPTIONS.find(o => o.value === form.category)?.label || "–";
+    if (form.targetType === "키워드")  return form.keyword || "–";
     return "–";
   };
 
@@ -107,23 +164,22 @@ export default function AdCreatePage({ onNavigate }) {
 
   return (
     <div className="ac-main">
-      {/* ── Page Header ── */}
       <div className="ac-page-header">
         <div>
-          <h1 className="ac-page-title">광고 등록</h1>
-          <p className="ac-page-sub">새 광고를 등록합니다</p>
+          <h1 className="ac-page-title">{isEdit ? "광고 수정" : "광고 등록"}</h1>
+          <p className="ac-page-sub">{isEdit ? "광고 정보를 수정합니다" : "새 광고를 등록합니다"}</p>
         </div>
         <div className="ac-header-btns">
-          <button className="ac-btn-cancel" onClick={() => onNavigate("list")}>취소</button>
-          <button className="ac-btn-submit">광고 등록하기</button>
+          <button className="ac-btn-cancel" onClick={() => onNavigate("list")} disabled={saving}>취소</button>
+          <button className="ac-btn-submit" onClick={handleSubmit} disabled={saving}>
+            {saving ? (isEdit ? "수정 중..." : "등록 중...") : (isEdit ? "수정하기" : "광고 등록하기")}
+          </button>
         </div>
       </div>
 
-      {/* ── 콘텐츠 ── */}
       <div className="ac-content">
         <div className="ac-left">
 
-          {/* 광고 기본 정보 */}
           <div className="ac-section">
             <h2 className="ac-section-title">광고 기본 정보</h2>
             <div className="ac-divider" />
@@ -138,7 +194,6 @@ export default function AdCreatePage({ onNavigate }) {
             </div>
           </div>
 
-          {/* 광고 타겟 설정 */}
           <div className="ac-section">
             <h2 className="ac-section-title">타겟 설정</h2>
             <div className="ac-divider" />
@@ -158,7 +213,6 @@ export default function AdCreatePage({ onNavigate }) {
               </div>
             </div>
 
-            {/* 상품 */}
             {form.targetType === "상품" && (
               <div className="ac-field ac-field-col">
                 <label className="ac-label">상품 ID *</label>
@@ -173,7 +227,6 @@ export default function AdCreatePage({ onNavigate }) {
               </div>
             )}
 
-            {/* 카테고리 */}
             {form.targetType === "카테고리" && (
               <div className="ac-field ac-field-col">
                 <label className="ac-label">카테고리 *</label>
@@ -184,14 +237,15 @@ export default function AdCreatePage({ onNavigate }) {
                     onChange={e => update("category", e.target.value)}
                   >
                     <option value="">선택하세요</option>
-                    {CATEGORY_OPTIONS.map(o => <option key={o}>{o}</option>)}
+                    {CATEGORY_OPTIONS.map(o => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
                   </select>
                 </div>
                 <p style={hintStyle}>해당 카테고리 상품 중 랜덤으로 이미지가 표시됩니다.</p>
               </div>
             )}
 
-            {/* 키워드 */}
             {form.targetType === "키워드" && (
               <div className="ac-field ac-field-col">
                 <label className="ac-label">키워드 *</label>
@@ -206,15 +260,15 @@ export default function AdCreatePage({ onNavigate }) {
               </div>
             )}
           </div>
+
+          {saveError && <div style={{ color: "red", fontSize: 13, marginTop: 8 }}>{saveError}</div>}
         </div>
 
-        {/* ── 오른쪽: 미리보기 ── */}
         <div className="ac-right">
           <div className="ac-section">
             <h2 className="ac-section-title">광고 미리보기</h2>
             <div className="ac-divider" />
 
-            {/* 이미지 미리보기 */}
             <div className="ac-preview-card">
               {previewLoading ? (
                 <div style={{ height: 180, display: "flex", alignItems: "center", justifyContent: "center", color: "#9EA6B5", fontSize: 12 }}>
@@ -235,7 +289,6 @@ export default function AdCreatePage({ onNavigate }) {
               )}
             </div>
 
-            {/* 조건 요약 */}
             <div className="ac-divider ac-divider-mid" />
             <p className="ac-summary-title">설정 요약</p>
             <div className="ac-summary-row">

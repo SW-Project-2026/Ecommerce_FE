@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import "./CampaignDetailPage.css";
 import { campaignDelete, campaignUpdate, campaignStatusUpdate } from "../api/campaigns";
 import { eventList } from "../api/events";
+import { couponList } from "../api/coupons";
+import { adList } from "../api/ads";
 
 const OPERATORS_NUMBER   = ["≥ (이상)", "≤ (이하)", "> (초과)", "< (미만)", "= (동등)"];
 const OPERATORS_STRING   = ["포함", "= (동등)"];
@@ -28,7 +30,6 @@ const OPERATOR_DISPLAY_MAP = {
   LT: "< (미만)", EQUALS: "= (동등)", CONTAINS: "포함",
   NOT_EQUALS: "≠", NOT_CONTAINS: "미포함", BETWEEN: "사이",
 };
-
 const COLLECTION_TYPE_MAP = { realtime: "TRIGGERED", batch: "BATCH" };
 const GOAL_TYPE_MAP = {
   "조기정착": "EARLY_RETENTION", "이탈방지": "CHURN_PREVENTION", "재구매": "REPURCHASE",
@@ -42,7 +43,6 @@ const SEGMENT_MAP = {
 const SEGMENT_DISPLAY_MAP = {
   NEW: "신규고객유치", VIP: "VIP 고객", GENERAL: "일반 고객", DORMANT: "휴면 고객", ALL: "전체",
 };
-
 const CYCLE_DISPLAY_MAP = { DAILY: "매일", WEEKLY: "매주", MONTHLY: "매달" };
 const CYCLE_MAP = { "매일": "DAILY", "매주": "WEEKLY", "매달": "MONTHLY" };
 const WEEKDAY_DISPLAY_MAP = {
@@ -53,6 +53,8 @@ const WEEKDAY_MAP = {
   "월": "MONDAY", "화": "TUESDAY", "수": "WEDNESDAY",
   "목": "THURSDAY", "금": "FRIDAY", "토": "SATURDAY", "일": "SUNDAY",
 };
+const DISCOUNT_TYPE_DISPLAY = { FIXED: "정액", RATE: "정률" };
+const TARGET_TYPE_DISPLAY   = { PRODUCT: "상품", CATEGORY: "카테고리", KEYWORD: "키워드" };
 
 const STATUS_DISPLAY = {
   IN_PROGRESS: { cls: "cdp-badge-running", label: "수행중" },
@@ -64,18 +66,10 @@ const STATUS_TRANSITIONS = {
   PAUSED:      ["IN_PROGRESS", "ENDED"],
   ENDED:       [],
 };
-const STATUS_LABEL = {
-  IN_PROGRESS: "수행중", PAUSED: "일시정지", ENDED: "종료",
-};
+const STATUS_LABEL = { IN_PROGRESS: "수행중", PAUSED: "일시정지", ENDED: "종료" };
 
-const COUPONS = [
-  { id: 1, name: "재구매 감사 쿠폰",    code: "THANKS10", discount: "10,000원 할인", expiry: "~ 2025-05-15" },
-  { id: 2, name: "신규 회원 웰컴 쿠폰", code: "WELCOME5",  discount: "5% 할인",      expiry: "~ 2025-05-15" },
-  { id: 3, name: "무료 배송 쿠폰",      code: "FREESHIP",  discount: "배송비 무료",   expiry: "~ 2025-05-15" },
-  { id: 4, name: "여름 시즌 특별 할인", code: "SUMMER10",  discount: "10,000원 할인", expiry: "~ 2025-05-15" },
-];
-const CAT1_OPTIONS    = ["조기정착", "이탈방지", "재구매"];
-const CAT2_OPTIONS    = {
+const CAT1_OPTIONS = ["조기정착", "이탈방지", "재구매"];
+const CAT2_OPTIONS = {
   "조기정착": ["신규고객유치", "휴면 고객"],
   "이탈방지": ["VIP 고객", "일반 고객"],
   "재구매":   ["일반 고객", "휴면 고객"],
@@ -103,6 +97,62 @@ function initBatchSchedule(campaign) {
   const dayOfMonth = campaign?.batchDayOfMonth ? String(campaign.batchDayOfMonth) : "1";
   return { cycle, hour, minute: minute ?? "00", dayOfWeek, dayOfMonth };
 }
+
+// ── 공통 리워드 테이블 인라인 스타일 ──
+const S = {
+  rewardTable: {
+    width: "100%",
+    borderRadius: 8,
+    overflow: "hidden",
+    border: "1px solid #EBEDF0",
+  },
+  rewardHeader: {
+    display: "grid",
+    alignItems: "center",
+    padding: "10px 16px",
+    background: "#F7FAFF",
+    borderBottom: "1px solid #EBEDF0",
+  },
+  rewardHeaderCoupon: { gridTemplateColumns: "36px 1.8fr 1fr 1fr 1fr 1fr" },
+  rewardHeaderAd:     { gridTemplateColumns: "36px 2fr 1fr 1.2fr 1fr" },
+  th: {
+    fontFamily: "'Noto Sans KR', sans-serif",
+    fontWeight: 700,
+    fontSize: 11,
+    color: "#9EA6B5",
+  },
+  row: {
+    display: "grid",
+    alignItems: "center",
+    padding: "12px 16px",
+    background: "#FDFEFF",
+    transition: "background 0.1s",
+  },
+  rowCoupon: { gridTemplateColumns: "36px 1.8fr 1fr 1fr 1fr 1fr" },
+  rowAd:     { gridTemplateColumns: "36px 2fr 1fr 1.2fr 1fr" },
+  rowSelected: { background: "#F0F5FF" },
+  name: {
+    fontFamily: "'Noto Sans KR', sans-serif",
+    fontWeight: 700,
+    fontSize: 13,
+    color: "#121212",
+  },
+  code: {
+    fontFamily: "'Inter', sans-serif",
+    fontSize: 12,
+    color: "#4F6EF7",
+  },
+  cell: {
+    fontFamily: "'Noto Sans KR', sans-serif",
+    fontSize: 12,
+    color: "#333",
+  },
+  subCell: {
+    fontFamily: "'Noto Sans KR', sans-serif",
+    fontSize: 11,
+    color: "#9EA6B5",
+  },
+};
 
 function DeleteModal({ campaignName, onConfirm, onCancel }) {
   return (
@@ -165,6 +215,9 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
 
   const [events,        setEvents]        = useState([]);
   const [eventsLoading, setEventsLoading] = useState(false);
+  const [coupons,       setCoupons]       = useState([]);
+  const [ads,           setAds]           = useState([]);
+  const [rewardLoading, setRewardLoading] = useState(false);
 
   useEffect(() => {
     setEventsLoading(true);
@@ -172,6 +225,15 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
       .then(data => setEvents(Array.isArray(data) ? data : []))
       .catch(err => console.error("이벤트 조회 실패:", err))
       .finally(() => setEventsLoading(false));
+
+    setRewardLoading(true);
+    Promise.all([couponList(), adList()])
+      .then(([couponData, adData]) => {
+        setCoupons(Array.isArray(couponData) ? couponData : []);
+        setAds(Array.isArray(adData) ? adData : []);
+      })
+      .catch(err => console.error("리워드 조회 실패:", err))
+      .finally(() => setRewardLoading(false));
   }, []);
 
   const eventFieldMap = events.reduce((acc, ev) => {
@@ -187,12 +249,10 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
   const [desc,      setDesc]      = useState(campaign?.description ?? "");
   const [status,    setStatus]    = useState(campaign?.status ?? "IN_PROGRESS");
 
-  // filters는 events 로드 후 useEffect에서 eventId 포함해서 설정
   const [filters,     setFilters]     = useState([]);
   const [filterLogic, setFilterLogic] = useState(campaign?.filterLogicalOperator ?? campaign?.logicalOperator ?? "AND");
   const [targetCount, setTargetCount] = useState(null);
 
-  // events 로드 완료 후 필터에 eventId 매핑
   useEffect(() => {
     if (events.length === 0) return;
     const mapped = (campaign?.filters ?? []).map((f, i) => {
@@ -211,8 +271,12 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
     setFilters(mapped);
   }, [events]);
 
-  const [rewardTab,       setRewardTab]       = useState("쿠폰");
-  const [selectedCoupons, setSelectedCoupons] = useState([1]);
+  const [rewardTab,      setRewardTab]      = useState("쿠폰");
+  const [selectedCoupon, setSelectedCoupon] = useState(campaign?.couponId ?? null);
+  const [selectedAd,     setSelectedAd]     = useState(campaign?.adId     ?? null);
+
+  const handleSelectCoupon = (id) => { setSelectedCoupon(prev => prev === id ? null : id); setSelectedAd(null); };
+  const handleSelectAd     = (id) => { setSelectedAd(prev => prev === id ? null : id); setSelectedCoupon(null); };
 
   const [processType,   setProcessType]   = useState(campaign?.collectionType === "BATCH" ? "batch" : "realtime");
   const [batchSchedule, setBatchSchedule] = useState(initBatchSchedule(campaign));
@@ -230,10 +294,8 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
       const u = { ...f, [key]: val };
       if (key === "event") {
         const ev = events.find(e => e.eventName === val);
-        u.eventId  = ev?.eventId ?? null;
-        u.field    = "";
-        u.dataType = "";
-        u.operator = "";
+        u.eventId = ev?.eventId ?? null;
+        u.field = ""; u.dataType = ""; u.operator = "";
       }
       if (key === "field") {
         const fields  = eventFieldMap[u.event] ?? [];
@@ -245,13 +307,8 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
     }));
   };
 
-  const toggleCoupon     = id => setSelectedCoupons(p => p.includes(id) ? p.filter(c => c !== id) : [...p, id]);
-  const handleCat1Change = v  => { setCat1(v); setCat2(CAT2_OPTIONS[v]?.[0] ?? ""); };
-
-  const handleStartDateChange = (val) => {
-    setStartDate(val);
-    if (endDate < val) setEndDate(val);
-  };
+  const handleCat1Change = v => { setCat1(v); setCat2(CAT2_OPTIONS[v]?.[0] ?? ""); };
+  const handleStartDateChange = (val) => { setStartDate(val); if (endDate < val) setEndDate(val); };
 
   function getBatchCycle()      { return CYCLE_MAP[batchSchedule.cycle] ?? "DAILY"; }
   function getBatchTime()       { return `${batchSchedule.hour}:${batchSchedule.minute}`; }
@@ -259,22 +316,16 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
   function getBatchDayOfMonth() { return batchSchedule.cycle === "매달" ? parseInt(batchSchedule.dayOfMonth, 10) : null; }
 
   const handleDelete = async () => {
-    setDeleting(true);
-    setApiError(null);
+    setDeleting(true); setApiError(null);
     try {
       await campaignDelete({ campaignId: campaign.campaignId });
       onNavigate("list");
-    } catch (err) {
-      setApiError(err.message);
-      setShowDeleteModal(false);
-    } finally {
-      setDeleting(false);
-    }
+    } catch (err) { setApiError(err.message); setShowDeleteModal(false); }
+    finally { setDeleting(false); }
   };
 
   const handleSave = async () => {
-    setSaving(true);
-    setApiError(null);
+    setSaving(true); setApiError(null);
     try {
       const apiFilters = filters.map(f => ({
         eventId:        f.eventId,
@@ -297,14 +348,13 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
         batchDayOfWeek:        processType === "batch" ? getBatchDayOfWeek()  : null,
         batchDayOfMonth:       processType === "batch" ? getBatchDayOfMonth() : null,
         filterLogicalOperator: filterLogic,
+        couponId:              selectedCoupon ?? null,
+        adId:                  selectedAd     ?? null,
         filters:               apiFilters,
       });
       setEditMode(false);
-    } catch (err) {
-      setApiError(err.message);
-    } finally {
-      setSaving(false);
-    }
+    } catch (err) { setApiError(err.message); }
+    finally { setSaving(false); }
   };
 
   const handleStatusChange = async (newStatus) => {
@@ -313,10 +363,7 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
       const updated = await campaignStatusUpdate({ campaignId: campaign.campaignId, status: newStatus });
       setStatus(updated?.status ?? newStatus);
       setShowStatusModal(false);
-    } catch (err) {
-      setApiError(err.message);
-      setShowStatusModal(false);
-    }
+    } catch (err) { setApiError(err.message); setShowStatusModal(false); }
   };
 
   const isReadOnly      = !editMode;
@@ -415,19 +462,17 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
         <div className="cdp-section-body">
           <div className="cdp-filter-table-wrap">
             <div className="cdp-filter-header">
-              <span className="cdp-fh cdp-fh-event">이벤트</span>
-              <span className="cdp-fh cdp-fh-field">이벤트 수집 필드</span>
-              <span className="cdp-fh cdp-fh-type">자료형</span>
-              <span className="cdp-fh cdp-fh-op">조건</span>
-              <span className="cdp-fh cdp-fh-val">값</span>
-              <span className="cdp-fh cdp-fh-period">기간 (최근 N일)</span>
-              {editMode && <span className="cdp-fh cdp-fh-del" />}
+              <span className="cdp-fh">이벤트</span>
+              <span className="cdp-fh">이벤트 수집 필드</span>
+              <span className="cdp-fh">자료형</span>
+              <span className="cdp-fh">조건</span>
+              <span className="cdp-fh">값</span>
+              <span className="cdp-fh">기간 (최근 N일)</span>
+              {editMode && <span className="cdp-fh" />}
             </div>
-
             {filters.length === 0 && (
               <div className="cdp-filter-empty">{editMode ? "조건을 추가해주세요" : "설정된 필터 조건이 없습니다"}</div>
             )}
-
             {filters.map((f, idx) => (
               <div key={f.id}>
                 {idx > 0 && (
@@ -438,14 +483,14 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
                   </div>
                 )}
                 <div className="cdp-filter-row">
-                  <div className="cdp-fc cdp-fh-event">
+                  <div className="cdp-fc">
                     {isReadOnly ? <span className="cdp-cell-val">{f.event || "–"}</span>
                       : <select className="cdp-select cdp-select-sm" value={f.event} onChange={e => updateFilter(f.id, "event", e.target.value)} disabled={eventsLoading}>
                           <option value="">{eventsLoading ? "불러오는 중..." : "선택"}</option>
                           {events.map(ev => <option key={ev.eventId} value={ev.eventName}>{ev.eventName}</option>)}
                         </select>}
                   </div>
-                  <div className="cdp-fc cdp-fh-field">
+                  <div className="cdp-fc">
                     {isReadOnly ? <span className="cdp-cell-val">{f.field || "–"}</span>
                       : <select className="cdp-select cdp-select-sm" value={f.field} onChange={e => updateFilter(f.id, "field", e.target.value)} disabled={!f.event}>
                           <option value="">선택</option>
@@ -454,23 +499,23 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
                           ))}
                         </select>}
                   </div>
-                  <div className="cdp-fc cdp-fh-type">
+                  <div className="cdp-fc">
                     {f.dataType
                       ? <span className={`cdp-type-badge ${f.dataType === "NUMBER" ? "cdp-type-number" : "cdp-type-string"}`}>{f.dataType}</span>
                       : <span className="cdp-type-empty">—</span>}
                   </div>
-                  <div className="cdp-fc cdp-fh-op">
+                  <div className="cdp-fc">
                     {isReadOnly ? <span className="cdp-cell-val">{f.operator || "–"}</span>
                       : <select className="cdp-select cdp-select-sm" value={f.operator} onChange={e => updateFilter(f.id, "operator", e.target.value)} disabled={!f.dataType}>
                           <option value="">선택</option>
                           {getOperators(f.dataType).map(op => <option key={op}>{op}</option>)}
                         </select>}
                   </div>
-                  <div className="cdp-fc cdp-fh-val">
+                  <div className="cdp-fc">
                     {isReadOnly ? <span className="cdp-cell-val">{f.value || "–"}</span>
                       : <input className="cdp-input cdp-input-sm" value={f.value} onChange={e => updateFilter(f.id, "value", e.target.value)} disabled={!f.operator} placeholder="값 입력" />}
                   </div>
-                  <div className="cdp-fc cdp-fh-period">
+                  <div className="cdp-fc">
                     {isReadOnly ? <span className="cdp-cell-val">최근 {f.period}일</span>
                       : <>
                           <span className="cdp-period-prefix">최근</span>
@@ -479,7 +524,7 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
                         </>}
                   </div>
                   {editMode && (
-                    <div className="cdp-fc cdp-fh-del">
+                    <div className="cdp-fc">
                       <button className="cdp-del-btn" onClick={() => removeFilter(f.id)}>✕</button>
                     </div>
                   )}
@@ -487,7 +532,6 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
               </div>
             ))}
           </div>
-
           {editMode && (
             <div className="cdp-filter-footer">
               <div className="cdp-target-area">
@@ -502,35 +546,96 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
 
       {/* 리워드 / 광고 설정 */}
       <div className="cdp-section">
-        <div className="cdp-section-head">리워드 / 광고 설정</div>
+        <div className="cdp-section-head">
+          리워드 / 광고 설정
+          {(selectedCoupon || selectedAd) && (
+            <span style={{ fontSize: 12, color: "#4F6EF7", marginLeft: 8 }}>
+              ({selectedCoupon ? "쿠폰" : "광고"} 1개 선택됨)
+            </span>
+          )}
+        </div>
         <div className="cdp-section-body">
           <div className="cdp-reward-tabs">
-            {["쿠폰", "광고", "포인트"].map(t => (
+            {["쿠폰", "광고"].map(t => (
               <button key={t} className={`cdp-reward-tab ${rewardTab === t ? "cdp-reward-tab-active" : ""}`} onClick={() => setRewardTab(t)}>{t}</button>
             ))}
           </div>
-          {rewardTab === "쿠폰" && (
-            <div className="cdp-coupon-list">
-              <div className="cdp-coupon-header">
-                <span className="cdp-ch" /><span className="cdp-ch">쿠폰명</span>
-                <span className="cdp-ch">코드</span><span className="cdp-ch">할인 내용</span><span className="cdp-ch">유효기간</span>
+
+          {rewardLoading && <div style={{ padding: 16, fontSize: 12, color: "#9EA6B5" }}>불러오는 중...</div>}
+
+          {/* 쿠폰 탭 */}
+          {!rewardLoading && rewardTab === "쿠폰" && (
+            <div style={S.rewardTable}>
+              <div style={{ ...S.rewardHeader, ...S.rewardHeaderCoupon }}>
+                <span style={S.th} />
+                <span style={S.th}>쿠폰명</span>
+                <span style={S.th}>코드</span>
+                <span style={S.th}>할인</span>
+                <span style={S.th}>유효기간</span>
+                <span style={S.th}>발급방식</span>
               </div>
-              {COUPONS.map(c => (
-                <div key={c.id} className={`cdp-coupon-row ${selectedCoupons.includes(c.id) ? "cdp-coupon-selected" : ""} ${isReadOnly ? "cdp-coupon-readonly" : ""}`}>
-                  <div className="cdp-coupon-check">
-                    <div className={`cdp-checkbox ${selectedCoupons.includes(c.id) ? "cdp-checkbox-on" : ""}`} onClick={() => !isReadOnly && toggleCoupon(c.id)}>
-                      {selectedCoupons.includes(c.id) && <span>✓</span>}
+              {coupons.length === 0 ? (
+                <div className="cdp-reward-empty">등록된 쿠폰이 없습니다</div>
+              ) : coupons.map((c, idx) => {
+                const isSelected = selectedCoupon === c.couponId;
+                return (
+                  <div key={c.couponId} style={{ ...S.row, ...S.rowCoupon, ...(isSelected ? S.rowSelected : {}), borderBottom: idx === coupons.length - 1 ? "none" : "0.5px solid #F0F2F5" }}>
+                    <div style={{ display: "flex", justifyContent: "center" }}>
+                      <div
+                        onClick={() => !isReadOnly && handleSelectCoupon(c.couponId)}
+                        style={{ width: 17, height: 17, borderRadius: 4, border: isSelected ? "none" : "1.5px solid #D0D5DD", background: isSelected ? "#4F6EF7" : "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: isReadOnly ? "default" : "pointer", fontSize: 10, color: "#fff", fontWeight: 700 }}
+                      >
+                        {isSelected && "✓"}
+                      </div>
                     </div>
+                    <span style={{ ...S.name, opacity: isReadOnly && !isSelected ? 0.5 : 1 }}>{c.name}</span>
+                    <span style={{ ...S.code, opacity: isReadOnly && !isSelected ? 0.5 : 1 }}>{c.code}</span>
+                    <span style={{ ...S.cell, opacity: isReadOnly && !isSelected ? 0.5 : 1 }}>
+                      {c.discountType === "RATE" ? `${c.discountAmount}%` : `${c.discountAmount?.toLocaleString()}원`}
+                      <span style={{ fontSize: 10, color: "#9EA6B5", marginLeft: 4 }}>({DISCOUNT_TYPE_DISPLAY[c.discountType]})</span>
+                    </span>
+                    <span style={{ ...S.subCell, opacity: isReadOnly && !isSelected ? 0.5 : 1 }}>{c.expiredAt}일</span>
+                    <span style={{ ...S.subCell, opacity: isReadOnly && !isSelected ? 0.5 : 1 }}>{c.issuanceMethod === "AUTO" ? "자동 지급" : "다운로드"}</span>
                   </div>
-                  <div className="cdp-coupon-name">{c.name}</div>
-                  <div className="cdp-coupon-code">{c.code}</div>
-                  <div className="cdp-coupon-discount">{c.discount}</div>
-                  <div className="cdp-coupon-expiry">{c.expiry}</div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
-          {rewardTab !== "쿠폰" && <div className="cdp-reward-empty">준비 중입니다</div>}
+
+          {/* 광고 탭 */}
+          {!rewardLoading && rewardTab === "광고" && (
+            <div style={S.rewardTable}>
+              <div style={{ ...S.rewardHeader, ...S.rewardHeaderAd }}>
+                <span style={S.th} />
+                <span style={S.th}>광고명</span>
+                <span style={S.th}>타겟 유형</span>
+                <span style={S.th}>타겟 값</span>
+                <span style={S.th}>생성일</span>
+              </div>
+              {ads.length === 0 ? (
+                <div className="cdp-reward-empty">등록된 광고가 없습니다</div>
+              ) : ads.map((a, idx) => {
+                const isSelected = selectedAd === a.adId;
+                const targetVal  = a.targetType === "PRODUCT" ? `ID: ${a.productId}` : (a.category || a.keyword || "–");
+                return (
+                  <div key={a.adId} style={{ ...S.row, ...S.rowAd, ...(isSelected ? S.rowSelected : {}), borderBottom: idx === ads.length - 1 ? "none" : "0.5px solid #F0F2F5" }}>
+                    <div style={{ display: "flex", justifyContent: "center" }}>
+                      <div
+                        onClick={() => !isReadOnly && handleSelectAd(a.adId)}
+                        style={{ width: 17, height: 17, borderRadius: 4, border: isSelected ? "none" : "1.5px solid #D0D5DD", background: isSelected ? "#4F6EF7" : "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: isReadOnly ? "default" : "pointer", fontSize: 10, color: "#fff", fontWeight: 700 }}
+                      >
+                        {isSelected && "✓"}
+                      </div>
+                    </div>
+                    <span style={{ ...S.name, opacity: isReadOnly && !isSelected ? 0.5 : 1 }}>{a.adName}</span>
+                    <span style={{ ...S.cell, fontSize: 11, opacity: isReadOnly && !isSelected ? 0.5 : 1 }}>{TARGET_TYPE_DISPLAY[a.targetType] ?? a.targetType}</span>
+                    <span style={{ ...S.code, opacity: isReadOnly && !isSelected ? 0.5 : 1 }}>{targetVal}</span>
+                    <span style={{ ...S.subCell, opacity: isReadOnly && !isSelected ? 0.5 : 1 }}>{a.createdAt?.substring(0, 10)}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
 
