@@ -57,9 +57,8 @@ export default function CampaignListPage() {
   const [selectedNo,       setSelectedNo]       = useState(null);
   const [currentPage,      setCurrentPage]      = useState(1);
 
-  // ── 수정용 데이터 state ──
-  const [editCoupon, setEditCoupon] = useState(null); // 수정할 쿠폰 데이터
-  const [editAd,     setEditAd]     = useState(null); // 수정할 광고 데이터
+  const [editCoupon, setEditCoupon] = useState(null);
+  const [editAd,     setEditAd]     = useState(null);
 
   const [campaignData, setCampaignData] = useState([]);
   const [loading,      setLoading]      = useState(false);
@@ -85,6 +84,7 @@ export default function CampaignListPage() {
   useEffect(() => { fetchCampaigns(); }, [activePage, activeTab]);
 
   const handleCampaignDetailClick = async (campaignId) => {
+    if (detailLoading) return;
     setDetailLoading(true);
     setDetailError(null);
     try {
@@ -114,7 +114,6 @@ export default function CampaignListPage() {
     if (item.key === "광고 관리")   { setAdOpen((p) => !p);       return; }
     if (item.group === "coupon") setCouponOpen(true);
     if (item.group === "ad")     setAdOpen(true);
-    // 사이드바 클릭 시 수정 데이터 초기화
     if (item.key === "쿠폰 등록") setEditCoupon(null);
     if (item.key === "광고 등록") setEditAd(null);
     setActivePage(item.key);
@@ -226,7 +225,6 @@ export default function CampaignListPage() {
         <CouponListPage
           onNavigate={(page, data) => {
             if (page === "create") {
-              // 수정 시 data(쿠폰 데이터) 저장 후 등록 페이지로 이동
               setEditCoupon(data ?? null);
               setActivePage("쿠폰 등록");
             } else {
@@ -266,7 +264,6 @@ export default function CampaignListPage() {
         <AdManagePage
           onNavigate={(page, data) => {
             if (page === "create") {
-              // 수정 시 data(광고 데이터) 저장 후 등록 페이지로 이동
               setEditAd(data ?? null);
               setActivePage("광고 등록");
             } else {
@@ -374,33 +371,28 @@ export default function CampaignListPage() {
                 {!loading && !error && pagedData.map((row, i) => {
                   const globalNo = (currentPage - 1) * PAGE_SIZE + i + 1;
                   const badge    = STATUS_BADGE[row.status];
+                  const isSelected = selectedNo === row.campaignId;
                   return (
                     <tr
                       key={row.campaignId}
-                      className={selectedNo === row.campaignId ? "cl-row-selected" : ""}
-                      onClick={() => setSelectedNo(row.campaignId)}
+                      className={`cl-clickable-row ${isSelected ? "cl-row-selected" : ""}`}
+                      onClick={() => {
+                        setSelectedNo(row.campaignId);
+                        handleCampaignDetailClick(row.campaignId);
+                      }}
                     >
                       <td>{globalNo}</td>
-                      <td>
+                      <td onClick={e => e.stopPropagation()}>
                         <input
                           type="radio"
                           name="selectedRow"
-                          checked={selectedNo === row.campaignId}
+                          checked={isSelected}
                           onChange={() => setSelectedNo(row.campaignId)}
                           className="cl-radio"
                         />
                       </td>
-                      <td>
-                        <span
-                          className="cl-campaign-id"
-                          style={{ cursor: detailLoading ? "wait" : "pointer" }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (!detailLoading) handleCampaignDetailClick(row.campaignId);
-                          }}
-                        >
-                          {row.campaignId}
-                        </span>
+                      <td style={{ color: "#3F76E4", fontFamily: "'Inter', sans-serif", fontWeight: 600 }}>
+                        {row.campaignId}
                       </td>
                       <td>{row.campaignGoalType}</td>
                       <td>{row.customerSegment}</td>

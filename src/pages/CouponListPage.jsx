@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import "./CouponListPage.css";
 import { couponList, couponDelete } from "../api/coupons";
 
-const DISCOUNT_TYPE_DISPLAY  = { FIXED: "정액할인", RATE: "정률할인" };
+const DISCOUNT_TYPE_DISPLAY   = { FIXED: "정액할인", RATE: "정률할인" };
 const ISSUANCE_METHOD_DISPLAY = { AUTO: "자동 지급", DOWNLOAD: "다운로드" };
 
 export default function CouponListPage({ onNavigate }) {
@@ -13,13 +13,10 @@ export default function CouponListPage({ onNavigate }) {
   const [currentPage, setCurrentPage] = useState(1);
   const PAGE_SIZE = 10;
 
-  useEffect(() => {
-    fetchCoupons();
-  }, []);
+  useEffect(() => { fetchCoupons(); }, []);
 
   async function fetchCoupons() {
-    setLoading(true);
-    setError(null);
+    setLoading(true); setError(null);
     try {
       const data = await couponList();
       setCoupons(Array.isArray(data) ? data : []);
@@ -76,7 +73,7 @@ export default function CouponListPage({ onNavigate }) {
             <table className="cp-table">
               <thead>
                 <tr>
-                  <th>고유번호</th>
+                  <th>No</th>
                   <th>쿠폰명</th>
                   <th>쿠폰코드</th>
                   <th>할인유형</th>
@@ -90,24 +87,27 @@ export default function CouponListPage({ onNavigate }) {
               <tbody>
                 {paginated.length === 0 ? (
                   <tr><td colSpan={9} style={{ textAlign: "center", padding: 24 }}>쿠폰이 없습니다</td></tr>
-                ) : paginated.map((c, i) => (
-                  <tr key={c.couponId} className={i % 2 === 1 ? "cp-row-alt" : ""}>
-                    <td className="cp-td-id">{c.couponId}</td>
-                    <td className="cp-td-name">{c.name}</td>
-                    <td className="cp-td-code">{c.code}</td>
-                    <td>{DISCOUNT_TYPE_DISPLAY[c.discountType] ?? c.discountType}</td>
-                    <td>{c.discountType === "RATE" ? `${c.discountAmount}%` : `${c.discountAmount?.toLocaleString()}원`}</td>
-                    <td>{c.expiredAt}일</td>
-                    <td>{ISSUANCE_METHOD_DISPLAY[c.issuanceMethod] ?? c.issuanceMethod}</td>
-                    <td>{c.issueLimit === null ? "무제한" : `${c.issueLimit?.toLocaleString()}건`}</td>
-                    <td>
-                      <div className="cp-action-btns">
-                        <button className="cp-btn-edit" onClick={() => onNavigate("create", c)}>수정</button>
-                        <button className="cp-btn-delete" onClick={() => handleDelete(c.couponId)}>삭제</button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                ) : paginated.map((c, i) => {
+                  const globalNo = (currentPage - 1) * PAGE_SIZE + i + 1;
+                  return (
+                    <tr key={c.couponId}>
+                      <td>{globalNo}</td>
+                      <td className="cp-td-name">{c.name}</td>
+                      <td className="cp-td-code">{c.code}</td>
+                      <td>{DISCOUNT_TYPE_DISPLAY[c.discountType] ?? c.discountType}</td>
+                      <td>{c.discountType === "RATE" ? `${c.discountAmount}%` : `${c.discountAmount?.toLocaleString()}원`}</td>
+                      <td>{c.expiredAt}일</td>
+                      <td>{ISSUANCE_METHOD_DISPLAY[c.issuanceMethod] ?? c.issuanceMethod}</td>
+                      <td>{c.issueLimit === null ? "무제한" : `${c.issueLimit?.toLocaleString()}건`}</td>
+                      <td>
+                        <div className="cp-action-btns">
+                          <button className="cp-btn-edit" onClick={() => onNavigate("create", c)}>수정</button>
+                          <button className="cp-btn-delete" onClick={() => handleDelete(c.couponId)}>삭제</button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           )}

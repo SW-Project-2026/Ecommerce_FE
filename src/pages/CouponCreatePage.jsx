@@ -12,7 +12,6 @@ const ISSUANCE_METHOD_OPTIONS = [
   { label: "다운로드",  value: "DOWNLOAD" },
 ];
 
-// coupon prop이 있으면 수정 모드, 없으면 생성 모드
 export default function CouponCreatePage({ onNavigate, coupon }) {
   const isEdit = !!coupon;
 
@@ -20,12 +19,12 @@ export default function CouponCreatePage({ onNavigate, coupon }) {
     name:           coupon?.name          ?? "",
     code:           coupon?.code          ?? "",
     discountType:   coupon?.discountType  ?? "RATE",
-    discountValue:  coupon?.discountAmount != null ? String(coupon.discountAmount) : "",
-    minOrder:       coupon?.minOrderAmount != null ? String(coupon.minOrderAmount) : "",
+    discountValue:  coupon?.discountAmount    != null ? String(coupon.discountAmount)    : "",
+    minOrder:       coupon?.minOrderAmount    != null ? String(coupon.minOrderAmount)    : "",
     maxDiscount:    coupon?.maxDiscountAmount != null ? String(coupon.maxDiscountAmount) : "",
-    validDays:      coupon?.expiredAt     != null ? String(coupon.expiredAt) : "",
+    validDays:      coupon?.expiredAt         != null ? String(coupon.expiredAt)         : "",
     issuanceMethod: coupon?.issuanceMethod ?? "AUTO",
-    quantity:       coupon?.issueLimit    != null ? String(coupon.issueLimit) : "",
+    quantity:       coupon?.issueLimit        != null ? String(coupon.issueLimit)        : "",
   });
 
   const [saving,    setSaving]    = useState(false);
@@ -33,8 +32,11 @@ export default function CouponCreatePage({ onNavigate, coupon }) {
 
   const update = (key, val) => setForm(prev => ({ ...prev, [key]: val }));
 
+  // 정률일 때만 최대 할인 금액 표시
+  const isRate = form.discountType === "RATE";
+
   const previewDiscount = form.discountValue
-    ? `${form.discountValue}${form.discountType === "RATE" ? "%" : "원"}`
+    ? `${form.discountValue}${isRate ? "%" : "원"}`
     : "–";
   const previewName = form.name || "신규 가입 웰컴 쿠폰";
   const previewCode = form.code || "WELCOME25";
@@ -53,8 +55,9 @@ export default function CouponCreatePage({ onNavigate, coupon }) {
         code:              form.code,
         discountType:      form.discountType,
         discountAmount:    parseInt(form.discountValue, 10),
-        minOrderAmount:    form.minOrder    ? parseInt(form.minOrder, 10)    : null,
-        maxDiscountAmount: form.maxDiscount ? parseInt(form.maxDiscount, 10) : null,
+        minOrderAmount:    form.minOrder ? parseInt(form.minOrder, 10) : null,
+        // 정률일 때만 최대 할인 금액 전송, 정액이면 null
+        maxDiscountAmount: isRate && form.maxDiscount ? parseInt(form.maxDiscount, 10) : null,
         expiredAt:         parseInt(form.validDays, 10),
         issuanceMethod:    form.issuanceMethod,
         issueLimit:        form.quantity ? parseInt(form.quantity, 10) : null,
@@ -91,6 +94,7 @@ export default function CouponCreatePage({ onNavigate, coupon }) {
       <div className="cc2-content">
         <div className="cc2-left">
 
+          {/* 쿠폰 기본 정보 */}
           <div className="cc2-section">
             <h2 className="cc2-section-title">쿠폰 기본 정보</h2>
             <div className="cc2-divider" />
@@ -141,7 +145,7 @@ export default function CouponCreatePage({ onNavigate, coupon }) {
                   onChange={e => update("discountValue", e.target.value)}
                   placeholder="10"
                 />
-                <span className="cc2-unit">{form.discountType === "RATE" ? "%" : "원"}</span>
+                <span className="cc2-unit">{isRate ? "%" : "원"}</span>
               </div>
             </div>
 
@@ -160,22 +164,26 @@ export default function CouponCreatePage({ onNavigate, coupon }) {
               </div>
             </div>
 
-            <div className="cc2-field">
-              <label className="cc2-label">최대 할인 금액</label>
-              <div className="cc2-inline-group">
-                <input
-                  className="cc2-input cc2-input-wide"
-                  type="number"
-                  min="0"
-                  value={form.maxDiscount}
-                  onChange={e => update("maxDiscount", e.target.value)}
-                  placeholder="5000"
-                />
-                <span className="cc2-unit">원 한도</span>
+            {/* 정률일 때만 최대 할인 금액 표시 */}
+            {isRate && (
+              <div className="cc2-field">
+                <label className="cc2-label">최대 할인 금액</label>
+                <div className="cc2-inline-group">
+                  <input
+                    className="cc2-input cc2-input-wide"
+                    type="number"
+                    min="0"
+                    value={form.maxDiscount}
+                    onChange={e => update("maxDiscount", e.target.value)}
+                    placeholder="5000"
+                  />
+                  <span className="cc2-unit">원 한도</span>
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
+          {/* 발급 설정 */}
           <div className="cc2-section">
             <h2 className="cc2-section-title">발급 설정</h2>
             <div className="cc2-divider" />
@@ -235,6 +243,7 @@ export default function CouponCreatePage({ onNavigate, coupon }) {
           {saveError && <div style={{ color: "red", fontSize: 13, marginTop: 8 }}>{saveError}</div>}
         </div>
 
+        {/* 오른쪽: 미리보기 */}
         <div className="cc2-right">
           <div className="cc2-section">
             <h2 className="cc2-section-title">쿠폰 미리보기</h2>
@@ -259,10 +268,12 @@ export default function CouponCreatePage({ onNavigate, coupon }) {
               <span className="cc2-summary-key">최소 주문</span>
               <span className="cc2-summary-val">{form.minOrder ? `${Number(form.minOrder).toLocaleString()}원 이상` : "–"}</span>
             </div>
-            <div className="cc2-summary-row">
-              <span className="cc2-summary-key">최대 할인</span>
-              <span className="cc2-summary-val">{form.maxDiscount ? `${Number(form.maxDiscount).toLocaleString()}원 한도` : "–"}</span>
-            </div>
+            {isRate && (
+              <div className="cc2-summary-row">
+                <span className="cc2-summary-key">최대 할인</span>
+                <span className="cc2-summary-val">{form.maxDiscount ? `${Number(form.maxDiscount).toLocaleString()}원 한도` : "–"}</span>
+              </div>
+            )}
             <div className="cc2-summary-row">
               <span className="cc2-summary-key">유효 기간</span>
               <span className="cc2-summary-val">{form.validDays ? `${form.validDays}일 (발급일 기준)` : "–"}</span>

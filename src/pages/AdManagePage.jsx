@@ -19,7 +19,7 @@ const CATEGORY_DISPLAY = {
   FASHION_CLOTHING:   "패션의류",
 };
 
-const TARGET_TYPE_STYLE = {
+const TARGET_TYPE_BADGE = {
   "상품":    { color: "#4F6EF7", background: "rgba(79,110,247,0.12)" },
   "카테고리": { color: "#2ABFBF", background: "rgba(42,191,191,0.12)" },
   "키워드":  { color: "#FF6B6B", background: "rgba(255,107,107,0.12)" },
@@ -74,7 +74,7 @@ export default function AdManagePage({ onNavigate }) {
       </div>
 
       <div className="ad-content">
-        {/* 검색 카드 - 쿠폰 목록과 동일 스타일 */}
+        {/* 검색 카드 */}
         <div style={{
           background: "#FFFFFF",
           borderRadius: 12,
@@ -86,19 +86,18 @@ export default function AdManagePage({ onNavigate }) {
           height: 56,
         }}>
           <span style={{
-            fontFamily: "'Noto Sans KR', sans-serif",
+            fontFamily: "'Inter', sans-serif",
             fontWeight: 700,
             fontSize: 12,
-            color: "#9EA6B5",
+            color: "#666666",
             whiteSpace: "nowrap",
           }}>검색</span>
           <div style={{
             display: "flex",
             alignItems: "center",
-            width: 260,
-            height: 30,
-            background: "#FFFFFF",
-            border: "1px solid #EBEDF0",
+            width: 240,
+            height: 35,
+            background: "#F5F6FA",
             borderRadius: 6,
             flexShrink: 0,
           }}>
@@ -109,7 +108,7 @@ export default function AdManagePage({ onNavigate }) {
                 outline: "none",
                 background: "transparent",
                 padding: "0 12px",
-                fontFamily: "'Noto Sans KR', sans-serif",
+                fontFamily: "'Inter', sans-serif",
                 fontSize: 12,
                 color: "#333",
               }}
@@ -122,33 +121,39 @@ export default function AdManagePage({ onNavigate }) {
 
         {/* 테이블 카드 */}
         <div className="ad-table-card">
-          {loading && <div style={{ padding: 24, textAlign: "center", fontSize: 12, color: "#9EA6B5" }}>불러오는 중...</div>}
-          {error   && <div style={{ padding: 24, color: "#B82B2B", fontSize: 12 }}>{error}</div>}
+          {loading && (
+            <div style={{ textAlign: "center", padding: 40, fontFamily: "'Noto Sans KR', sans-serif", fontSize: 13, color: "#9EA6B5" }}>
+              불러오는 중...
+            </div>
+          )}
+          {error && (
+            <div style={{ textAlign: "center", padding: 40, fontFamily: "'Noto Sans KR', sans-serif", fontSize: 13, color: "#D94F4F" }}>
+              {error}
+            </div>
+          )}
           {!loading && !error && (
             <table className="ad-table">
               <thead>
                 <tr>
-                  <th style={{ width: 70 }}>고유번호</th>
+                  <th>No</th>
                   <th>광고명</th>
-                  <th style={{ width: 120 }}>생성시간</th>
-                  <th style={{ width: 100 }}>타겟 유형</th>
-                  <th style={{ width: 160 }}>타겟 값</th>
-                  <th style={{ width: 100, textAlign: "center" }}>액션</th>
+                  <th>생성시간</th>
+                  <th>타겟 유형</th>
+                  <th>타겟 값</th>
+                  <th>액션</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0 ? (
-                  <tr><td colSpan={6} style={{ textAlign: "center", padding: 24, fontSize: 12, color: "#9EA6B5" }}>광고가 없습니다</td></tr>
+                  <tr><td colSpan={6} style={{ textAlign: "center", padding: 40 }}>광고가 없습니다</td></tr>
                 ) : filtered.map((ad, i) => {
                   const { type, value } = getTargetInfo(ad);
-                  const badgeStyle = TARGET_TYPE_STYLE[type] ?? {};
+                  const badgeStyle = TARGET_TYPE_BADGE[type] ?? {};
                   return (
-                    <tr key={ad.adId} className={i % 2 === 1 ? "ad-row-alt" : ""}>
-                      <td style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: "#4F6EF7", fontWeight: 600 }}>{ad.adId}</td>
-                      <td className="ad-td-name"><span className="ad-name">{ad.adName}</span></td>
-                      <td style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: "#9EA6B5" }}>
-                        {ad.createdAt?.substring(0, 19).replace("T", " ")}
-                      </td>
+                    <tr key={ad.adId}>
+                      <td>{i + 1}</td>
+                      <td className="ad-td-name">{ad.adName}</td>
+                      <td>{ad.createdAt?.substring(0, 19).replace("T", " ")}</td>
                       <td>
                         <span style={{
                           display: "inline-flex",
@@ -156,7 +161,7 @@ export default function AdManagePage({ onNavigate }) {
                           justifyContent: "center",
                           padding: "3px 10px",
                           borderRadius: 4,
-                          fontFamily: "'Noto Sans KR', sans-serif",
+                          fontFamily: "'Inter', sans-serif",
                           fontWeight: 700,
                           fontSize: 11,
                           ...badgeStyle,
@@ -164,7 +169,7 @@ export default function AdManagePage({ onNavigate }) {
                           {type}
                         </span>
                       </td>
-                      <td style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: "#333" }}>{value}</td>
+                      <td>{value}</td>
                       <td>
                         <div className="ad-action-btns">
                           <button className="ad-btn-edit" onClick={() => onNavigate?.("create", ad)}>수정</button>
