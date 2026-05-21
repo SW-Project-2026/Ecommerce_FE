@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import "./AdManagePage.css";
 import { adList, adDelete } from "../api/ads";
+import { withAutoRefresh } from "../utils/withAutoRefresh";
 
 const TARGET_TYPE_DISPLAY = {
   PRODUCT:  "상품",
@@ -45,7 +46,7 @@ export default function AdManagePage({ onNavigate }) {
   async function fetchAds() {
     setLoading(true); setError(null);
     try {
-      const data = await adList();
+      const data = await withAutoRefresh(() => adList());
       setAds(Array.isArray(data) ? data : []);
     } catch (err) { setError(err.message); }
     finally { setLoading(false); }
@@ -54,7 +55,7 @@ export default function AdManagePage({ onNavigate }) {
   async function handleDelete(adId) {
     if (!window.confirm("광고를 삭제하시겠습니까?")) return;
     try {
-      await adDelete({ adId });
+      await withAutoRefresh(() => adDelete({ adId }));
       setAds(prev => prev.filter(a => a.adId !== adId));
     } catch (err) { alert(err.message); }
   }
@@ -74,7 +75,6 @@ export default function AdManagePage({ onNavigate }) {
       </div>
 
       <div className="ad-content">
-        {/* 검색 카드 */}
         <div style={{
           background: "#FFFFFF",
           borderRadius: 12,
@@ -119,7 +119,6 @@ export default function AdManagePage({ onNavigate }) {
           </div>
         </div>
 
-        {/* 테이블 카드 */}
         <div className="ad-table-card">
           {loading && (
             <div style={{ textAlign: "center", padding: 40, fontFamily: "'Noto Sans KR', sans-serif", fontSize: 13, color: "#9EA6B5" }}>

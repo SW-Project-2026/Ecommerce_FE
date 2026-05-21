@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import "./CouponListPage.css";
 import { couponList, couponDelete } from "../api/coupons";
+import { withAutoRefresh } from "../utils/withAutoRefresh";
 
-const DISCOUNT_TYPE_DISPLAY   = { FIXED: "정액할인", RATE: "정률할인" };
-const ISSUANCE_METHOD_DISPLAY = { AUTO: "자동 지급", DOWNLOAD: "다운로드" };
+const DISCOUNT_TYPE_DISPLAY = { FIXED: "정액할인", RATE: "정률할인" };
 
 export default function CouponListPage({ onNavigate }) {
   const [coupons,     setCoupons]     = useState([]);
@@ -18,7 +18,7 @@ export default function CouponListPage({ onNavigate }) {
   async function fetchCoupons() {
     setLoading(true); setError(null);
     try {
-      const data = await couponList();
+      const data = await withAutoRefresh(() => couponList());
       setCoupons(Array.isArray(data) ? data : []);
     } catch (err) {
       setError(err.message);
@@ -30,7 +30,7 @@ export default function CouponListPage({ onNavigate }) {
   async function handleDelete(couponId) {
     if (!window.confirm("쿠폰을 삭제하시겠습니까?")) return;
     try {
-      await couponDelete({ couponId });
+      await withAutoRefresh(() => couponDelete({ couponId }));
       setCoupons(prev => prev.filter(c => c.couponId !== couponId));
     } catch (err) {
       alert(err.message);
@@ -79,14 +79,13 @@ export default function CouponListPage({ onNavigate }) {
                   <th>할인유형</th>
                   <th>할인금액</th>
                   <th>유효기간</th>
-                  <th>발급방식</th>
                   <th>발급수량</th>
                   <th>액션</th>
                 </tr>
               </thead>
               <tbody>
                 {paginated.length === 0 ? (
-                  <tr><td colSpan={9} style={{ textAlign: "center", padding: 24 }}>쿠폰이 없습니다</td></tr>
+                  <tr><td colSpan={8} style={{ textAlign: "center", padding: 24 }}>쿠폰이 없습니다</td></tr>
                 ) : paginated.map((c, i) => {
                   const globalNo = (currentPage - 1) * PAGE_SIZE + i + 1;
                   return (
@@ -97,7 +96,6 @@ export default function CouponListPage({ onNavigate }) {
                       <td>{DISCOUNT_TYPE_DISPLAY[c.discountType] ?? c.discountType}</td>
                       <td>{c.discountType === "RATE" ? `${c.discountAmount}%` : `${c.discountAmount?.toLocaleString()}원`}</td>
                       <td>{c.expiredAt}일</td>
-                      <td>{ISSUANCE_METHOD_DISPLAY[c.issuanceMethod] ?? c.issuanceMethod}</td>
                       <td>{c.issueLimit === null ? "무제한" : `${c.issueLimit?.toLocaleString()}건`}</td>
                       <td>
                         <div className="cp-action-btns">

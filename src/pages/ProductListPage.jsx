@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { searchProducts, getProducts } from '../api/products'
+import { usePageView } from '../hooks/usePageView'
 
 const DISPLAY = 20
 const NAVER_SORT_OPTIONS = [
@@ -15,11 +16,7 @@ function NaverCard({ product }) {
     <a href={product.link} target="_blank" rel="noreferrer" className="sp-card">
       <div className="sp-card-thumb">
         <img src={product.image} alt={product.title} loading="lazy" />
-        <button
-          className="sp-heart"
-          onClick={e => { e.preventDefault(); setLiked(p => !p) }}
-          aria-label="찜하기"
-        >
+        <button className="sp-heart" onClick={e => { e.preventDefault(); setLiked(p => !p) }} aria-label="찜하기">
           <i className={liked ? 'ri-heart-fill' : 'ri-heart-line'} style={{ color: '#FF6B6B' }} />
         </button>
       </div>
@@ -41,11 +38,7 @@ function DbCard({ product, onNavigate }) {
         {image
           ? <img src={image} alt={product.name} loading="lazy" />
           : <div className="sp-no-image" />}
-        <button
-          className="sp-heart"
-          onClick={e => { e.preventDefault(); e.stopPropagation(); setLiked(p => !p) }}
-          aria-label="찜하기"
-        >
+        <button className="sp-heart" onClick={e => { e.preventDefault(); e.stopPropagation(); setLiked(p => !p) }} aria-label="찜하기">
           <i className={liked ? 'ri-heart-fill' : 'ri-heart-line'} style={{ color: '#FF6B6B' }} />
         </button>
       </div>
@@ -69,13 +62,7 @@ function Pagination({ current, totalPages, onChange }) {
   return (
     <div className="sp-pagination">
       {nums.map(n => (
-        <button
-          key={n}
-          className={`sp-page-btn${n === current ? ' active' : ''}`}
-          onClick={() => onChange(n)}
-        >
-          {n}
-        </button>
+        <button key={n} className={`sp-page-btn${n === current ? ' active' : ''}`} onClick={() => onChange(n)}>{n}</button>
       ))}
       {end < totalPages && (
         <button className="sp-page-btn" onClick={() => onChange(end + 1)}>»</button>
@@ -84,7 +71,9 @@ function Pagination({ current, totalPages, onChange }) {
   )
 }
 
-export default function SearchPage({ query, category, onNavigate }) {
+export default function SearchPage({ query, category, onNavigate, userId = null }) {
+  usePageView('상품목록', userId)
+
   const [products, setProducts] = useState([])
   const [total, setTotal] = useState(0)
   const [totalPages, setTotalPages] = useState(0)
@@ -134,15 +123,8 @@ export default function SearchPage({ query, category, onNavigate }) {
     }
   }, [query, category, page, sort, dbSort])
 
-  function handleSort(e) {
-    setSort(e.target.value)
-    setPage(1)
-  }
-
-  function handleDbSort(value) {
-    setDbSort(value)
-    setPage(1)
-  }
+  function handleSort(e) { setSort(e.target.value); setPage(1) }
+  function handleDbSort(value) { setDbSort(value); setPage(1) }
 
   const resultLabel = isSearch
     ? <><b>"{query}"</b> 검색 결과</>
@@ -150,7 +132,6 @@ export default function SearchPage({ query, category, onNavigate }) {
 
   return (
     <div className="sp-wrap">
-      {/* 브레드크럼 */}
       <div className="pdp-breadcrumb" style={{ marginBottom: 16 }}>
         <span onClick={() => onNavigate('home')} className="pdp-bc-link">홈</span>
         {isList && category?.label && (
@@ -167,7 +148,6 @@ export default function SearchPage({ query, category, onNavigate }) {
         )}
       </div>
 
-      {/* 결과바 */}
       <div className="sp-result-bar">
         <span className="sp-result-count">
           {resultLabel}
@@ -175,9 +155,7 @@ export default function SearchPage({ query, category, onNavigate }) {
         </span>
         {isSearch && (
           <select className="sp-sort" value={sort} onChange={handleSort}>
-            {NAVER_SORT_OPTIONS.map(o => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
+            {NAVER_SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
         )}
         {isList && (
@@ -189,12 +167,7 @@ export default function SearchPage({ query, category, onNavigate }) {
               { value: 'price,desc',     label: '높은가격' },
             ].map((o, i, arr) => (
               <span key={o.value} className="sp-db-sort-item">
-                <button
-                  className={`sp-db-sort-btn${dbSort === o.value ? ' active' : ''}`}
-                  onClick={() => handleDbSort(o.value)}
-                >
-                  {o.label}
-                </button>
+                <button className={`sp-db-sort-btn${dbSort === o.value ? ' active' : ''}`} onClick={() => handleDbSort(o.value)}>{o.label}</button>
                 {i < arr.length - 1 && <span className="sp-db-sort-divider">|</span>}
               </span>
             ))}
@@ -202,15 +175,10 @@ export default function SearchPage({ query, category, onNavigate }) {
         )}
       </div>
 
-      {/* 상품 그리드 */}
       {loading && <div className="sp-status">불러오는 중...</div>}
       {error && <div className="sp-status sp-error">{error}</div>}
-      {!loading && !error && !isSearch && !isList && (
-        <div className="sp-status">검색어 또는 카테고리를 선택해주세요.</div>
-      )}
-      {!loading && !error && (isSearch || isList) && products.length === 0 && (
-        <div className="sp-status">상품이 없어요.</div>
-      )}
+      {!loading && !error && !isSearch && !isList && <div className="sp-status">검색어 또는 카테고리를 선택해주세요.</div>}
+      {!loading && !error && (isSearch || isList) && products.length === 0 && <div className="sp-status">상품이 없어요.</div>}
       {!loading && !error && products.length > 0 && (
         <div className="sp-grid">
           {products.map(p =>
@@ -221,11 +189,7 @@ export default function SearchPage({ query, category, onNavigate }) {
         </div>
       )}
 
-      <Pagination
-        current={page}
-        totalPages={totalPages}
-        onChange={n => { setPage(n); window.scrollTo(0, 0) }}
-      />
+      <Pagination current={page} totalPages={totalPages} onChange={n => { setPage(n); window.scrollTo(0, 0) }} />
     </div>
   )
 }

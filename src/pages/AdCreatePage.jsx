@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import "./AdCreatePage.css";
 import { getProduct, getProducts, searchProducts } from "../api/products";
 import { adCreate, adUpdate } from "../api/ads";
+import { withAutoRefresh } from "../utils/withAutoRefresh";
 
 const AD_TARGET_TYPES = ["상품", "카테고리", "키워드"];
 
@@ -39,7 +40,6 @@ const CATEGORY_DB_KEY = {
   FURNITURE_INTERIOR: "가구/인테리어",
 };
 
-// ad prop이 있으면 수정 모드, 없으면 생성 모드
 export default function AdCreatePage({ onNavigate, ad }) {
   const isEdit = !!ad;
 
@@ -65,7 +65,6 @@ export default function AdCreatePage({ onNavigate, ad }) {
     setPreviewError(null);
   };
 
-  // 상품 ID로 이미지 조회
   const handleProductIdBlur = async () => {
     if (!form.productId.trim()) return;
     setPreviewLoading(true);
@@ -82,7 +81,6 @@ export default function AdCreatePage({ onNavigate, ad }) {
     }
   };
 
-  // 카테고리 변경 시 랜덤 이미지 조회
   useEffect(() => {
     if (!form.category) { setPreviewImage(null); return; }
     setPreviewLoading(true);
@@ -99,7 +97,6 @@ export default function AdCreatePage({ onNavigate, ad }) {
       .finally(() => setPreviewLoading(false));
   }, [form.category]);
 
-  // 키워드 blur 시 랜덤 이미지 조회
   const handleKeywordBlur = async () => {
     if (!form.keyword.trim()) return;
     setPreviewLoading(true);
@@ -135,9 +132,9 @@ export default function AdCreatePage({ onNavigate, ad }) {
       };
 
       if (isEdit) {
-        await adUpdate({ adId: ad.adId, ...payload });
+        await withAutoRefresh(() => adUpdate({ adId: ad.adId, ...payload }));
       } else {
-        await adCreate(payload);
+        await withAutoRefresh(() => adCreate(payload));
       }
       onNavigate("list");
     } catch (err) {

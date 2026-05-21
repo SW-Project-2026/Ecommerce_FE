@@ -4,6 +4,7 @@ import { campaignCreate } from "../api/campaigns";
 import { eventList } from "../api/events";
 import { couponList } from "../api/coupons";
 import { adList } from "../api/ads";
+import { withAutoRefresh } from "../utils/withAutoRefresh";
 
 const OPERATORS_NUMBER   = ["≥ (이상)", "≤ (이하)", "> (초과)", "< (미만)", "= (동등)"];
 const OPERATORS_STRING   = ["포함", "= (동등)"];
@@ -40,6 +41,12 @@ const WEEKDAY_MAP = {
 const DISCOUNT_TYPE_DISPLAY = { FIXED: "정액", RATE: "정률" };
 const TARGET_TYPE_DISPLAY   = { PRODUCT: "상품", CATEGORY: "카테고리", KEYWORD: "키워드" };
 
+const ISSUANCE_METHOD_OPTIONS = [
+  { label: "자동 지급", value: "AUTO" },
+  { label: "다운로드",  value: "DOWNLOAD" },
+  { label: "메세징",    value: "MESSAGING" },
+];
+
 const CAT1_OPTIONS = ["조기정착", "이탈방지", "재구매"];
 const CAT2_OPTIONS = {
   "조기정착": ["신규고객유치", "휴면 고객"],
@@ -48,6 +55,11 @@ const CAT2_OPTIONS = {
 };
 const HOUR_OPTIONS   = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"));
 const MINUTE_OPTIONS = ["00", "10", "20", "30", "40", "50"];
+
+const REWARD_ROW_HEIGHT    = 48;
+const REWARD_HEADER_HEIGHT = 42;
+const REWARD_MAX_ROWS      = 3;
+const REWARD_MAX_HEIGHT    = REWARD_HEADER_HEIGHT + REWARD_ROW_HEIGHT * REWARD_MAX_ROWS;
 
 let filterIdCounter = 0;
 const newFilter = () => ({
@@ -58,61 +70,20 @@ function today() {
   return new Date().toISOString().split("T")[0];
 }
 
-// ── 공통 리워드 테이블 인라인 스타일 ──
 const S = {
-  rewardTable: {
-    width: "100%",
-    borderRadius: 8,
-    overflow: "hidden",
-    border: "1px solid #EBEDF0",
-  },
-  rewardHeader: {
-    display: "grid",
-    alignItems: "center",
-    padding: "10px 16px",
-    background: "#F7FAFF",
-    borderBottom: "1px solid #EBEDF0",
-  },
-  rewardHeaderCoupon: { gridTemplateColumns: "36px 1.8fr 1fr 1fr 1fr 1fr" },
+  rewardTable: { width: "100%", borderRadius: 8, overflow: "hidden", border: "1px solid #EBEDF0" },
+  rewardHeader: { display: "grid", alignItems: "center", padding: "10px 16px", background: "#F7FAFF", borderBottom: "1px solid #EBEDF0" },
+  rewardHeaderCoupon: { gridTemplateColumns: "36px 1.8fr 1fr 1fr 1fr" },
   rewardHeaderAd:     { gridTemplateColumns: "36px 2fr 1fr 1.2fr 1fr" },
-  th: {
-    fontFamily: "'Noto Sans KR', sans-serif",
-    fontWeight: 700,
-    fontSize: 11,
-    color: "#9EA6B5",
-  },
-  row: {
-    display: "grid",
-    alignItems: "center",
-    padding: "12px 16px",
-    borderBottom: "0.5px solid #F0F2F5",
-    background: "#FDFEFF",
-    transition: "background 0.1s",
-  },
-  rowCoupon: { gridTemplateColumns: "36px 1.8fr 1fr 1fr 1fr 1fr" },
-  rowAd:     { gridTemplateColumns: "36px 2fr 1fr 1.2fr 1fr" },
+  th:      { fontFamily: "'Noto Sans KR', sans-serif", fontWeight: 700, fontSize: 11, color: "#9EA6B5" },
+  row:     { display: "grid", alignItems: "center", padding: "12px 16px", background: "#FDFEFF", transition: "background 0.1s" },
+  rowCoupon:   { gridTemplateColumns: "36px 1.8fr 1fr 1fr 1fr" },
+  rowAd:       { gridTemplateColumns: "36px 2fr 1fr 1.2fr 1fr" },
   rowSelected: { background: "#F0F5FF" },
-  name: {
-    fontFamily: "'Noto Sans KR', sans-serif",
-    fontWeight: 700,
-    fontSize: 13,
-    color: "#121212",
-  },
-  code: {
-    fontFamily: "'Inter', sans-serif",
-    fontSize: 12,
-    color: "#4F6EF7",
-  },
-  cell: {
-    fontFamily: "'Noto Sans KR', sans-serif",
-    fontSize: 12,
-    color: "#333",
-  },
-  subCell: {
-    fontFamily: "'Noto Sans KR', sans-serif",
-    fontSize: 11,
-    color: "#9EA6B5",
-  },
+  name:    { fontFamily: "'Noto Sans KR', sans-serif", fontWeight: 700, fontSize: 13, color: "#121212" },
+  code:    { fontFamily: "'Inter', sans-serif", fontSize: 12, color: "#4F6EF7" },
+  cell:    { fontFamily: "'Noto Sans KR', sans-serif", fontSize: 12, color: "#333" },
+  subCell: { fontFamily: "'Noto Sans KR', sans-serif", fontSize: 11, color: "#9EA6B5" },
 };
 
 export default function CampaignCreatePage({ onNavigate }) {
@@ -131,13 +102,16 @@ export default function CampaignCreatePage({ onNavigate }) {
 
   useEffect(() => {
     setEventsLoading(true);
-    eventList({ isActive: true })
+    withAutoRefresh(() => eventList({ isActive: true }))
       .then(data => setEvents(Array.isArray(data) ? data : []))
       .catch(err => console.error("이벤트 조회 실패:", err))
       .finally(() => setEventsLoading(false));
 
     setRewardLoading(true);
-    Promise.all([couponList(), adList()])
+    Promise.all([
+      withAutoRefresh(() => couponList()),
+      withAutoRefresh(() => adList()),
+    ])
       .then(([couponData, adData]) => {
         setCoupons(Array.isArray(couponData) ? couponData : []);
         setAds(Array.isArray(adData) ? adData : []);
@@ -159,7 +133,16 @@ export default function CampaignCreatePage({ onNavigate }) {
   const [selectedCoupon, setSelectedCoupon] = useState(null);
   const [selectedAd,     setSelectedAd]     = useState(null);
 
-  const handleRewardTabChange = (tab) => setRewardTab(tab);
+  const [dedupeType, setDedupeType] = useState("none");
+  const [dedupeDays, setDedupeDays] = useState("30");
+
+  const [issuanceMethod, setIssuanceMethod] = useState("AUTO");
+  const [msgContent,     setMsgContent]     = useState("");
+
+  const isMessaging = issuanceMethod === "MESSAGING";
+
+  const selectedCouponName = coupons.find(c => c.couponId === selectedCoupon)?.name ?? "쿠폰명";
+
   const handleSelectCoupon = (id) => setSelectedCoupon(prev => prev === id ? null : id);
   const handleSelectAd     = (id) => setSelectedAd(prev => prev === id ? null : id);
 
@@ -213,7 +196,7 @@ export default function CampaignCreatePage({ onNavigate }) {
         value:          f.value,
         periodDays:     parseInt(f.period, 10),
       }));
-      await campaignCreate({
+      await withAutoRefresh(() => campaignCreate({
         campaignName:          name,
         description:           desc,
         campaignGoalType:      GOAL_TYPE_MAP[cat1] ?? cat1,
@@ -228,8 +211,12 @@ export default function CampaignCreatePage({ onNavigate }) {
         filterLogicalOperator: filterLogic,
         couponId:              selectedCoupon ?? null,
         adId:                  selectedAd     ?? null,
+        deduplicationType:     dedupeType,
+        deduplicationDays:     dedupeType === "period" ? parseInt(dedupeDays, 10) : null,
+        issuanceMethod,
+        messagingContent:      isMessaging ? msgContent : null,
         filters:               apiFilters,
-      });
+      }));
       onNavigate && onNavigate("list");
     } catch (err) { setSaveError(err.message); }
     finally { setSaving(false); }
@@ -377,7 +364,7 @@ export default function CampaignCreatePage({ onNavigate }) {
         <div className="cc-section-body">
           <div className="cc-reward-tabs">
             {["쿠폰", "광고"].map(t => (
-              <button key={t} className={`cc-reward-tab ${rewardTab === t ? "cc-reward-tab-active" : ""}`} onClick={() => handleRewardTabChange(t)}>{t}</button>
+              <button key={t} className={`cc-reward-tab ${rewardTab === t ? "cc-reward-tab-active" : ""}`} onClick={() => setRewardTab(t)}>{t}</button>
             ))}
           </div>
 
@@ -385,47 +372,116 @@ export default function CampaignCreatePage({ onNavigate }) {
 
           {/* 쿠폰 탭 */}
           {!rewardLoading && rewardTab === "쿠폰" && (
-            <div style={S.rewardTable}>
-              <div style={{ ...S.rewardHeader, ...S.rewardHeaderCoupon }}>
-                <span style={S.th} />
-                <span style={S.th}>쿠폰명</span>
-                <span style={S.th}>코드</span>
-                <span style={S.th}>할인</span>
-                <span style={S.th}>유효기간</span>
-                <span style={S.th}>발급방식</span>
-              </div>
-              {coupons.length === 0 ? (
-                <div className="cc-filter-empty">등록된 쿠폰이 없습니다</div>
-              ) : coupons.map((c, idx) => {
-                const isSelected = selectedCoupon === c.couponId;
-                return (
-                  <div key={c.couponId} style={{ ...S.row, ...S.rowCoupon, ...(isSelected ? S.rowSelected : {}), borderBottom: idx === coupons.length - 1 ? "none" : "0.5px solid #F0F2F5" }}>
-                    <div style={{ display: "flex", justifyContent: "center" }}>
-                      <div
-                        onClick={() => { handleSelectCoupon(c.couponId); setSelectedAd(null); }}
-                        style={{ width: 17, height: 17, borderRadius: 4, border: isSelected ? "none" : "1.5px solid #D0D5DD", background: isSelected ? "#3B82F5" : "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: 10, color: "#fff", fontWeight: 700 }}
-                      >
-                        {isSelected && "✓"}
+            <>
+              <p className="cc-reward-sub-label">쿠폰 선택 <span className="cc-req">*</span></p>
+              <div style={{ ...S.rewardTable, maxHeight: coupons.length > REWARD_MAX_ROWS ? REWARD_MAX_HEIGHT : "none", overflow: coupons.length > REWARD_MAX_ROWS ? "auto" : "visible" }}>
+                <div style={{ ...S.rewardHeader, ...S.rewardHeaderCoupon, position: "sticky", top: 0, zIndex: 1 }}>
+                  <span style={S.th} />
+                  <span style={S.th}>쿠폰명</span>
+                  <span style={S.th}>코드</span>
+                  <span style={S.th}>할인</span>
+                  <span style={S.th}>유효기간</span>
+                </div>
+                {coupons.length === 0 ? (
+                  <div className="cc-filter-empty">등록된 쿠폰이 없습니다</div>
+                ) : coupons.map((c, idx) => {
+                  const isSelected = selectedCoupon === c.couponId;
+                  return (
+                    <div key={c.couponId} style={{ ...S.row, ...S.rowCoupon, ...(isSelected ? S.rowSelected : {}), borderBottom: idx === coupons.length - 1 ? "none" : "0.5px solid #F0F2F5" }}>
+                      <div style={{ display: "flex", justifyContent: "center" }}>
+                        <div
+                          onClick={() => { handleSelectCoupon(c.couponId); setSelectedAd(null); }}
+                          style={{ width: 17, height: 17, borderRadius: 4, border: isSelected ? "none" : "1.5px solid #D0D5DD", background: isSelected ? "#3B82F5" : "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: 10, color: "#fff", fontWeight: 700 }}
+                        >
+                          {isSelected && "✓"}
+                        </div>
                       </div>
+                      <span style={S.name}>{c.name}</span>
+                      <span style={S.code}>{c.code}</span>
+                      <span style={S.cell}>
+                        {c.discountType === "RATE" ? `${c.discountAmount}%` : `${c.discountAmount?.toLocaleString()}원`}
+                        <span style={{ fontSize: 10, color: "#9EA6B5", marginLeft: 4 }}>({DISCOUNT_TYPE_DISPLAY[c.discountType]})</span>
+                      </span>
+                      <span style={S.subCell}>{c.expiredAt}일</span>
                     </div>
-                    <span style={S.name}>{c.name}</span>
-                    <span style={S.code}>{c.code}</span>
-                    <span style={S.cell}>
-                      {c.discountType === "RATE" ? `${c.discountAmount}%` : `${c.discountAmount?.toLocaleString()}원`}
-                      <span style={{ fontSize: 10, color: "#9EA6B5", marginLeft: 4 }}>({DISCOUNT_TYPE_DISPLAY[c.discountType]})</span>
-                    </span>
-                    <span style={S.subCell}>{c.expiredAt}일</span>
-                    <span style={S.subCell}>{c.issuanceMethod === "AUTO" ? "자동 지급" : "다운로드"}</span>
+                  );
+                })}
+              </div>
+
+              <p className="cc-reward-sub-label" style={{ marginTop: 20 }}>중복 제거 <span className="cc-req">*</span></p>
+              <div className="cc-dedupe-section">
+                <div className="cc-dedupe-cards">
+                  <div
+                    className={`cc-dedupe-card ${dedupeType === "none" ? "cc-dedupe-card-inactive" : "cc-dedupe-card-default"}`}
+                    onClick={() => setDedupeType("none")}
+                  >
+                    <div style={{ width: 18, height: 18, borderRadius: "50%", border: "1.5px solid #E0E4E8", background: "#FFFFFF", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      {dedupeType === "none" && <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#E0E4E8" }} />}
+                    </div>
+                    <div>
+                      <div className="cc-dedupe-card-title" style={{ color: dedupeType === "none" ? "#0F1E3D" : "#9EA6B5" }}>사용 안 함</div>
+                      <div className="cc-dedupe-card-desc" style={{ color: dedupeType === "none" ? "rgba(90,106,138,0.75)" : "#C0C5D0" }}>중복 제거 없이 조건 충족 시 항상 발송</div>
+                    </div>
                   </div>
-                );
-              })}
-            </div>
+                  <div
+                    className={`cc-dedupe-card ${dedupeType === "period" ? "cc-dedupe-card-active" : "cc-dedupe-card-default"}`}
+                    onClick={() => setDedupeType("period")}
+                  >
+                    <div style={{ width: 18, height: 18, borderRadius: "50%", border: dedupeType === "period" ? "1.5px solid #4F6EF7" : "1.5px solid #A6A8B8", background: dedupeType === "period" ? "#4F6EF7" : "#FFFFFF", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      {dedupeType === "period" && <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#FFFFFF" }} />}
+                    </div>
+                    <div>
+                      <div className="cc-dedupe-card-title" style={{ color: dedupeType === "period" ? "#4F6EF7" : "#0F1E3D" }}>기간 설정</div>
+                      <div className="cc-dedupe-card-desc" style={{ color: dedupeType === "period" ? "rgba(79,110,247,0.75)" : "rgba(90,106,138,0.75)" }}>N일 이내 수신 이력 있는 고객은 발송에서 제외</div>
+                    </div>
+                  </div>
+                </div>
+                {dedupeType === "period" && (
+                  <div className="cc-dedupe-period-row">
+                    <span className="cc-dedupe-period-label">제한 기간</span>
+                    <div className="cc-dedupe-period-input-wrap">
+                      <input className="cc-input cc-dedupe-period-input" type="number" min="1" value={dedupeDays} onChange={e => setDedupeDays(e.target.value)} />
+                    </div>
+                    <span className="cc-dedupe-period-suffix">일 이내 수신 이력 있으면 발송 제외</span>
+                  </div>
+                )}
+              </div>
+
+              <p className="cc-reward-sub-label" style={{ marginTop: 20 }}>발급 방식 <span className="cc-req">*</span></p>
+              <div className="cc-issuance-group">
+                {ISSUANCE_METHOD_OPTIONS.map(opt => (
+                  <label key={opt.value} className="cc-issuance-label">
+                    <input
+                      type="radio"
+                      name="issuanceMethod"
+                      checked={issuanceMethod === opt.value}
+                      onChange={() => setIssuanceMethod(opt.value)}
+                      className="cc-issuance-radio"
+                    />
+                    {opt.label}
+                  </label>
+                ))}
+              </div>
+
+              {isMessaging && (
+                <div className="cc-msg-wrap">
+                  <textarea
+                    className="cc-msg-textarea"
+                    placeholder={`예) [Da-On] 회원님께 특별 쿠폰을 발송해드립니다.\n쿠폰명: ${selectedCouponName}\n앱에서 바로 사용해보세요!`}
+                    value={msgContent}
+                    onChange={e => setMsgContent(e.target.value)}
+                    maxLength={90}
+                  />
+                  <p className="cc-msg-char-count">{msgContent.length} / 90자</p>
+                </div>
+              )}
+            </>
           )}
 
           {/* 광고 탭 */}
           {!rewardLoading && rewardTab === "광고" && (
-            <div style={S.rewardTable}>
-              <div style={{ ...S.rewardHeader, ...S.rewardHeaderAd }}>
+            <div style={{ ...S.rewardTable, maxHeight: ads.length > REWARD_MAX_ROWS ? REWARD_MAX_HEIGHT : "none", overflow: ads.length > REWARD_MAX_ROWS ? "auto" : "visible" }}>
+              <div style={{ ...S.rewardHeader, ...S.rewardHeaderAd, position: "sticky", top: 0, zIndex: 1 }}>
                 <span style={S.th} />
                 <span style={S.th}>광고명</span>
                 <span style={S.th}>타겟 유형</span>

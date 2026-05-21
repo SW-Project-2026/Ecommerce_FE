@@ -1,4 +1,11 @@
 import { useState } from 'react'
+import { usePageView } from '../hooks/usePageView'
+
+const MOCK_COUPONS = [
+  { id: 'c1', name: '신규가입 5,000원 할인', discountAmount: 5000 },
+  { id: 'c2', name: '여름 시즌 3,000원 할인', discountAmount: 3000 },
+  { id: 'c3', name: '첫 구매 10% 할인 (최대 10,000원)', discountAmount: 10000 },
+]
 
 function ProgressBar({ step }) {
   const steps = ['장바구니', '주문/결제', '주문 완료']
@@ -24,11 +31,14 @@ function ProgressBar({ step }) {
   )
 }
 
-export default function CartPage({ cart, onNavigate, onCartChange, onOrderComplete }) {
+export default function CartPage({ cart, onNavigate, onCartChange, onGoCheckout, auth }) {
+  usePageView('장바구니', auth?.userId ?? null)
+
   const [selected, setSelected] = useState(() => new Set(cart.map(i => i.product.productId)))
   const [qtys, setQtys] = useState(() =>
     Object.fromEntries(cart.map(i => [i.product.productId, i.qty]))
   )
+  const [couponId, setCouponId] = useState('')
 
   const allSelected = cart.length > 0 && cart.every(i => selected.has(i.product.productId))
   const selectedCount = selected.size
@@ -62,13 +72,19 @@ export default function CartPage({ cart, onNavigate, onCartChange, onOrderComple
 
   const selectedItems = cart.filter(i => selected.has(i.product.productId))
   const subtotal = selectedItems.reduce((s, i) => s + i.product.minPrice * qtys[i.product.productId], 0)
-  const shipping = 0
-  const total = subtotal + shipping
+
+  const appliedCoupon = MOCK_COUPONS.find(c => c.id === couponId) ?? null
+  const couponDiscount = appliedCoupon?.discountAmount ?? 0
+  const total = Math.max(0, subtotal - couponDiscount)
 
   function handleOrder() {
     if (selectedItems.length === 0) return
-    onOrderComplete({ items: selectedItems, qtys, total })
-    onNavigate('order-complete')
+    const items = selectedItems.map(i => ({
+      product: i.product,
+      qty: qtys[i.product.productId],
+    }))
+    // clickPurchaseButton 스니펫은 CheckoutPage 결제하기 버튼으로 이동됨
+    onGoCheckout({ items, coupon: appliedCoupon })
   }
 
   return (
@@ -76,7 +92,6 @@ export default function CartPage({ cart, onNavigate, onCartChange, onOrderComple
       <ProgressBar step={1} />
 
       <div className="cart-layout">
-        {/* 왼쪽: 상품 목록 */}
         <div className="cart-left">
           <div className="cart-card">
             <div className="cart-header">
@@ -126,7 +141,6 @@ export default function CartPage({ cart, onNavigate, onCartChange, onOrderComple
             })}
           </div>
 
-          {/* 다른 고객이 함께 구매한 상품 */}
           <div className="cart-related">
             <h3 className="cart-related-title">다른 고객이 함께 구매한 상품</h3>
             <div className="cart-related-row">
@@ -146,7 +160,6 @@ export default function CartPage({ cart, onNavigate, onCartChange, onOrderComple
           </div>
         </div>
 
-        {/* 오른쪽: 주문 요약 */}
         <div className="cart-right">
           <div className="cart-summary">
             <h3 className="cart-summary-title">주문 요약</h3>
@@ -157,8 +170,14 @@ export default function CartPage({ cart, onNavigate, onCartChange, onOrderComple
               </div>
               <div className="cart-summary-row">
                 <span>배송비</span>
-                <span>{shipping === 0 ? '+ 0원' : `${shipping.toLocaleString()}원`}</span>
+                <span>+ 0원</span>
               </div>
+              {couponDiscount > 0 && (
+                <div className="cart-summary-row" style={{ color: '#FF6B6B' }}>
+                  <span>쿠폰 할인</span>
+                  <span>-{couponDiscount.toLocaleString()}원</span>
+                </div>
+              )}
             </div>
             <div className="cart-summary-total">
               <span>최종 결제 금액</span>
@@ -166,8 +185,15 @@ export default function CartPage({ cart, onNavigate, onCartChange, onOrderComple
             </div>
 
             <div className="cart-coupon-box">
-              <select className="cart-coupon-select">
+              <select
+                className="cart-coupon-select"
+                value={couponId}
+                onChange={e => setCouponId(e.target.value)}
+              >
                 <option value="">쿠폰 선택</option>
+                {MOCK_COUPONS.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
               </select>
             </div>
 

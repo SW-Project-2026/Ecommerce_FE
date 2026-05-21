@@ -666,3 +666,161 @@
 }
 
 .myp-empty i { font-size: 40px; display: block; margin-bottom: 12px; color: #D1D5DB; }
+
+/* ══════════ 배송지 관리 ══════════ */
+.myp-addr-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.myp-addr-card {
+  border: 1px solid #E5E7EB;
+  border-radius: 10px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  transition: border-color 0.15s;
+}
+
+.myp-addr-card--default {
+  border-color: #1C2E5C;
+  background: #F7F9FF;
+}
+
+.myp-addr-default-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #1C2E5C;
+  background: #EEF2FF;
+  padding: 2px 8px;
+  border-radius: 10px;
+  margin-bottom: 4px;
+}
+
+.myp-addr-info { flex: 1; min-width: 0; }
+
+.myp-addr-road {
+  font-size: 13px;
+  color: #374151;
+  margin-bottom: 2px;
+}
+
+.myp-addr-detail {
+  font-size: 12px;
+  color: #9E9E9E;
+}
+
+.myp-addr-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.myp-addr-btn {
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.myp-addr-btn--default {
+  background: #fff;
+  border: 1px solid #D1D5DB;
+  color: #374151;
+}
+.myp-addr-btn--default:hover { border-color: #1C2E5C; color: #1C2E5C; }
+
+.myp-addr-btn--edit {
+  background: #fff;
+  border: 1px solid #D1D5DB;
+  color: #374151;
+}
+.myp-addr-btn--edit:hover { border-color: #1C2E5C; color: #1C2E5C; }
+
+.myp-addr-btn--del {
+  background: #fff;
+  border: 1px solid #FECACA;
+  color: #DC2626;
+}
+.myp-addr-btn--del:hover { background: #DC2626; color: #fff; }
+
+.myp-addr-add-btn {
+  width: 100%;
+  height: 44px;
+  border: 1.5px dashed #D1D5DB;
+  border-radius: 10px;
+  background: #fff;
+  color: #9E9E9E;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.15s;
+}
+
+.myp-addr-add-btn:hover {
+  border-color: #1C2E5C;
+  color: #1C2E5C;
+  background: #F7F9FF;
+}
+
+/* 배송지 추가/수정 인라인 폼 */
+.myp-addr-form {
+  border: 1px solid #1C2E5C;
+  border-radius: 10px;
+  padding: 18px;
+  background: #F7F9FF;
+  margin-bottom: 10px;
+}
+
+.myp-addr-form-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1C2E5C;
+  margin-bottom: 14px;
+}
+
+.myp-addr-form-btns {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.myp-addr-form-save {
+  height: 38px;
+  padding: 0 20px;
+  background: #1C2E5C;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.myp-addr-form-save:hover { opacity: 0.85; }
+
+.myp-addr-form-cancel {
+  height: 38px;
+  padding: 0 16px;
+  background: #fff;
+  color: #374151;
+  border: 1px solid #D1D5DB;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.myp-addr-form-cancel:hover { border-color: #9E9E9E; }

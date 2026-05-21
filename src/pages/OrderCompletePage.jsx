@@ -1,3 +1,5 @@
+import { usePageView } from '../hooks/usePageView'
+
 function ProgressBar({ step }) {
   const steps = ['장바구니', '주문/결제', '주문 완료']
   return (
@@ -22,16 +24,15 @@ function ProgressBar({ step }) {
   )
 }
 
-export default function OrderCompletePage({ orderInfo, onNavigate }) {
+export default function OrderCompletePage({ orderInfo, onNavigate, userId = null }) {
+  usePageView('주문완료', userId)
+
   const now = new Date()
   const dateStr = now.toLocaleDateString('ko-KR', {
     year: 'numeric', month: 'long', day: 'numeric', weekday: 'short'
   })
-  const timeStr = now.toLocaleTimeString('ko-KR', {
-    hour: '2-digit', minute: '2-digit'
-  })
+  const timeStr = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
   const orderNo = `DA-${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}${String(Math.floor(Math.random()*9999)).padStart(4,'0')}`
-
   const total = orderInfo?.total ?? 0
 
   return (

@@ -1,11 +1,34 @@
 import { useState, useEffect } from "react";
 import "./EventFieldPage.css";
 import { eventList, addEventField, updateEventField, deleteEventField } from "../api/events";
+import { campaignList, campaignDetail } from "../api/campaigns";
+import { withAutoRefresh } from "../utils/withAutoRefresh";
 
 const TYPE_OPTIONS     = ["STRING", "NUMBER", "DATETIME", "DATE", "TIME"];
 const REQUIRED_OPTIONS = ["필수", "선택"];
 
-/* ── 이벤트 그룹 ── */
+async function isFieldInActiveCampaign(fieldName, eventName) {
+  try {
+    const [inProgress, paused] = await Promise.all([
+      withAutoRefresh(() => campaignList({ status: "IN_PROGRESS" })),
+      withAutoRefresh(() => campaignList({ status: "PAUSED" })),
+    ]);
+    const activeCampaigns = [...(Array.isArray(inProgress) ? inProgress : []), ...(Array.isArray(paused) ? paused : [])];
+
+    for (const c of activeCampaigns) {
+      const detail = await withAutoRefresh(() => campaignDetail({ campaignId: c.campaignId }));
+      const filters = detail?.filters ?? [];
+      const used = filters.some(
+        f => f.fieldName === fieldName && f.eventName === eventName
+      );
+      if (used) return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
 function EventGroup({ event, onReload }) {
   const [showAddRow,  setShowAddRow]  = useState(false);
   const [editFieldId, setEditFieldId] = useState(null);
@@ -13,17 +36,18 @@ function EventGroup({ event, onReload }) {
   const [editField,   setEditField]   = useState({});
   const [saving,      setSaving]      = useState(false);
   const [deleting,    setDeleting]    = useState(null);
+  const [checking,    setChecking]    = useState(null);
 
   const handleAdd = async () => {
     if (!newField.key.trim()) return;
     setSaving(true);
     try {
-      await addEventField(event.eventId, {
+      await withAutoRefresh(() => addEventField(event.eventId, {
         fieldName:   newField.key,
         fieldType:   newField.type,
         isRequired:  newField.required === "필수",
         description: newField.desc,
-      });
+      }));
       setNewField({ key: "", type: "STRING", required: "필수", desc: "" });
       setShowAddRow(false);
       onReload();
@@ -34,7 +58,16 @@ function EventGroup({ event, onReload }) {
     }
   };
 
-  const handleEditStart = (f) => {
+  const handleEditStart = async (f) => {
+    setChecking(f.fieldId);
+    const inUse = await isFieldInActiveCampaign(f.fieldName, event.eventName);
+    setChecking(null);
+
+    if (inUse) {
+      alert(`'${f.fieldName}' 필드는 수행중 또는 일시정지 상태의 캠페인에서 사용 중이므로 수정할 수 없습니다.`);
+      return;
+    }
+
     setEditFieldId(f.fieldId);
     setEditField({
       fieldName:   f.fieldName,
@@ -47,12 +80,12 @@ function EventGroup({ event, onReload }) {
   const handleEditSave = async (fieldId) => {
     setSaving(true);
     try {
-      await updateEventField(event.eventId, fieldId, {
+      await withAutoRefresh(() => updateEventField(event.eventId, fieldId, {
         fieldName:   editField.fieldName,
         fieldType:   editField.fieldType,
         isRequired:  editField.isRequired === "필수",
         description: editField.description,
-      });
+      }));
       setEditFieldId(null);
       onReload();
     } catch (err) {
@@ -62,11 +95,20 @@ function EventGroup({ event, onReload }) {
     }
   };
 
-  const handleDelete = async (fieldId) => {
+  const handleDelete = async (f) => {
+    setChecking(f.fieldId);
+    const inUse = await isFieldInActiveCampaign(f.fieldName, event.eventName);
+    setChecking(null);
+
+    if (inUse) {
+      alert(`'${f.fieldName}' 필드는 수행중 또는 일시정지 상태의 캠페인에서 사용 중이므로 삭제할 수 없습니다.`);
+      return;
+    }
+
     if (!window.confirm("정말 삭제하시겠습니까?")) return;
-    setDeleting(fieldId);
+    setDeleting(f.fieldId);
     try {
-      await deleteEventField(event.eventId, fieldId);
+      await withAutoRefresh(() => deleteEventField(event.eventId, f.fieldId));
       onReload();
     } catch (err) {
       alert(err.message);
@@ -77,26 +119,12 @@ function EventGroup({ event, onReload }) {
 
   return (
     <div className="ef-group">
-      <div className="ef-group-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <div>
-          <h3 className="ef-event-title">
-            <span className="ef-event-key">{event.eventName}</span>
-            <span className="ef-event-sep"> | </span>
-            <span>{event.description}</span>
-          </h3>
-        </div>
-        <span style={{
-          display: "inline-block",
-          padding: "2px 10px",
-          borderRadius: "10px",
-          fontSize: 11,
-          fontFamily: "'Noto Sans KR', sans-serif",
-          fontWeight: 500,
-          background: event.isActive ? "rgba(34,197,94,0.12)" : "rgba(158,166,181,0.15)",
-          color: event.isActive ? "#1a9e42" : "#9EA6B5",
-        }}>
-          {event.isActive ? "활성" : "비활성"}
-        </span>
+      <div className="ef-group-header">
+        <h3 className="ef-event-title">
+          <span className="ef-event-key">{event.eventName}</span>
+          <span className="ef-event-sep"> | </span>
+          <span>{event.description}</span>
+        </h3>
       </div>
 
       <table className="ef-table">
@@ -166,13 +194,19 @@ function EventGroup({ event, onReload }) {
                     <td className="ef-td-desc">{f.description}</td>
                     <td className="ef-td-action">
                       <div className="ef-add-actions">
-                        <button className="ef-btn-edit" onClick={() => handleEditStart(f)}>수정</button>
+                        <button
+                          className="ef-btn-edit"
+                          onClick={() => handleEditStart(f)}
+                          disabled={checking === f.fieldId}
+                        >
+                          {checking === f.fieldId ? "확인중..." : "수정"}
+                        </button>
                         <button
                           className="ef-btn-add-cancel"
-                          onClick={() => handleDelete(f.fieldId)}
-                          disabled={deleting === f.fieldId}
+                          onClick={() => handleDelete(f)}
+                          disabled={deleting === f.fieldId || checking === f.fieldId}
                         >
-                          {deleting === f.fieldId ? "삭제중..." : "삭제"}
+                          {deleting === f.fieldId ? "삭제중..." : checking === f.fieldId ? "확인중..." : "삭제"}
                         </button>
                       </div>
                     </td>
@@ -252,7 +286,6 @@ function EventGroup({ event, onReload }) {
   );
 }
 
-/* ── 메인 페이지 ── */
 export default function EventFieldPage() {
   const [events,  setEvents]  = useState([]);
   const [loading, setLoading] = useState(false);
@@ -261,7 +294,7 @@ export default function EventFieldPage() {
   const fetchEvents = () => {
     setLoading(true);
     setError(null);
-    eventList()
+    withAutoRefresh(() => eventList())
       .then(data => setEvents(Array.isArray(data) ? data : []))
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));

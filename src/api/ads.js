@@ -9,10 +9,6 @@ function authHeaders() {
 }
 
 // ── 광고 생성 ──
-// targetType: PRODUCT / CATEGORY / KEYWORD
-// productId: targetType=PRODUCT일 때
-// category: targetType=CATEGORY일 때 (BEAUTY/FASHION_ACCESSORY/LIVING_HEALTH/FURNITURE_INTERIOR/FOOD/SPORTS_LEISURE/DIGITAL_APPLIANCE/FASHION_CLOTHING)
-// keyword: targetType=KEYWORD일 때
 export async function adCreate({ adName, targetType, productId, category, keyword }) {
   const res = await fetch(`${BASE}/api/ads`, {
     method: 'POST',
@@ -32,14 +28,18 @@ export async function adCreate({ adName, targetType, productId, category, keywor
 }
 
 // ── 광고 목록 조회 ──
-export async function adList() {
-  const res = await fetch(`${BASE}/api/ads`, {
+export async function adList({ page = 0, size = 100 } = {}) {
+  const params = new URLSearchParams()
+  params.append('page', page)
+  params.append('size', size)
+
+  const res = await fetch(`${BASE}/api/ads?${params}`, {
     method: 'GET',
     headers: authHeaders(),
   })
   const json = await res.json()
   if (!res.ok) throw new Error(json.message || '광고 목록 조회 실패')
-  return json.data
+  return json.data.content
 }
 
 // ── 광고 단건 조회 ──
@@ -92,7 +92,6 @@ export async function adDelete({ adId }) {
 }
 
 // ── 광고 사용자 노출 ──
-// 유저가 광고를 봤을 때 호출 → AdExposure 레코드 생성 (clicked=false)
 export async function adExpose({ adId }) {
   const res = await fetch(`${BASE}/api/ads/${adId}/expose`, {
     method: 'POST',
@@ -105,7 +104,6 @@ export async function adExpose({ adId }) {
 }
 
 // ── 광고 사용자 클릭 ──
-// 유저가 광고 클릭 시 호출 → clicked=true, clickedAt=now 업데이트
 export async function adClick({ adId }) {
   const res = await fetch(`${BASE}/api/ads/${adId}/click`, {
     method: 'PATCH',
@@ -118,7 +116,6 @@ export async function adClick({ adId }) {
 }
 
 // ── 사용자 광고 조회 ──
-// 특정 유저가 노출된 광고 목록 조회
 export async function userAdList({ userId }) {
   const res = await fetch(`${BASE}/api/users/${userId}/ads`, {
     method: 'GET',

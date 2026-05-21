@@ -36,7 +36,7 @@ const STATUS_MAP = {
   shipping: { label: '배송중',   cls: 'myp-status--shipping' },
   complete: { label: '배송완료', cls: 'myp-status--complete' },
   pending:  { label: '결제완료', cls: 'myp-status--pending'  },
-  cancel:   { label: '취소/반품', cls: 'myp-status--cancel'  },
+  cancel:   { label: '취소/반품', cls: 'myp-status--cancel'   },
 }
 
 const FILTERS = ['전체', '1개월', '3개월', '6개월']
@@ -68,7 +68,7 @@ export default function MyOrderList() {
           <div className="myp-order-card-header">
             <span className="myp-order-date">{order.date}</span>
             <span className="myp-order-num">{order.num}</span>
-            <button className="myp-order-detail-btn">주문 상세</button>
+            {/* 주문 상세 버튼이 있던 자리입니다. 깔끔하게 삭제되었습니다. */}
           </div>
 
           {order.items.map((item, ii) => (

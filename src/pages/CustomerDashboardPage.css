@@ -1,21 +1,23 @@
-/* ── MAIN ── */
+/* ══════════ MAIN ══════════ */
 .cd-main {
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: #0D0F14;
+  background: #F0F1F3;
   min-width: 0;
+  overflow-y: auto;
 }
 
-/* ── PAGE HEADER ── */
+/* ══════════ PAGE HEADER ══════════ */
 .cd-page-header {
   box-sizing: border-box;
   width: 100%;
-  height: 64px;
-  background: #151820;
-  border-bottom: 1px solid #252A38;
+  height: 72px;
+  background: #FFFFFF;
+  border-bottom: 1px solid #E0E4E8;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 0 32px;
   flex-shrink: 0;
 }
@@ -24,7 +26,7 @@
   font-family: 'Inter', sans-serif;
   font-weight: 700;
   font-size: 18px;
-  color: #F0F2FF;
+  color: #212121;
   margin: 0 0 3px 0;
 }
 
@@ -35,24 +37,52 @@
   margin: 0;
 }
 
-/* ── CONTENT ── */
+.cd-back-btn {
+  height: 30px;
+  padding: 0 14px;
+  background: #FFFFFF;
+  border: 1px solid #EBEDF0;
+  border-radius: 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: #5A6A8A;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.cd-back-btn:hover { background: #F5F7FA; }
+
+/* ══════════ CONTENT ══════════ */
 .cd-content {
   flex: 1;
-  padding: 20px 24px 40px;
+  padding: 20px 28px 40px;
   display: flex;
   flex-direction: column;
   gap: 14px;
-  overflow-y: auto;
 }
 
-/* ── PROFILE CARD ── */
+/* ══════════ PROFILE CARD ══════════ */
 .cd-profile-card {
-  background: #1A1E2A;
-  border-radius: 12px;
-  padding: 18px 24px;
+  background: #1A2E52;
+  border-radius: 16px;
+  padding: 24px 28px;
   display: flex;
-  align-items: center;
-  gap: 20px;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+  overflow: hidden;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.cd-profile-deco {
+  position: absolute;
+  width: 150px;
+  height: 150px;
+  background: rgba(79, 110, 247, 0.08);
+  border-radius: 50%;
+  right: 200px;
+  top: -30px;
+  pointer-events: none;
 }
 
 .cd-avatar {
@@ -73,501 +103,373 @@
 .cd-profile-info {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
 }
 
 .cd-profile-name {
   font-family: 'Inter', sans-serif;
   font-weight: 700;
-  font-size: 15px;
-  color: #F0F2FF;
+  font-size: 20px;
+  color: #FFFFFF;
   margin: 0;
 }
 
 .cd-profile-tier {
   font-family: 'Inter', sans-serif;
-  font-size: 11px;
-  color: #8892AA;
+  font-size: 12px;
+  color: rgba(255,255,255,0.45);
   margin: 0;
 }
 
-.cd-profile-access {
-  font-family: 'Inter', sans-serif;
-  font-size: 10px;
-  color: #4B5468;
-  margin: 0;
-}
-
-.cd-profile-tags {
-  margin-left: auto;
+.cd-profile-badges {
   display: flex;
   gap: 8px;
+  margin-top: 6px;
   flex-wrap: wrap;
-  justify-content: flex-end;
 }
 
-.cd-tag {
+.cd-badge {
   padding: 4px 12px;
-  border-radius: 11px;
+  border-radius: 13px;
   font-family: 'Inter', sans-serif;
   font-weight: 600;
-  font-size: 10px;
+  font-size: 11px;
   white-space: nowrap;
 }
 
-/* ── SECTION LABEL ── */
+.cd-badge-vip     { background: rgba(232,93,69,0.22);   color: #FF7CAC; }
+.cd-badge-freq    { background: rgba(79,110,247,0.22);  color: #A0E1FF; }
+.cd-badge-churn   { background: rgba(24,184,122,0.18);  color: #18B87A; }
+
+.cd-profile-divider {
+  width: 1px;
+  height: 60px;
+  background: rgba(255,255,255,0.08);
+  flex-shrink: 0;
+  margin: 0 8px;
+}
+
+.cd-profile-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.cd-profile-stat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+}
+
+.cd-profile-stat-label {
+  color: rgba(255,255,255,0.4);
+}
+
+.cd-profile-stat-value {
+  color: rgba(255,255,255,0.75);
+  font-weight: 500;
+}
+
+/* ══════════ CAMPAIGN STAT CARDS ══════════ */
 .cd-section-label {
   font-family: 'Inter', sans-serif;
   font-weight: 600;
-  font-size: 11px;
+  font-size: 14px;
   color: #8892AA;
   margin-bottom: -4px;
 }
 
-/* ── STAT ROW ── */
 .cd-stat-row {
   display: flex;
-  gap: 10px;
+  gap: 12px;
 }
 
 .cd-stat-card {
   flex: 1;
-  background: #1A1E2A;
-  border-radius: 10px;
-  padding: 14px 14px 12px;
+  background: #FFFFFF;
+  border-radius: 12px;
+  padding: 20px 20px 16px;
   position: relative;
   overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
 }
 
 .cd-stat-bar {
   position: absolute;
   top: 0; left: 0;
-  width: 100%;
-  height: 3px;
-  border-radius: 10px 10px 0 0;
+  width: 3px;
+  height: 100%;
+  border-radius: 12px 0 0 12px;
 }
 
 .cd-stat-label {
   font-family: 'Inter', sans-serif;
-  font-size: 9px;
+  font-size: 13px;
   color: #8892AA;
-  margin: 0 0 6px 0;
+  margin: 0 0 8px 0;
+  font-weight: 500;
 }
 
 .cd-stat-value {
   font-family: 'Inter', sans-serif;
   font-weight: 700;
-  font-size: 18px;
-  color: #F0F2FF;
+  font-size: 20px;
+  color: #1A2E5A;
   margin: 0 0 4px 0;
 }
 
 .cd-stat-sub {
   font-family: 'Inter', sans-serif;
-  font-size: 9px;
-  color: #22C55E;
+  font-size: 11px;
+  color: #8892AA;
   margin: 0;
 }
 
-.cd-stat-tag {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  font-family: 'Inter', sans-serif;
-  font-size: 8px;
-  color: #4B5468;
+/* ══════════ WHITE CARD BASE ══════════ */
+.cd-card {
+  background: #FFFFFF;
+  border: 0.5px solid #E3E8F4;
+  border-radius: 14px;
+  padding: 20px 22px 18px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
 }
 
-/* ── 2열 그리드 ── */
+.cd-card-title {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  color: #0F1E3D;
+  margin: 0 0 4px 0;
+}
+
+.cd-card-sub {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  color: #9BAAC0;
+  margin: 0 0 14px 0;
+}
+
+.cd-card-divider {
+  width: 100%;
+  height: 1px;
+  background: #E3E8F4;
+  margin: 10px 0;
+}
+
+/* ══════════ 2열 그리드 ══════════ */
 .cd-grid-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 14px;
 }
 
-/* ── CARD BASE ── */
-.cd-card {
-  background: #1A1E2A;
-  border-radius: 12px;
-  padding: 18px 20px 16px;
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.cd-card::before {
-  content: "";
-  position: absolute;
-  top: 0; left: 0;
-  width: 100%;
-  height: 3px;
-  background: var(--bar, #4F6EF7);
-  border-radius: 12px 12px 0 0;
-}
-
-.cd-card-title {
-  font-family: 'Inter', sans-serif;
-  font-weight: 600;
-  font-size: 13px;
-  color: #F0F2FF;
-  margin: 0;
-}
-
-.cd-card-sub {
-  font-family: 'Inter', sans-serif;
-  font-size: 10px;
-  color: #8892AA;
-  margin: 0 0 8px 0;
-}
-
-.cd-card-note {
-  font-family: 'Inter', sans-serif;
-  font-weight: 600;
-  font-size: 10px;
-  margin: 6px 0 0 0;
-}
-
-/* ── KEYWORD CLOUD ── */
-.cd-keyword-cloud {
+/* ══════════ 관심 키워드 ══════════ */
+.cd-keyword-wrap {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px 16px;
-  padding: 8px 0 4px;
-  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
 }
 
-.cd-keyword {
+.cd-keyword-chip {
+  background: #F5F5F6;
+  border-radius: 13px;
+  padding: 5px 14px;
   font-family: 'Inter', sans-serif;
   font-weight: 600;
-  line-height: 1.3;
+  font-size: 12px;
+  color: #5A6A8A;
 }
 
-/* ── TIME CHART ── */
-.cd-time-chart {
+/* ══════════ 주 접속 시간대 차트 ══════════ */
+.cd-timeslot-card {
+  background: #FFFFFF;
+  border: 0.5px solid #E3E8F4;
+  border-radius: 14px;
+  padding: 20px 22px 18px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+}
+
+.cd-chart-wrap {
   display: flex;
-  gap: 12px;
+  gap: 0;
   align-items: flex-end;
-  padding: 8px 0 4px;
+  margin-top: 12px;
+  height: 200px;
 }
 
-.cd-time-col {
+.cd-chart-y {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 160px;
+  margin-bottom: 22px;
+  margin-right: 8px;
+  align-items: flex-end;
+}
+
+.cd-chart-y-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  color: #9BAAC0;
+  line-height: 1;
+}
+
+.cd-chart-bars {
+  flex: 1;
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  height: 100%;
+  position: relative;
+}
+
+/* grid lines */
+.cd-chart-grid {
+  position: absolute;
+  left: 0; right: 0;
+  height: 160px;
+  bottom: 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.cd-chart-grid-line {
+  width: 100%;
+  height: 1px;
+  background: #E3E8F4;
+}
+
+.cd-bar-col {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
+  height: 100%;
+  justify-content: flex-end;
 }
 
-.cd-time-track {
-  width: 44px;
-  height: 80px;
+.cd-bar-track {
+  width: 100%;
+  height: 160px;
   display: flex;
   align-items: flex-end;
-  background: #252A38;
-  border-radius: 4px;
-  overflow: hidden;
+  position: relative;
 }
 
-.cd-time-bar {
+.cd-bar-fill {
   width: 100%;
-  border-radius: 4px;
+  border-radius: 4px 4px 0 0;
   transition: height 0.4s;
 }
 
-.cd-time-label {
-  font-family: 'Inter', sans-serif;
-  font-size: 9px;
-  color: #8892AA;
-}
-
-.cd-time-sub {
-  font-family: 'Inter', sans-serif;
-  font-size: 8px;
-}
-
-/* ── SHOPPING PATTERN ── */
-.cd-pattern-chart {
-  display: flex;
-  gap: 16px;
-  align-items: flex-end;
-  padding: 8px 0 4px;
-}
-
-.cd-pattern-col {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
-
-.cd-pattern-track {
-  width: 60px;
-  height: 80px;
-  display: flex;
-  align-items: flex-end;
-  background: #252A38;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.cd-pattern-bar {
-  width: 100%;
-  border-radius: 4px;
-}
-
-.cd-pattern-pct {
-  font-family: 'Inter', sans-serif;
-  font-weight: 700;
-  font-size: 12px;
-  color: #F0F2FF;
-}
-
-.cd-pattern-type {
-  font-family: 'Inter', sans-serif;
-  font-weight: 600;
-  font-size: 9px;
-}
-
-/* ── SATISFACTION ── */
-.cd-satisfaction {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  padding: 8px 0;
-}
-
-.cd-score-circle {
-  width: 100px;
-  height: 100px;
-  background: rgba(34, 197, 94, 0.15);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.cd-score-num {
-  font-family: 'Inter', sans-serif;
-  font-weight: 700;
-  font-size: 36px;
-  color: #22C55E;
-}
-
-.cd-score-denom {
-  font-family: 'Inter', sans-serif;
-  font-size: 14px;
-  color: #8892AA;
-  align-self: flex-end;
-  margin-bottom: 8px;
-}
-
-.cd-satisfaction-rows {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.cd-satisfaction-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.cd-sat-label {
+.cd-bar-label {
   font-family: 'Inter', sans-serif;
   font-size: 10px;
-  color: #8892AA;
-  width: 90px;
-  flex-shrink: 0;
-}
-
-.cd-sat-value {
-  font-family: 'Inter', sans-serif;
-  font-weight: 600;
-  font-size: 10px;
-  flex: 1;
-}
-
-.cd-sat-status {
-  font-family: 'Inter', sans-serif;
-  font-size: 8px;
-  font-weight: 400;
-  padding: 2px 8px;
-  border-radius: 7px;
+  color: #9BAAC0;
+  text-align: center;
   white-space: nowrap;
 }
 
-/* ── REPURCHASE ── */
-.cd-repurchase-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 8px 0 4px;
-}
-
-.cd-repurchase-row {
+/* ══════════ 장바구니 / 최근 구매 이력 ══════════ */
+.cd-list-item {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid #E3E8F4;
 }
 
-.cd-repurchase-name {
+.cd-list-item:last-child { border-bottom: none; }
+.cd-list-item:first-child { padding-top: 0; }
+
+.cd-list-name {
   font-family: 'Inter', sans-serif;
-  font-weight: 600;
-  font-size: 10px;
-  width: 48px;
-  flex-shrink: 0;
+  font-weight: 500;
+  font-size: 13px;
+  color: #0F1E3D;
+  margin: 0 0 2px 0;
 }
 
-.cd-repurchase-bar-wrap {
-  flex: 1;
-}
-
-.cd-repurchase-track {
-  width: 100%;
-  height: 10px;
-  background: #252A38;
-  border-radius: 5px;
-  overflow: hidden;
-}
-
-.cd-repurchase-fill {
-  height: 100%;
-  border-radius: 5px;
-  transition: width 0.4s;
-}
-
-.cd-repurchase-info {
+.cd-list-cat {
   font-family: 'Inter', sans-serif;
-  font-size: 9px;
-  color: #8892AA;
-  white-space: nowrap;
-}
-
-.cd-repurchase-alert {
-  font-family: 'Inter', sans-serif;
-  font-weight: 700;
   font-size: 11px;
-  color: #EF4444;
-  flex-shrink: 0;
+  color: #9BAAC0;
+  margin: 0;
 }
 
-/* ── CART ── */
-.cd-cart-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 8px 0 4px;
-}
-
-.cd-cart-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: rgba(26, 30, 42, 0.4);
-  border-radius: 6px;
-  padding: 8px 12px;
-  position: relative;
-  overflow: hidden;
-}
-
-.cd-cart-alert {
-  background: rgba(239, 68, 68, 0.1);
-}
-
-.cd-cart-bar {
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
-  width: 3px;
-}
-
-.cd-cart-name {
-  font-family: 'Inter', sans-serif;
-  font-weight: 600;
-  font-size: 10px;
-  flex: 1;
-  padding-left: 4px;
-}
-
-.cd-cart-stock {
+.cd-list-price {
   font-family: 'Inter', sans-serif;
   font-weight: 700;
-  font-size: 9px;
+  font-size: 13px;
+  color: #0F1E3D;
   white-space: nowrap;
 }
 
-/* ── ACTIVE CAMPAIGNS ── */
-.cd-campaign-card {
-  background: #1A1E2A;
-  border-radius: 12px;
-  padding: 18px 20px 16px;
-  position: relative;
-  overflow: hidden;
+/* ══════════ 캠페인 성과 개인 stat 카드 (오른쪽 3개) ══════════ */
+.cd-perf-row {
+  display: flex;
+  gap: 12px;
 }
 
-.cd-campaign-bar {
+.cd-perf-card {
+  flex: 1;
+  background: #FFFFFF;
+  border-radius: 12px;
+  padding: 18px 20px 14px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  border: 0.5px solid #E3E8F4;
+}
+
+.cd-perf-bar {
   position: absolute;
   top: 0; left: 0;
-  width: 100%;
-  height: 3px;
-  background: #FF6B6B;
-  border-radius: 12px 12px 0 0;
-}
-
-.cd-campaign-list {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  margin-top: 12px;
-}
-
-.cd-campaign-item {
-  background: #151820;
-  border-radius: 8px;
-  padding: 12px 14px;
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.cd-campaign-left-bar {
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
   width: 3px;
+  height: 100%;
+  border-radius: 12px 0 0 12px;
 }
 
-.cd-campaign-info {
-  padding-left: 6px;
-}
-
-.cd-campaign-name {
+.cd-perf-label {
   font-family: 'Inter', sans-serif;
-  font-weight: 600;
-  font-size: 11px;
-  color: #F0F2FF;
+  font-size: 13px;
+  color: #8892AA;
+  font-weight: 500;
+  margin: 0 0 6px 0;
+}
+
+.cd-perf-value {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+  color: #1A2E5A;
   margin: 0 0 4px 0;
 }
 
-.cd-campaign-desc {
+.cd-perf-sub {
   font-family: 'Inter', sans-serif;
-  font-size: 9px;
+  font-size: 11px;
   color: #8892AA;
   margin: 0;
 }
 
-.cd-campaign-status {
-  display: inline-block;
-  margin-top: 6px;
-  margin-left: 6px;
-  padding: 2px 8px;
-  border-radius: 8px;
-  font-family: 'Inter', sans-serif;
-  font-weight: 600;
-  font-size: 9px;
-  align-self: flex-start;
+/* ══════════ TOP LAYOUT: 프로필 + 캠페인성과 ══════════ */
+.cd-top-grid {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 14px;
+  align-items: stretch;
+}
+
+.cd-top-right {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }

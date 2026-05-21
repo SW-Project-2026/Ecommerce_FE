@@ -388,7 +388,6 @@
 }
 
 .cdp-target-area { display: flex; align-items: center; gap: 10px; }
-
 .cdp-target-text { font-family: 'Noto Sans KR', sans-serif; font-size: 12px; color: #666; }
 
 .cdp-btn-query {
@@ -458,12 +457,9 @@
 
 .cdp-coupon-row { border-bottom: 0.5px solid #F0F2F5; }
 .cdp-coupon-row:last-child { border-bottom: none; }
-
 .cdp-coupon-selected { background: #F0F5FF; border-radius: 6px; }
-
 .cdp-coupon-readonly { cursor: default !important; }
 .cdp-coupon-readonly .cdp-checkbox { cursor: default !important; }
-
 .cdp-coupon-check { display: flex; justify-content: center; }
 
 .cdp-checkbox {
@@ -491,6 +487,108 @@
   text-align: center;
   font-size: 12px;
   color: #BFBFBF;
+}
+
+/* ── 중복 발송 제어 (읽기 모드) ── */
+.cdp-dedupe-readonly {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 14px;
+  padding: 12px 16px;
+  background: #F9FAFB;
+  border-radius: 8px;
+  border: 1px solid #EBEDF0;
+}
+
+.cdp-dedupe-readonly-label {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 12px;
+  color: #9EA6B5;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.cdp-dedupe-readonly-value {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 12px;
+  color: #121212;
+}
+
+/* ── 중복 발송 제어 (수정 모드) ── */
+.cdp-dedupe-section {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cdp-dedupe-cards {
+  display: flex;
+  gap: 16px;
+}
+
+.cdp-dedupe-card {
+  flex: 1;
+  border-radius: 12px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  border: 0.5px solid #E3E8F4;
+}
+
+.cdp-dedupe-card-default  { background: #F0F2F8; }
+.cdp-dedupe-card-inactive { background: #F0F2F8; border-color: #E3E8F4; }
+.cdp-dedupe-card-active   { background: #EEF0FF; border: 0.5px solid #4F6EF7; }
+
+.cdp-dedupe-card-title {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.cdp-dedupe-card-desc {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.cdp-dedupe-period-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 4px;
+}
+
+.cdp-dedupe-period-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: #5A6A8A;
+  min-width: 48px;
+  flex-shrink: 0;
+}
+
+.cdp-dedupe-period-input {
+  width: 72px !important;
+  height: 32px !important;
+  text-align: center;
+  background: #F0F2F8 !important;
+  border: 0.5px solid #E3E8F4 !important;
+  border-radius: 7px !important;
+  font-size: 13px;
+  font-weight: 500;
+  color: #0F1E3D;
+}
+
+.cdp-dedupe-period-suffix {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: #5A6A8A;
 }
 
 /* ── PROCESS ── */
@@ -701,6 +799,7 @@
   cursor: pointer;
   transition: background 0.15s;
 }
+
 .cdp-btn-status:hover { background: #ddeaff; }
 
 /* ── 상태 옵션 (모달 내) ── */
@@ -725,6 +824,88 @@
   width: 16px;
   height: 16px;
   cursor: pointer;
+}
+
+/* ── 발급 방식 ── */
+.cdp-reward-sub-label {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  color: #121212;
+  margin: 0 0 10px 0;
+}
+
+.cdp-issuance-group {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
+
+.cdp-issuance-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 12px;
+  color: #333;
+  cursor: pointer;
+}
+
+.cdp-issuance-radio {
+  width: 15px;
+  height: 15px;
+  accent-color: #4F6EF7;
+  cursor: pointer;
+}
+
+/* ── 메세징 입력 ── */
+.cdp-msg-wrap {
+  margin-top: 12px;
+  background: #F8FAFF;
+  border: 1px solid #DDEAFF;
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+
+.cdp-msg-textarea {
+  width: 100%;
+  height: 100px;
+  background: #FFFFFF;
+  border: 1px solid #E0E4E8;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 12px;
+  color: #333;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+  line-height: 1.6;
+}
+
+.cdp-msg-textarea:focus { border-color: #4F6EF7; }
+.cdp-msg-textarea::placeholder { color: #BFBFBF; }
+
+.cdp-msg-char-count {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  color: #A6A8B8;
+  text-align: right;
+  margin-top: 6px;
+}
+
+/* ── 메세징 읽기 모드 내용 ── */
+.cdp-msg-readonly-content {
+  margin-top: 6px;
+  padding: 8px 12px;
+  background: #F0F2F8;
+  border-radius: 6px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 12px;
+  color: #333;
+  line-height: 1.6;
+  white-space: pre-wrap;
 }
 
 /* ── API 에러 ── */

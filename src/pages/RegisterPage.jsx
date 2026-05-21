@@ -1,8 +1,11 @@
 import { useState } from 'react'
 import { signup } from '../api/auth'
+import { usePageView } from '../hooks/usePageView'
 import './auth.css'
 
 export default function RegisterPage({ onNavigate, onLogin }) {
+  usePageView('회원가입', null)
+
   const [form, setForm] = useState({
     name: '', loginId: '', email: '',
     phone: '', password: '', passwordConfirm: '',
@@ -56,7 +59,6 @@ export default function RegisterPage({ onNavigate, onLogin }) {
 
   return (
     <div className="auth-page">
-      {/* ── 왼쪽 패널 ── */}
       <div className="auth-left auth-left--register">
         <div className="auth-deco-circle" style={{ width: 420, height: 420, top: -120, right: -100 }} />
         <div className="auth-deco-circle" style={{ width: 260, height: 260, bottom: 60, left: -80 }} />
@@ -68,16 +70,15 @@ export default function RegisterPage({ onNavigate, onLogin }) {
         </div>
         <div className="auth-hero">
           <h1>새로운 시작,<br />Da-On와 함께 ✨</h1>
-          <p>회원가입하고 AI 맞춤 추천과<br />특별한 혜택을 경험해보세요</p>
+          <p>회원가입하고 나만을 위한<br />맞춤 혜택을 경험해보세요</p>
           <div className="benefit-list">
-            <div className="benefit-item">🎁 신규 가입 쿠폰 5,000원</div>
-            <div className="benefit-item">✨ 맞춤 상품 추천</div>
-            <div className="benefit-item">📧 재구매 알림 서비스</div>
+            <div className="benefit-item">🎁 다양한 쿠폰 혜택 제공</div>
+            <div className="benefit-item">✨ 알고리즘 기반 상품 추천</div>
+            <div className="benefit-item">📊 개인화 마케팅 서비스 제공</div>
           </div>
         </div>
       </div>
 
-      {/* ── 오른쪽 패널 ── */}
       <div className="auth-right">
         <div className="auth-topnav">
           이미 계정이 있으신가요?

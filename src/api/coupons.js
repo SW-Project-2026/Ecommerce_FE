@@ -9,8 +9,6 @@ function authHeaders() {
 }
 
 // ── 쿠폰 생성 ──
-// discountType: FIXED(정액할인) / RATE(정률할인)
-// issuanceMethod: AUTO(자동 지급) / DOWNLOAD(다운로드)
 export async function couponCreate({
   name, code, discountType, discountAmount,
   minOrderAmount, maxDiscountAmount, expiredAt,
@@ -32,14 +30,18 @@ export async function couponCreate({
 }
 
 // ── 쿠폰 목록 조회 ──
-export async function couponList() {
-  const res = await fetch(`${BASE}/api/coupons`, {
+export async function couponList({ page = 0, size = 100 } = {}) {
+  const params = new URLSearchParams()
+  params.append('page', page)
+  params.append('size', size)
+
+  const res = await fetch(`${BASE}/api/coupons?${params}`, {
     method: 'GET',
     headers: authHeaders(),
   })
   const json = await res.json()
   if (!res.ok) throw new Error(json.message || '쿠폰 목록 조회 실패')
-  return json.data
+  return json.data.content
 }
 
 // ── 쿠폰 단건 조회 ──

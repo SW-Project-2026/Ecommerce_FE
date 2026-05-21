@@ -1,8 +1,11 @@
 import { useState } from 'react'
 import { login } from '../api/auth'
+import { usePageView } from '../hooks/usePageView'
 import './auth.css'
 
 export default function LoginPage({ onNavigate, onLogin }) {
+  usePageView('로그인', null)
+
   const [loginId, setLoginId] = useState('')
   const [password, setPassword] = useState('')
   const [showPw, setShowPw] = useState(false)
@@ -20,7 +23,6 @@ export default function LoginPage({ onNavigate, onLogin }) {
     try {
       const data = await login({ loginId, password })
       onLogin(data)
-      // ADMIN이 아닌 경우에만 home으로 이동 (ADMIN은 handleLogin에서 처리)
       if (data.role !== 'ADMIN') {
         onNavigate('home')
       }
@@ -90,20 +92,9 @@ export default function LoginPage({ onNavigate, onLogin }) {
             {loading ? '로그인 중...' : '로그인'}
           </button>
 
-          <div className="auth-divider"><span>OR</span></div>
-
-          <p className="terms-notice">
+          <p className="terms-notice" style={{ marginTop: 16 }}>
             로그인 시 Da-On의 이용약관 및 개인정보처리방침에 동의하는 것으로 간주합니다
           </p>
-
-          <div className="social-row">
-            <button type="button" className="btn-social btn-google">
-              <i className="ri-google-fill" /> Google로 로그인
-            </button>
-            <button type="button" className="btn-social btn-kakao">
-              💬 카카오로 로그인
-            </button>
-          </div>
         </form>
       </div>
     </div>

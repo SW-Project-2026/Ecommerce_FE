@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import "./CampaignListPage.css";
 import CampaignCreatePage from "./CampaignCreatePage";
 import CampaignDetailPage from "./CampaignDetailPage";
@@ -11,6 +11,8 @@ import AdCreatePage from "./AdCreatePage";
 import DashboardPage from "./DashboardPage";
 import CustomerDashboardPage from "./CustomerDashboardPage";
 import { campaignList, campaignDetail } from "../api/campaigns";
+import { getMyProfile } from "../api/users";
+import { refreshToken } from "../api/auth";
 
 const PAGE_SIZE = 10;
 
@@ -44,6 +46,27 @@ const NAV_ITEMS = [
   { label: "데이터 관리",        key: "데이터 관리",        depth: 0 },
 ];
 
+// ── 401 시 자동 토큰 갱신 후 재시도하는 공통 래퍼 ──
+async function withAutoRefresh(fn, onRefreshed) {
+  try {
+    return await fn();
+  } catch (err) {
+    if (err.message?.includes('401') || err.message?.includes('Unauthorized')) {
+      try {
+        const data = await refreshToken();
+        if (data?.accessToken) {
+          localStorage.setItem('accessToken', data.accessToken);
+          onRefreshed?.();
+        }
+        return await fn(); // 갱신 후 재시도
+      } catch {
+        throw new Error('세션이 만료되었습니다. 다시 로그인해주세요.');
+      }
+    }
+    throw err;
+  }
+}
+
 export default function CampaignListPage() {
   const [activePage,       setActivePage]       = useState("캠페인 목록");
   const [selectedCampaign, setSelectedCampaign] = useState(null);
@@ -56,6 +79,7 @@ export default function CampaignListPage() {
   const [searchText,       setSearchText]       = useState("");
   const [selectedNo,       setSelectedNo]       = useState(null);
   const [currentPage,      setCurrentPage]      = useState(1);
+  const [adminId,          setAdminId]          = useState("admin");
 
   const [editCoupon, setEditCoupon] = useState(null);
   const [editAd,     setEditAd]     = useState(null);
@@ -64,22 +88,36 @@ export default function CampaignListPage() {
   const [loading,      setLoading]      = useState(false);
   const [error,        setError]        = useState(null);
 
-  const fetchCampaigns = () => {
+  // 토큰 갱신 후 adminId 재조회
+  const fetchAdminId = useCallback(() => {
+    getMyProfile()
+      .then(profile => { if (profile?.loginId) setAdminId(profile.loginId) })
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => { fetchAdminId(); }, [])
+
+  const handleLogout = () => {
+    localStorage.removeItem('accessToken')
+    localStorage.removeItem('role')
+    localStorage.removeItem('userId')
+    window.location.href = '/'
+  }
+
+  const fetchCampaigns = useCallback(() => {
     if (activePage !== "캠페인 목록") return;
     setLoading(true);
     setError(null);
     const apiStatus = STATUS_TAB_TO_API[activeTab] ?? undefined;
-    campaignList({ status: apiStatus })
+
+    withAutoRefresh(
+      () => campaignList({ status: apiStatus }),
+      fetchAdminId  // 토큰 갱신됐으면 adminId도 새로 가져오기
+    )
       .then(data => { setCampaignData(Array.isArray(data) ? data : []); setCurrentPage(1); })
-      .catch(err => {
-        if (err.message.includes('401') || err.message.includes('Unauthorized')) {
-          setError('로그인이 필요합니다. 관리자 계정으로 로그인해주세요.');
-        } else {
-          setError(err.message);
-        }
-      })
+      .catch(err => setError(err.message))
       .finally(() => setLoading(false));
-  };
+  }, [activePage, activeTab, fetchAdminId]);
 
   useEffect(() => { fetchCampaigns(); }, [activePage, activeTab]);
 
@@ -88,7 +126,10 @@ export default function CampaignListPage() {
     setDetailLoading(true);
     setDetailError(null);
     try {
-      const detail = await campaignDetail({ campaignId });
+      const detail = await withAutoRefresh(
+        () => campaignDetail({ campaignId }),
+        fetchAdminId
+      );
       setSelectedCampaign(detail);
       setActivePage("캠페인 상세");
     } catch (err) {
@@ -128,7 +169,10 @@ export default function CampaignListPage() {
         </div>
         <span className="cl-logo-text">Da-On</span>
       </div>
-      <span className="cl-admin-label">admin</span>
+      <div className="cl-nav-header-right">
+        <span className="cl-admin-label">{adminId}</span>
+        <button className="cl-logout-btn" onClick={handleLogout}>로그아웃</button>
+      </div>
     </header>
   );
 

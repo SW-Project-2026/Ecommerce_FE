@@ -1,0 +1,522 @@
+/* ══════════ 주문/결제 페이지 ══════════ */
+
+.co-layout {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.co-left {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.co-right {
+  flex-shrink: 0;
+  width: 300px;
+}
+
+/* ── 섹션 카드 공통 ── */
+.co-card {
+  background: #fff;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.co-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #F3F4F6;
+}
+
+.co-card-indicator {
+  width: 4px;
+  height: 18px;
+  background: #1C2E5C;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.co-card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+  flex: 1;
+}
+
+.co-card-body {
+  padding: 20px;
+}
+
+/* ── 배송지 변경 버튼 ── */
+.co-addr-change-btn {
+  height: 28px;
+  padding: 0 12px;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+.co-addr-change-btn:hover {
+  border-color: #1C2E5C;
+  color: #1C2E5C;
+}
+
+/* ── 배송지 없음 ── */
+.co-addr-empty {
+  text-align: center;
+  padding: 24px 0 8px;
+  color: #9EA6B4;
+}
+.co-addr-empty i {
+  font-size: 32px;
+  display: block;
+  margin-bottom: 8px;
+  color: #D1D5DB;
+}
+.co-addr-empty p {
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+/* ── 선택된 배송지 표시 ── */
+.co-addr-selected {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.co-addr-default-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #1C2E5C;
+  background: #EEF2FF;
+  padding: 2px 8px;
+  border-radius: 10px;
+  width: fit-content;
+  margin-bottom: 2px;
+}
+
+.co-addr-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.co-addr-phone {
+  font-size: 13px;
+  font-weight: 400;
+  color: #6B7280;
+}
+.co-addr-road {
+  font-size: 14px;
+  color: #374151;
+}
+.co-addr-detail {
+  font-size: 13px;
+  color: #9EA6B4;
+}
+
+/* ── 배송지 선택 목록 ── */
+.co-addr-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.co-addr-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid #E5E7EB;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.co-addr-option:hover {
+  border-color: #1C2E5C;
+  background: #F7F9FF;
+}
+.co-addr-option.selected {
+  border-color: #1C2E5C;
+  background: #F0F4FF;
+}
+
+.co-addr-option-radio {
+  font-size: 18px;
+  color: #D1D5DB;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.co-addr-option.selected .co-addr-option-radio {
+  color: #1C2E5C;
+}
+
+.co-addr-option-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+}
+
+/* ── 마이페이지 배송지 추가 버튼 ── */
+.co-addr-goto-btn {
+  width: 100%;
+  height: 42px;
+  border: 1.5px dashed #D1D5DB;
+  border-radius: 10px;
+  background: #fff;
+  color: #9EA6B4;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.15s;
+  margin-top: 4px;
+}
+.co-addr-goto-btn:hover {
+  border-color: #1C2E5C;
+  color: #1C2E5C;
+  background: #F7F9FF;
+}
+
+/* ── 배송지 추가 인라인 폼 ── */
+.co-addr-form {
+  border: 1px solid #1C2E5C;
+  border-radius: 10px;
+  padding: 18px;
+  background: #F7F9FF;
+}
+
+.co-addr-form-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1C2E5C;
+  margin-bottom: 14px;
+}
+
+.co-form-row {
+  display: flex;
+  gap: 16px;
+}
+.co-form-row .co-form-group {
+  flex: 1;
+}
+
+.co-form-group {
+  margin-bottom: 14px;
+}
+.co-form-group:last-child {
+  margin-bottom: 0;
+}
+
+.co-form-group label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: #6B7280;
+  margin-bottom: 6px;
+}
+
+.co-form-group input {
+  width: 100%;
+  height: 40px;
+  border: none;
+  border-bottom: 1.5px solid #D1D5DB;
+  padding: 0 4px;
+  font-size: 14px;
+  color: #111827;
+  font-family: inherit;
+  outline: none;
+  background: transparent;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+.co-form-group input:focus {
+  border-bottom-color: #1C2E5C;
+}
+.co-form-group input::placeholder {
+  color: #9EA6B4;
+}
+
+.co-addr-form-btns {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.co-addr-form-save {
+  height: 38px;
+  padding: 0 20px;
+  background: #1C2E5C;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  font-family: inherit;
+}
+.co-addr-form-save:hover:not(:disabled) { opacity: 0.85; }
+.co-addr-form-save:disabled {
+  background: #E5E7EB;
+  color: #9CA3AF;
+  cursor: not-allowed;
+}
+
+.co-addr-form-cancel {
+  height: 38px;
+  padding: 0 16px;
+  background: #fff;
+  color: #374151;
+  border: 1px solid #D1D5DB;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.15s;
+}
+.co-addr-form-cancel:hover { border-color: #9E9E9E; }
+
+/* ── 주문 상품 목록 ── */
+.co-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid #F3F4F6;
+}
+.co-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+.co-item:first-child {
+  padding-top: 0;
+}
+
+.co-item-img {
+  width: 64px;
+  height: 64px;
+  background: #F7F8FA;
+  border-radius: 4px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.co-item-img img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+}
+.co-item-no-img {
+  width: 100%; height: 100%;
+  background: #EBEBEB;
+}
+
+.co-item-info {
+  flex: 1;
+  min-width: 0;
+}
+.co-item-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  line-height: 1.4;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.co-item-qty {
+  font-size: 13px;
+  color: #9EA6B4;
+}
+.co-item-price {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+  flex-shrink: 0;
+}
+
+/* ── 쿠폰 ── */
+.co-coupon-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+  color: #374151;
+}
+.co-coupon-none {
+  font-size: 13px;
+  color: #9EA6B4;
+}
+.co-coupon-applied {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1C2E5C;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.co-coupon-discount {
+  font-size: 13px;
+  font-weight: 700;
+  color: #FF6B6B;
+}
+
+/* ── 결제 수단 ── */
+.co-pay-methods {
+  display: flex;
+  gap: 10px;
+}
+.co-pay-btn {
+  flex: 1;
+  height: 52px;
+  border: 1.5px solid #E5E7EB;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  font-size: 13px;
+  font-weight: 500;
+  color: #6B7280;
+  background: #fff;
+}
+.co-pay-btn:hover {
+  border-color: #1C2E5C;
+  color: #1C2E5C;
+}
+.co-pay-btn.active {
+  border-color: #1C2E5C;
+  background: #EEF2FF;
+  color: #1C2E5C;
+  font-weight: 700;
+}
+.co-pay-icon {
+  font-size: 20px;
+}
+.co-pay-btn.kakao.active {
+  border-color: #FEE500;
+  background: #FFFDE7;
+  color: #3C1E1E;
+}
+.co-pay-btn.kakao:hover {
+  border-color: #FEE500;
+  color: #3C1E1E;
+}
+
+/* ── 우측 요약 ── */
+.co-summary {
+  background: #fff;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  padding: 24px;
+  position: sticky;
+  top: 120px;
+}
+.co-summary-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 20px;
+}
+.co-summary-rows {
+  margin-bottom: 4px;
+}
+.co-summary-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #6B7280;
+  margin-bottom: 10px;
+}
+.co-summary-row.discount {
+  color: #FF6B6B;
+}
+.co-summary-divider {
+  height: 1px;
+  background: #E5E7EB;
+  margin: 12px 0;
+}
+.co-summary-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+.co-total-price {
+  font-size: 20px;
+  font-weight: 800;
+  color: #FF6B6B;
+}
+
+.co-order-btn {
+  width: 100%;
+  height: 50px;
+  background: #1C2E5C;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-bottom: 10px;
+  border: none;
+  transition: opacity 0.15s;
+}
+.co-order-btn:hover:not(:disabled) {
+  opacity: 0.85;
+}
+.co-order-btn:disabled {
+  background: #E5E7EB;
+  color: #9CA3AF;
+  cursor: not-allowed;
+}
+.co-back-btn {
+  width: 100%;
+  height: 46px;
+  border: 1px solid #D1D5DB;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+  background: none;
+  transition: border-color 0.15s;
+}
+.co-back-btn:hover {
+  border-color: #1C2E5C;
+  color: #1C2E5C;
+}
+
+.co-notice {
+  font-size: 11px;
+  color: #9EA6B4;
+  text-align: center;
+  margin-top: 12px;
+  line-height: 1.6;
+}

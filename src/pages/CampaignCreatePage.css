@@ -101,9 +101,7 @@
   flex-shrink: 0;
 }
 
-.cc-req {
-  color: #E53E3E;
-}
+.cc-req { color: #E53E3E; }
 
 .cc-input {
   box-sizing: border-box;
@@ -119,28 +117,12 @@
   transition: border-color 0.15s;
 }
 
-.cc-input:focus {
-  border-color: #3F76E4;
-}
+.cc-input:focus { border-color: #3F76E4; }
+.cc-input::placeholder { color: #BFBFBF; }
+.cc-input-wide { flex: 1; max-width: 580px; }
+.cc-input-date { width: 140px; background: #F5F6FA; }
 
-.cc-input::placeholder {
-  color: #BFBFBF;
-}
-
-.cc-input-wide {
-  flex: 1;
-  max-width: 580px;
-}
-
-.cc-input-date {
-  width: 140px;
-  background: #F5F6FA;
-}
-
-.cc-tilde {
-  font-size: 13px;
-  color: #666666;
-}
+.cc-tilde { font-size: 13px; color: #666666; }
 
 .cc-select {
   box-sizing: border-box;
@@ -173,13 +155,8 @@
   transition: border-color 0.15s;
 }
 
-.cc-textarea:focus {
-  border-color: #3F76E4;
-}
-
-.cc-textarea::placeholder {
-  color: #BFBFBF;
-}
+.cc-textarea:focus { border-color: #3F76E4; }
+.cc-textarea::placeholder { color: #BFBFBF; }
 
 /* ══════════ FILTER TABLE ══════════ */
 .cc-filter-table-wrap {
@@ -255,7 +232,6 @@
   white-space: nowrap;
 }
 
-/* 자료형 뱃지 */
 .cc-type-badge {
   display: inline-block;
   padding: 3px 8px;
@@ -265,22 +241,10 @@
   font-size: 10px;
 }
 
-.cc-type-number {
-  background: #FFF7ED;
-  color: #A66B0F;
-}
+.cc-type-number { background: #FFF7ED; color: #A66B0F; }
+.cc-type-string { background: #E6F0FF; color: #4F6EF7; }
+.cc-type-empty  { color: #BFBFBF; font-size: 12px; }
 
-.cc-type-string {
-  background: #E6F0FF;
-  color: #4F6EF7;
-}
-
-.cc-type-empty {
-  color: #BFBFBF;
-  font-size: 12px;
-}
-
-/* AND 구분선 */
 .cc-and-row {
   display: flex;
   align-items: center;
@@ -308,9 +272,7 @@
   white-space: nowrap;
 }
 
-.cc-logic-badge:hover {
-  background: #d0e4ff;
-}
+.cc-logic-badge:hover { background: #d0e4ff; }
 
 .cc-logic-or {
   background: #FFF0E8;
@@ -318,11 +280,8 @@
   color: #B84A00;
 }
 
-.cc-logic-or:hover {
-  background: #ffe0cc;
-}
+.cc-logic-or:hover { background: #ffe0cc; }
 
-/* 빈 상태 */
 .cc-filter-empty {
   padding: 24px;
   text-align: center;
@@ -330,7 +289,6 @@
   color: #BFBFBF;
 }
 
-/* 삭제 버튼 */
 .cc-del-btn {
   width: 22px;
   height: 22px;
@@ -345,11 +303,8 @@
   transition: color 0.15s;
 }
 
-.cc-del-btn:hover {
-  color: #E53E3E;
-}
+.cc-del-btn:hover { color: #E53E3E; }
 
-/* 필터 하단 */
 .cc-filter-footer {
   display: flex;
   align-items: center;
@@ -388,9 +343,7 @@
   transition: background 0.15s;
 }
 
-.cc-btn-query:hover {
-  background: #3d5de0;
-}
+.cc-btn-query:hover { background: #3d5de0; }
 
 .cc-btn-add-filter {
   height: 32px;
@@ -405,9 +358,7 @@
   transition: background 0.15s;
 }
 
-.cc-btn-add-filter:hover {
-  background: #EEF3FF;
-}
+.cc-btn-add-filter:hover { background: #EEF3FF; }
 
 /* ══════════ 리워드 탭 ══════════ */
 .cc-reward-tabs {
@@ -436,97 +387,166 @@
   font-weight: 700;
 }
 
-/* 쿠폰 목록 */
-.cc-coupon-list {
-  border-radius: 8px;
-  overflow: hidden;
-  border: 1px solid #EBEDF0;
-}
-
-.cc-coupon-header {
-  display: grid;
-  grid-template-columns: 44px 1fr 1fr 1fr 1fr;
-  background: #FAFCFF;
-  border-bottom: 1px solid #EBEDF0;
-  padding: 10px 16px;
-}
-
-.cc-coupon-header .cc-ch {
+/* 쿠폰/광고 섹션 내 소제목 */
+.cc-reward-sub-label {
   font-family: 'Noto Sans KR', sans-serif;
-  font-weight: 700;
-  font-size: 11px;
-  color: #666666;
-}
-
-.cc-coupon-row {
-  display: grid;
-  grid-template-columns: 44px 1fr 1fr 1fr 1fr;
-  padding: 14px 16px;
-  border-bottom: 1px solid #F0F2F5;
-  align-items: center;
-  background: #FDFEFF;
-  transition: background 0.1s;
-}
-
-.cc-coupon-row:last-child {
-  border-bottom: none;
-}
-
-.cc-coupon-selected {
-  background: #F0F5FF;
-}
-
-.cc-coupon-check {
-  display: flex;
-  align-items: center;
-}
-
-.cc-checkbox {
-  width: 17px;
-  height: 18px;
-  border-radius: 4px;
-  border: 0.5px solid #9EA6B5;
-  background: #FFFFFF;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 9px;
-  font-weight: 700;
-  transition: background 0.15s, border-color 0.15s;
-}
-
-.cc-checkbox-on {
-  background: #3B82F5;
-  border-color: #3B82F5;
-  color: #FFFFFF;
-}
-
-.cc-coupon-name {
-  font-family: 'Noto Sans KR', sans-serif;
-  font-weight: 700;
-  font-size: 13px;
+  font-weight: 600;
+  font-size: 12px;
   color: #121212;
+  margin: 0 0 10px 0;
 }
 
-.cc-coupon-code {
+/* ── 발급 방식 ── */
+.cc-issuance-group {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
+
+.cc-issuance-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 12px;
+  color: #333;
+  cursor: pointer;
+}
+
+.cc-issuance-radio {
+  width: 15px;
+  height: 15px;
+  accent-color: #4F6EF7;
+  cursor: pointer;
+}
+
+/* ── 메세징 입력 ── */
+.cc-msg-wrap {
+  margin-top: 12px;
+  background: #F8FAFF;
+  border: 1px solid #DDEAFF;
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+
+.cc-msg-textarea {
+  width: 100%;
+  height: 100px;
+  background: #FFFFFF;
+  border: 1px solid #E0E4E8;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 12px;
+  color: #333;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+  line-height: 1.6;
+}
+
+.cc-msg-textarea:focus { border-color: #4F6EF7; }
+.cc-msg-textarea::placeholder { color: #BFBFBF; }
+
+.cc-msg-char-count {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  color: #A6A8B8;
+  text-align: right;
+  margin-top: 6px;
+}
+
+/* ══════════ 중복 발송 제어 ══════════ */
+.cc-dedupe-section {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cc-dedupe-cards {
+  display: flex;
+  gap: 16px;
+}
+
+.cc-dedupe-card {
+  flex: 1;
+  border-radius: 12px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  border: 0.5px solid #E3E8F4;
+}
+
+.cc-dedupe-card-default {
+  background: #F0F2F8;
+}
+
+.cc-dedupe-card-inactive {
+  background: #F0F2F8;
+  border-color: #E3E8F4;
+}
+
+.cc-dedupe-card-active {
+  background: #EEF0FF;
+  border: 0.5px solid #4F6EF7;
+}
+
+.cc-dedupe-card-title {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.cc-dedupe-card-desc {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+/* 제한 기간 입력 행 */
+.cc-dedupe-period-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 4px;
+}
+
+.cc-dedupe-period-label {
   font-family: 'Inter', sans-serif;
   font-size: 12px;
-  color: #4F6EF7;
+  font-weight: 500;
+  color: #5A6A8A;
+  min-width: 48px;
+  flex-shrink: 0;
 }
 
-.cc-coupon-discount,
-.cc-coupon-expiry {
-  font-family: 'Noto Sans KR', sans-serif;
-  font-size: 12px;
-  color: #121212;
+.cc-dedupe-period-input-wrap {
+  display: flex;
+  align-items: center;
 }
 
-.cc-reward-empty {
-  padding: 32px;
+.cc-dedupe-period-input {
+  width: 72px;
+  height: 32px;
   text-align: center;
+  background: #F0F2F8;
+  border: 0.5px solid #E3E8F4;
+  border-radius: 7px;
   font-size: 13px;
-  color: #BFBFBF;
+  font-weight: 500;
+  color: #0F1E3D;
+}
+
+.cc-dedupe-period-suffix {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: #5A6A8A;
 }
 
 /* ══════════ 처리 방식 설정 ══════════ */
@@ -612,15 +632,8 @@
   font-size: 10px;
 }
 
-.cc-pc-badge-kafka {
-  background: #E0F5E8;
-  color: #2E7D4F;
-}
-
-.cc-pc-badge-batch {
-  background: #FEEEDA;
-  color: #854E0B;
-}
+.cc-pc-badge-kafka { background: #E0F5E8; color: #2E7D4F; }
+.cc-pc-badge-batch { background: #FEEEDA; color: #854E0B; }
 
 .cc-pc-name {
   font-family: 'Inter', sans-serif;
@@ -630,9 +643,7 @@
   margin-bottom: 6px;
 }
 
-.cc-pc-name-inactive {
-  color: #666666;
-}
+.cc-pc-name-inactive { color: #666666; }
 
 .cc-pc-desc {
   font-family: 'Inter', sans-serif;
@@ -641,9 +652,7 @@
   margin-bottom: 12px;
 }
 
-.cc-pc-desc-inactive {
-  color: #A6A8B8;
-}
+.cc-pc-desc-inactive { color: #A6A8B8; }
 
 .cc-pc-divider {
   height: 1px;
@@ -678,13 +687,8 @@
   top: 3px;
 }
 
-.cc-pc-list-inactive li {
-  color: #A6A8B8;
-}
-
-.cc-pc-list-inactive li::before {
-  background: #A6A8B8;
-}
+.cc-pc-list-inactive li { color: #A6A8B8; }
+.cc-pc-list-inactive li::before { background: #A6A8B8; }
 
 /* ══════════ 하단 버튼 ══════════ */
 .cc-footer-btns {
@@ -710,9 +714,7 @@
 }
 
 .cc-btn-cancel:hover,
-.cc-btn-save-draft:hover {
-  background: #F5F5F5;
-}
+.cc-btn-save-draft:hover { background: #F5F5F5; }
 
 .cc-btn-save {
   height: 32px;
@@ -728,13 +730,17 @@
   transition: background 0.15s;
 }
 
-.cc-btn-save:hover {
-  background: #2d6fe0;
+.cc-btn-save:hover { background: #2d6fe0; }
+
+.cc-save-error {
+  color: #E53E3E;
+  font-size: 13px;
+  padding: 0 28px 12px;
 }
 
 /* ── BATCH SCHEDULE ── */
 .cc-batch-schedule {
-  margin-top: 16px;
+  margin: 0 28px 16px;
   background: #F8FAFF;
   border: 1px solid #DDEAFF;
   border-radius: 8px;
@@ -786,6 +792,4 @@
   background-position: right 10px center;
 }
 
-.cc-batch-select:focus {
-  border-color: #4F6EF7;
-}
+.cc-batch-select:focus { border-color: #4F6EF7; }

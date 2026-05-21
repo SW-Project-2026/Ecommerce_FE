@@ -4,6 +4,7 @@ import { campaignDelete, campaignUpdate, campaignStatusUpdate } from "../api/cam
 import { eventList } from "../api/events";
 import { couponList } from "../api/coupons";
 import { adList } from "../api/ads";
+import { withAutoRefresh } from "../utils/withAutoRefresh";
 
 const OPERATORS_NUMBER   = ["≥ (이상)", "≤ (이하)", "> (초과)", "< (미만)", "= (동등)"];
 const OPERATORS_STRING   = ["포함", "= (동등)"];
@@ -68,6 +69,15 @@ const STATUS_TRANSITIONS = {
 };
 const STATUS_LABEL = { IN_PROGRESS: "수행중", PAUSED: "일시정지", ENDED: "종료" };
 
+const ISSUANCE_METHOD_OPTIONS = [
+  { label: "자동 지급", value: "AUTO" },
+  { label: "다운로드",  value: "DOWNLOAD" },
+  { label: "메세징",    value: "MESSAGING" },
+];
+const ISSUANCE_METHOD_DISPLAY = {
+  AUTO: "자동 지급", DOWNLOAD: "다운로드", MESSAGING: "메세징",
+};
+
 const CAT1_OPTIONS = ["조기정착", "이탈방지", "재구매"];
 const CAT2_OPTIONS = {
   "조기정착": ["신규고객유치", "휴면 고객"],
@@ -79,6 +89,11 @@ const HOUR_OPTIONS        = Array.from({ length: 24 }, (_, i) => String(i).padSt
 const MINUTE_OPTIONS      = ["00", "10", "20", "30", "40", "50"];
 const WEEKDAY_OPTIONS     = ["월", "화", "수", "목", "금", "토", "일"];
 const MONTHDAY_OPTIONS    = Array.from({ length: 31 }, (_, i) => String(i + 1));
+
+const REWARD_ROW_HEIGHT    = 48;
+const REWARD_HEADER_HEIGHT = 42;
+const REWARD_MAX_ROWS      = 3;
+const REWARD_MAX_HEIGHT    = REWARD_HEADER_HEIGHT + REWARD_ROW_HEIGHT * REWARD_MAX_ROWS;
 
 let filterIdCounter = 100;
 const newFilter = () => ({
@@ -98,60 +113,20 @@ function initBatchSchedule(campaign) {
   return { cycle, hour, minute: minute ?? "00", dayOfWeek, dayOfMonth };
 }
 
-// ── 공통 리워드 테이블 인라인 스타일 ──
 const S = {
-  rewardTable: {
-    width: "100%",
-    borderRadius: 8,
-    overflow: "hidden",
-    border: "1px solid #EBEDF0",
-  },
-  rewardHeader: {
-    display: "grid",
-    alignItems: "center",
-    padding: "10px 16px",
-    background: "#F7FAFF",
-    borderBottom: "1px solid #EBEDF0",
-  },
-  rewardHeaderCoupon: { gridTemplateColumns: "36px 1.8fr 1fr 1fr 1fr 1fr" },
+  rewardTable:        { width: "100%", borderRadius: 8, overflow: "hidden", border: "1px solid #EBEDF0" },
+  rewardHeader:       { display: "grid", alignItems: "center", padding: "10px 16px", background: "#F7FAFF", borderBottom: "1px solid #EBEDF0" },
+  rewardHeaderCoupon: { gridTemplateColumns: "36px 1.8fr 1fr 1fr 1fr" },
   rewardHeaderAd:     { gridTemplateColumns: "36px 2fr 1fr 1.2fr 1fr" },
-  th: {
-    fontFamily: "'Noto Sans KR', sans-serif",
-    fontWeight: 700,
-    fontSize: 11,
-    color: "#9EA6B5",
-  },
-  row: {
-    display: "grid",
-    alignItems: "center",
-    padding: "12px 16px",
-    background: "#FDFEFF",
-    transition: "background 0.1s",
-  },
-  rowCoupon: { gridTemplateColumns: "36px 1.8fr 1fr 1fr 1fr 1fr" },
-  rowAd:     { gridTemplateColumns: "36px 2fr 1fr 1.2fr 1fr" },
+  th:      { fontFamily: "'Noto Sans KR', sans-serif", fontWeight: 700, fontSize: 11, color: "#9EA6B5" },
+  row:     { display: "grid", alignItems: "center", padding: "12px 16px", background: "#FDFEFF", transition: "background 0.1s" },
+  rowCoupon:   { gridTemplateColumns: "36px 1.8fr 1fr 1fr 1fr" },
+  rowAd:       { gridTemplateColumns: "36px 2fr 1fr 1.2fr 1fr" },
   rowSelected: { background: "#F0F5FF" },
-  name: {
-    fontFamily: "'Noto Sans KR', sans-serif",
-    fontWeight: 700,
-    fontSize: 13,
-    color: "#121212",
-  },
-  code: {
-    fontFamily: "'Inter', sans-serif",
-    fontSize: 12,
-    color: "#4F6EF7",
-  },
-  cell: {
-    fontFamily: "'Noto Sans KR', sans-serif",
-    fontSize: 12,
-    color: "#333",
-  },
-  subCell: {
-    fontFamily: "'Noto Sans KR', sans-serif",
-    fontSize: 11,
-    color: "#9EA6B5",
-  },
+  name:    { fontFamily: "'Noto Sans KR', sans-serif", fontWeight: 700, fontSize: 13, color: "#121212" },
+  code:    { fontFamily: "'Inter', sans-serif", fontSize: 12, color: "#4F6EF7" },
+  cell:    { fontFamily: "'Noto Sans KR', sans-serif", fontSize: 12, color: "#333" },
+  subCell: { fontFamily: "'Noto Sans KR', sans-serif", fontSize: 11, color: "#9EA6B5" },
 };
 
 function DeleteModal({ campaignName, onConfirm, onCancel }) {
@@ -221,13 +196,16 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
 
   useEffect(() => {
     setEventsLoading(true);
-    eventList({ isActive: true })
+    withAutoRefresh(() => eventList({ isActive: true }))
       .then(data => setEvents(Array.isArray(data) ? data : []))
       .catch(err => console.error("이벤트 조회 실패:", err))
       .finally(() => setEventsLoading(false));
 
     setRewardLoading(true);
-    Promise.all([couponList(), adList()])
+    Promise.all([
+      withAutoRefresh(() => couponList()),
+      withAutoRefresh(() => adList()),
+    ])
       .then(([couponData, adData]) => {
         setCoupons(Array.isArray(couponData) ? couponData : []);
         setAds(Array.isArray(adData) ? adData : []);
@@ -271,9 +249,18 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
     setFilters(mapped);
   }, [events]);
 
-  const [rewardTab,      setRewardTab]      = useState("쿠폰");
   const [selectedCoupon, setSelectedCoupon] = useState(campaign?.couponId ?? null);
   const [selectedAd,     setSelectedAd]     = useState(campaign?.adId     ?? null);
+
+  const [dedupeType, setDedupeType] = useState(campaign?.deduplicationType ?? "none");
+  const [dedupeDays, setDedupeDays] = useState(campaign?.deduplicationDays ? String(campaign.deduplicationDays) : "30");
+
+  const [issuanceMethod, setIssuanceMethod] = useState(campaign?.issuanceMethod ?? "AUTO");
+  const [msgContent,     setMsgContent]     = useState(campaign?.messagingContent ?? "");
+  const isMessaging = issuanceMethod === "MESSAGING";
+
+  const initialTab = campaign?.adId ? "광고" : "쿠폰";
+  const [rewardTab, setRewardTab] = useState(initialTab);
 
   const handleSelectCoupon = (id) => { setSelectedCoupon(prev => prev === id ? null : id); setSelectedAd(null); };
   const handleSelectAd     = (id) => { setSelectedAd(prev => prev === id ? null : id); setSelectedCoupon(null); };
@@ -318,7 +305,7 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
   const handleDelete = async () => {
     setDeleting(true); setApiError(null);
     try {
-      await campaignDelete({ campaignId: campaign.campaignId });
+      await withAutoRefresh(() => campaignDelete({ campaignId: campaign.campaignId }));
       onNavigate("list");
     } catch (err) { setApiError(err.message); setShowDeleteModal(false); }
     finally { setDeleting(false); }
@@ -334,7 +321,7 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
         value:          f.value,
         periodDays:     parseInt(f.period, 10),
       }));
-      await campaignUpdate({
+      await withAutoRefresh(() => campaignUpdate({
         campaignId:            campaign.campaignId,
         campaignName:          name,
         description:           desc,
@@ -350,8 +337,10 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
         filterLogicalOperator: filterLogic,
         couponId:              selectedCoupon ?? null,
         adId:                  selectedAd     ?? null,
+        issuanceMethod,
+        messagingContent:      isMessaging ? msgContent : null,
         filters:               apiFilters,
-      });
+      }));
       setEditMode(false);
     } catch (err) { setApiError(err.message); }
     finally { setSaving(false); }
@@ -360,7 +349,7 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
   const handleStatusChange = async (newStatus) => {
     setApiError(null);
     try {
-      const updated = await campaignStatusUpdate({ campaignId: campaign.campaignId, status: newStatus });
+      const updated = await withAutoRefresh(() => campaignStatusUpdate({ campaignId: campaign.campaignId, status: newStatus }));
       setStatus(updated?.status ?? newStatus);
       setShowStatusModal(false);
     } catch (err) { setApiError(err.message); setShowStatusModal(false); }
@@ -369,6 +358,23 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
   const isReadOnly      = !editMode;
   const statusInfo      = STATUS_DISPLAY[status] ?? STATUS_DISPLAY["IN_PROGRESS"];
   const canChangeStatus = (STATUS_TRANSITIONS[status] ?? []).length > 0;
+
+  const displayCoupons = isReadOnly && selectedCoupon
+    ? coupons.filter(c => c.couponId === selectedCoupon)
+    : coupons;
+  const displayAds = isReadOnly && selectedAd
+    ? ads.filter(a => a.adId === selectedAd)
+    : ads;
+
+  const visibleTabs = isReadOnly
+    ? selectedCoupon ? ["쿠폰"] : selectedAd ? ["광고"] : []
+    : ["쿠폰", "광고"];
+
+  const dedupeReadLabel = dedupeType === "period"
+    ? `기간 설정 — ${dedupeDays}일 이내 수신 이력 있으면 발송 제외`
+    : "사용 안 함";
+
+  const selectedCouponName = coupons.find(c => c.couponId === selectedCoupon)?.name ?? "쿠폰명";
 
   return (
     <div className="cdp-main">
@@ -546,79 +552,163 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
 
       {/* 리워드 / 광고 설정 */}
       <div className="cdp-section">
-        <div className="cdp-section-head">
-          리워드 / 광고 설정
-          {(selectedCoupon || selectedAd) && (
-            <span style={{ fontSize: 12, color: "#4F6EF7", marginLeft: 8 }}>
-              ({selectedCoupon ? "쿠폰" : "광고"} 1개 선택됨)
-            </span>
-          )}
-        </div>
+        <div className="cdp-section-head">리워드 / 광고 설정</div>
         <div className="cdp-section-body">
-          <div className="cdp-reward-tabs">
-            {["쿠폰", "광고"].map(t => (
-              <button key={t} className={`cdp-reward-tab ${rewardTab === t ? "cdp-reward-tab-active" : ""}`} onClick={() => setRewardTab(t)}>{t}</button>
-            ))}
-          </div>
+          {visibleTabs.length > 0 && (
+            <div className="cdp-reward-tabs">
+              {visibleTabs.map(t => (
+                <button key={t} className={`cdp-reward-tab ${rewardTab === t ? "cdp-reward-tab-active" : ""}`} onClick={() => setRewardTab(t)}>{t}</button>
+              ))}
+            </div>
+          )}
+
+          {isReadOnly && !selectedCoupon && !selectedAd && (
+            <div className="cdp-reward-empty">선택된 리워드가 없습니다</div>
+          )}
 
           {rewardLoading && <div style={{ padding: 16, fontSize: 12, color: "#9EA6B5" }}>불러오는 중...</div>}
 
           {/* 쿠폰 탭 */}
-          {!rewardLoading && rewardTab === "쿠폰" && (
-            <div style={S.rewardTable}>
-              <div style={{ ...S.rewardHeader, ...S.rewardHeaderCoupon }}>
-                <span style={S.th} />
-                <span style={S.th}>쿠폰명</span>
-                <span style={S.th}>코드</span>
-                <span style={S.th}>할인</span>
-                <span style={S.th}>유효기간</span>
-                <span style={S.th}>발급방식</span>
+          {!rewardLoading && rewardTab === "쿠폰" && visibleTabs.includes("쿠폰") && (
+            <>
+              <div style={{ ...S.rewardTable, maxHeight: displayCoupons.length > REWARD_MAX_ROWS ? REWARD_MAX_HEIGHT : "none", overflow: displayCoupons.length > REWARD_MAX_ROWS ? "auto" : "visible" }}>
+                <div style={{ ...S.rewardHeader, ...S.rewardHeaderCoupon, position: "sticky", top: 0, zIndex: 1 }}>
+                  <span style={S.th} />
+                  <span style={S.th}>쿠폰명</span>
+                  <span style={S.th}>코드</span>
+                  <span style={S.th}>할인</span>
+                  <span style={S.th}>유효기간</span>
+                </div>
+                {displayCoupons.length === 0 ? (
+                  <div className="cdp-reward-empty">등록된 쿠폰이 없습니다</div>
+                ) : displayCoupons.map((c, idx) => {
+                  const isSelected = selectedCoupon === c.couponId;
+                  return (
+                    <div key={c.couponId} style={{ ...S.row, ...S.rowCoupon, ...(isSelected ? S.rowSelected : {}), borderBottom: idx === displayCoupons.length - 1 ? "none" : "0.5px solid #F0F2F5" }}>
+                      <div style={{ display: "flex", justifyContent: "center" }}>
+                        <div
+                          onClick={() => !isReadOnly && handleSelectCoupon(c.couponId)}
+                          style={{ width: 17, height: 17, borderRadius: 4, border: isSelected ? "none" : "1.5px solid #D0D5DD", background: isSelected ? "#4F6EF7" : "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: isReadOnly ? "default" : "pointer", fontSize: 10, color: "#fff", fontWeight: 700 }}
+                        >
+                          {isSelected && "✓"}
+                        </div>
+                      </div>
+                      <span style={S.name}>{c.name}</span>
+                      <span style={S.code}>{c.code}</span>
+                      <span style={S.cell}>
+                        {c.discountType === "RATE" ? `${c.discountAmount}%` : `${c.discountAmount?.toLocaleString()}원`}
+                        <span style={{ fontSize: 10, color: "#9EA6B5", marginLeft: 4 }}>({DISCOUNT_TYPE_DISPLAY[c.discountType]})</span>
+                      </span>
+                      <span style={S.subCell}>{c.expiredAt}일</span>
+                    </div>
+                  );
+                })}
               </div>
-              {coupons.length === 0 ? (
-                <div className="cdp-reward-empty">등록된 쿠폰이 없습니다</div>
-              ) : coupons.map((c, idx) => {
-                const isSelected = selectedCoupon === c.couponId;
-                return (
-                  <div key={c.couponId} style={{ ...S.row, ...S.rowCoupon, ...(isSelected ? S.rowSelected : {}), borderBottom: idx === coupons.length - 1 ? "none" : "0.5px solid #F0F2F5" }}>
-                    <div style={{ display: "flex", justifyContent: "center" }}>
-                      <div
-                        onClick={() => !isReadOnly && handleSelectCoupon(c.couponId)}
-                        style={{ width: 17, height: 17, borderRadius: 4, border: isSelected ? "none" : "1.5px solid #D0D5DD", background: isSelected ? "#4F6EF7" : "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: isReadOnly ? "default" : "pointer", fontSize: 10, color: "#fff", fontWeight: 700 }}
-                      >
-                        {isSelected && "✓"}
+
+              {/* ── 중복 발송 제어 ── */}
+              {isReadOnly ? (
+                <div className="cdp-dedupe-readonly">
+                  <span className="cdp-dedupe-readonly-label">중복 발송 제어</span>
+                  <span className="cdp-dedupe-readonly-value">{dedupeReadLabel}</span>
+                </div>
+              ) : (
+                <div className="cdp-dedupe-section">
+                  <div className="cdp-dedupe-cards">
+                    <div
+                      className={`cdp-dedupe-card ${dedupeType === "none" ? "cdp-dedupe-card-inactive" : "cdp-dedupe-card-default"}`}
+                      onClick={() => setDedupeType("none")}
+                    >
+                      <div style={{ width: 18, height: 18, borderRadius: "50%", border: "1.5px solid #E0E4E8", background: "#FFFFFF", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        {dedupeType === "none" && <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#E0E4E8" }} />}
+                      </div>
+                      <div>
+                        <div className="cdp-dedupe-card-title" style={{ color: dedupeType === "none" ? "#0F1E3D" : "#9EA6B5" }}>사용 안 함</div>
+                        <div className="cdp-dedupe-card-desc" style={{ color: dedupeType === "none" ? "rgba(90,106,138,0.75)" : "#C0C5D0" }}>중복 제거 없이 조건 충족 시 항상 발송</div>
                       </div>
                     </div>
-                    <span style={{ ...S.name, opacity: isReadOnly && !isSelected ? 0.5 : 1 }}>{c.name}</span>
-                    <span style={{ ...S.code, opacity: isReadOnly && !isSelected ? 0.5 : 1 }}>{c.code}</span>
-                    <span style={{ ...S.cell, opacity: isReadOnly && !isSelected ? 0.5 : 1 }}>
-                      {c.discountType === "RATE" ? `${c.discountAmount}%` : `${c.discountAmount?.toLocaleString()}원`}
-                      <span style={{ fontSize: 10, color: "#9EA6B5", marginLeft: 4 }}>({DISCOUNT_TYPE_DISPLAY[c.discountType]})</span>
-                    </span>
-                    <span style={{ ...S.subCell, opacity: isReadOnly && !isSelected ? 0.5 : 1 }}>{c.expiredAt}일</span>
-                    <span style={{ ...S.subCell, opacity: isReadOnly && !isSelected ? 0.5 : 1 }}>{c.issuanceMethod === "AUTO" ? "자동 지급" : "다운로드"}</span>
+                    <div
+                      className={`cdp-dedupe-card ${dedupeType === "period" ? "cdp-dedupe-card-active" : "cdp-dedupe-card-default"}`}
+                      onClick={() => setDedupeType("period")}
+                    >
+                      <div style={{ width: 18, height: 18, borderRadius: "50%", border: dedupeType === "period" ? "1.5px solid #4F6EF7" : "1.5px solid #A6A8B8", background: dedupeType === "period" ? "#4F6EF7" : "#FFFFFF", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        {dedupeType === "period" && <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#FFFFFF" }} />}
+                      </div>
+                      <div>
+                        <div className="cdp-dedupe-card-title" style={{ color: dedupeType === "period" ? "#4F6EF7" : "#0F1E3D" }}>기간 설정</div>
+                        <div className="cdp-dedupe-card-desc" style={{ color: dedupeType === "period" ? "rgba(79,110,247,0.75)" : "rgba(90,106,138,0.75)" }}>N일 이내 수신 이력 있는 고객은 발송에서 제외</div>
+                      </div>
+                    </div>
                   </div>
-                );
-              })}
-            </div>
+                  {dedupeType === "period" && (
+                    <div className="cdp-dedupe-period-row">
+                      <span className="cdp-dedupe-period-label">제한 기간</span>
+                      <input className="cdp-input cdp-dedupe-period-input" type="number" min="1" value={dedupeDays} onChange={e => setDedupeDays(e.target.value)} />
+                      <span className="cdp-dedupe-period-suffix">일 이내 수신 이력 있으면 발송 제외</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ── 발급 방식 ── */}
+              {isReadOnly ? (
+                <div className="cdp-dedupe-readonly" style={{ marginTop: 10 }}>
+                  <span className="cdp-dedupe-readonly-label">발급 방식</span>
+                  <span className="cdp-dedupe-readonly-value">{ISSUANCE_METHOD_DISPLAY[issuanceMethod] ?? issuanceMethod}</span>
+                  {isMessaging && msgContent && (
+                    <div className="cdp-msg-readonly-content">{msgContent}</div>
+                  )}
+                </div>
+              ) : (
+                <div style={{ marginTop: 16 }}>
+                  <p className="cdp-reward-sub-label">발급 방식</p>
+                  <div className="cdp-issuance-group">
+                    {ISSUANCE_METHOD_OPTIONS.map(opt => (
+                      <label key={opt.value} className="cdp-issuance-label">
+                        <input
+                          type="radio"
+                          name="issuanceMethod"
+                          checked={issuanceMethod === opt.value}
+                          onChange={() => setIssuanceMethod(opt.value)}
+                          className="cdp-issuance-radio"
+                        />
+                        {opt.label}
+                      </label>
+                    ))}
+                  </div>
+                  {isMessaging && (
+                    <div className="cdp-msg-wrap">
+                      <textarea
+                        className="cdp-msg-textarea"
+                        placeholder={`예) [Da-On] 회원님께 특별 쿠폰을 발송해드립니다.\n쿠폰명: ${selectedCouponName}\n앱에서 바로 사용해보세요!`}
+                        value={msgContent}
+                        onChange={e => setMsgContent(e.target.value)}
+                        maxLength={90}
+                      />
+                      <p className="cdp-msg-char-count">{msgContent.length} / 90자</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
           )}
 
           {/* 광고 탭 */}
-          {!rewardLoading && rewardTab === "광고" && (
-            <div style={S.rewardTable}>
-              <div style={{ ...S.rewardHeader, ...S.rewardHeaderAd }}>
+          {!rewardLoading && rewardTab === "광고" && visibleTabs.includes("광고") && (
+            <div style={{ ...S.rewardTable, maxHeight: displayAds.length > REWARD_MAX_ROWS ? REWARD_MAX_HEIGHT : "none", overflow: displayAds.length > REWARD_MAX_ROWS ? "auto" : "visible" }}>
+              <div style={{ ...S.rewardHeader, ...S.rewardHeaderAd, position: "sticky", top: 0, zIndex: 1 }}>
                 <span style={S.th} />
                 <span style={S.th}>광고명</span>
                 <span style={S.th}>타겟 유형</span>
                 <span style={S.th}>타겟 값</span>
                 <span style={S.th}>생성일</span>
               </div>
-              {ads.length === 0 ? (
+              {displayAds.length === 0 ? (
                 <div className="cdp-reward-empty">등록된 광고가 없습니다</div>
-              ) : ads.map((a, idx) => {
+              ) : displayAds.map((a, idx) => {
                 const isSelected = selectedAd === a.adId;
                 const targetVal  = a.targetType === "PRODUCT" ? `ID: ${a.productId}` : (a.category || a.keyword || "–");
                 return (
-                  <div key={a.adId} style={{ ...S.row, ...S.rowAd, ...(isSelected ? S.rowSelected : {}), borderBottom: idx === ads.length - 1 ? "none" : "0.5px solid #F0F2F5" }}>
+                  <div key={a.adId} style={{ ...S.row, ...S.rowAd, ...(isSelected ? S.rowSelected : {}), borderBottom: idx === displayAds.length - 1 ? "none" : "0.5px solid #F0F2F5" }}>
                     <div style={{ display: "flex", justifyContent: "center" }}>
                       <div
                         onClick={() => !isReadOnly && handleSelectAd(a.adId)}
@@ -627,10 +717,10 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
                         {isSelected && "✓"}
                       </div>
                     </div>
-                    <span style={{ ...S.name, opacity: isReadOnly && !isSelected ? 0.5 : 1 }}>{a.adName}</span>
-                    <span style={{ ...S.cell, fontSize: 11, opacity: isReadOnly && !isSelected ? 0.5 : 1 }}>{TARGET_TYPE_DISPLAY[a.targetType] ?? a.targetType}</span>
-                    <span style={{ ...S.code, opacity: isReadOnly && !isSelected ? 0.5 : 1 }}>{targetVal}</span>
-                    <span style={{ ...S.subCell, opacity: isReadOnly && !isSelected ? 0.5 : 1 }}>{a.createdAt?.substring(0, 10)}</span>
+                    <span style={S.name}>{a.adName}</span>
+                    <span style={{ ...S.cell, fontSize: 11 }}>{TARGET_TYPE_DISPLAY[a.targetType] ?? a.targetType}</span>
+                    <span style={S.code}>{targetVal}</span>
+                    <span style={S.subCell}>{a.createdAt?.substring(0, 10)}</span>
                   </div>
                 );
               })}
