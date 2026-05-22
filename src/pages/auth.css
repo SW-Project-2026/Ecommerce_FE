@@ -376,3 +376,5 @@
   .auth-form-wrap { padding: 16px 20px 32px; }
   .auth-form-wrap h2 { font-size: 26px; }
 }
+
+.auth-error { font-size: 13px; color: #EF4444; margin-bottom: 8px; }

@@ -1,0 +1,326 @@
+/* ── MAIN ── */
+.dm-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #F5F7FA;
+  min-width: 0;
+}
+
+/* ── PAGE HEADER ── */
+.dm-page-header {
+  box-sizing: border-box;
+  width: 100%;
+  height: 72px;
+  background: #FFFFFF;
+  border-bottom: 1px solid #EBEDF0;
+  display: flex;
+  align-items: center;
+  padding: 0 32px;
+  flex-shrink: 0;
+}
+
+.dm-page-title {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+  color: #121212;
+  margin: 0 0 4px 0;
+}
+
+.dm-page-sub {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-weight: 400;
+  font-size: 12px;
+  color: #9EA6B5;
+  margin: 0;
+}
+
+/* ── CONTENT ── */
+.dm-content {
+  flex: 1;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overflow-y: auto;
+}
+
+/* ── SECTION CARD ── */
+.dm-section {
+  background: #FFFFFF;
+  border: 1px solid #E0E4E8;
+  border-radius: 8px;
+  padding: 24px 28px;
+}
+
+.dm-section-header {
+  margin-bottom: 12px;
+}
+
+.dm-section-title {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  color: #212121;
+  margin: 0 0 6px 0;
+}
+
+.dm-section-sub {
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  font-size: 12px;
+  color: #A6A8B8;
+  margin: 0;
+}
+
+.dm-divider {
+  width: 100%;
+  height: 1px;
+  background: #E0E4E8;
+  margin-bottom: 20px;
+}
+
+/* ── STAT CARDS ── */
+.dm-stat-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.dm-stat-card {
+  flex: 1;
+  background: #F2F3F5;
+  border-radius: 6px;
+  padding: 12px 16px 14px;
+}
+
+.dm-stat-label {
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  font-size: 10px;
+  color: #A6A8B8;
+  margin: 0 0 8px 0;
+}
+
+.dm-stat-value {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  color: #212121;
+  margin: 0;
+}
+
+/* ── COLLECT SECTION ── */
+.dm-collect-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* ── CHECKBOX ── */
+.dm-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  margin-bottom: 12px;
+}
+
+.dm-checkbox-label-mt {
+  margin-top: 4px;
+}
+
+.dm-checkbox {
+  width: 15px;
+  height: 15px;
+  accent-color: #3B82F5;
+  cursor: pointer;
+  flex-shrink: 0;
+  border-radius: 4px;
+}
+
+.dm-checkbox-text {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  color: #212121;
+}
+
+/* ── SCHEDULE ROW ── */
+.dm-schedule-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+  margin-bottom: 16px;
+  margin-left: 23px;
+}
+
+.dm-schedule-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dm-schedule-label {
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  font-size: 10px;
+  color: #A6A8B8;
+}
+
+.dm-select-wrap {
+  position: relative;
+}
+
+.dm-select {
+  width: 90px;
+  height: 28px;
+  background: #F2F3F5;
+  border: 1px solid #E0E4E8;
+  border-radius: 5px;
+  padding: 0 24px 0 10px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  color: #212121;
+  outline: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.dm-select-wrap::after {
+  content: "▾";
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 9px;
+  color: #A6A8B8;
+  pointer-events: none;
+}
+
+/* ── NOTICES ── */
+.dm-notice {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  margin-bottom: 8px;
+}
+
+.dm-notice:last-child { margin-bottom: 0; }
+
+.dm-notice-success { background: #E0F5E8; color: #2E7D4F; }
+.dm-notice-warning { background: #FEEEDA; color: #854E0B; }
+.dm-notice-error   { background: #FFEDED; color: #B82B2B; }
+
+/* ── FOOTER BUTTON ── */
+.dm-section-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.dm-btn-collect {
+  width: 100px;
+  height: 32px;
+  background: #3B81F5;
+  border: none;
+  border-radius: 6px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 11px;
+  color: #FFFFFF;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.dm-btn-collect:hover    { background: #2d6de0; }
+.dm-btn-collect:disabled { opacity: 0.5; cursor: default; }
+
+/* ── 자동 스케줄 목록 ── */
+.dm-schedule-list-section {
+  margin-top: 4px;
+}
+
+.dm-schedule-list-title {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  color: #212121;
+  margin: 0 0 12px 0;
+}
+
+.dm-schedule-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #F7FAFF;
+  border: 1px solid #D0DCFF;
+  border-radius: 6px;
+}
+
+.dm-schedule-item-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dm-schedule-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  background: rgba(34,197,94,0.12);
+  color: #1a9e42;
+  border-radius: 4px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 10px;
+}
+
+.dm-schedule-item-text {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  color: #212121;
+}
+
+.dm-schedule-item-sub {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  color: #9EA6B5;
+}
+
+.dm-btn-cancel-schedule {
+  height: 26px;
+  padding: 0 12px;
+  background: #FFEDED;
+  border: none;
+  border-radius: 4px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  color: #B82B2B;
+  cursor: pointer;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+
+.dm-btn-cancel-schedule:hover    { background: #ffd5d5; }
+.dm-btn-cancel-schedule:disabled { opacity: 0.5; cursor: default; }
+
+.dm-schedule-empty {
+  padding: 16px;
+  text-align: center;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: #9EA6B5;
+  background: #F7F8FA;
+  border: 1px dashed #E0E4E8;
+  border-radius: 6px;
+}

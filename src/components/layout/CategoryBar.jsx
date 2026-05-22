@@ -1,17 +1,18 @@
 import { useState, useRef, useEffect } from 'react'
 
 const CATEGORIES = [
-  { id: 'all',      label: '전체',       left: 60 },
-  { id: 'digital',  label: '가전·디지털', left: 115 },
-  { id: 'fashion',  label: '패션',       left: 204 },
-  { id: 'beauty',   label: '뷰티',       left: 276 },
-  { id: 'food',     label: '식품',       left: 348 },
-  { id: 'living',   label: '생활용품',    left: 420 },
-  { id: 'sports',   label: '스포츠',     left: 492 },
+  { id: 'home',    label: '홈',          left: 60,  isHome: true },
+  { id: 'all',     label: '전체',        left: 106 },
+  { id: 'digital', label: '가전·디지털', left: 161, dbKey: '디지털/가전' },
+  { id: 'fashion', label: '패션',        left: 250, dbKey: '패션의류' },
+  { id: 'beauty',  label: '뷰티',        left: 322, dbKey: '화장품/미용' },
+  { id: 'food',    label: '식품',        left: 394, dbKey: '식품' },
+  { id: 'living',  label: '생활용품',    left: 466, dbKey: '생활/건강' },
+  { id: 'sports',  label: '스포츠',      left: 556, dbKey: '스포츠/레저' },
 ]
 
-export default function CategoryBar() {
-  const [active, setActive] = useState('all')
+export default function CategoryBar({ onNavigate, activeCategory }) {
+  const [active, setActive] = useState(activeCategory || 'all')
   const [underline, setUnderline] = useState({ left: 60, width: 23 })
   const itemRefs = useRef({})
 
@@ -21,9 +22,25 @@ export default function CategoryBar() {
   }, [active])
 
   useEffect(() => {
-    const el = itemRefs.current['all']
+    const id = activeCategory || 'all'
+    setActive(id)
+  }, [activeCategory])
+
+  useEffect(() => {
+    const id = activeCategory || 'home'
+    const el = itemRefs.current[id]
     if (el) setUnderline({ left: el.offsetLeft, width: el.offsetWidth })
   }, [])
+
+  function handleClick(cat) {
+    setActive(cat.id)
+    if (!onNavigate) return
+    if (cat.isHome) {
+      onNavigate('home')
+    } else {
+      onNavigate('list', { id: cat.id, label: cat.label, dbKey: cat.dbKey })
+    }
+  }
 
   return (
     <nav className="category-bar">
@@ -33,7 +50,7 @@ export default function CategoryBar() {
           ref={el => { itemRefs.current[cat.id] = el }}
           className={`cat-item${active === cat.id ? ' active' : ''}`}
           style={{ left: cat.left }}
-          onClick={() => setActive(cat.id)}
+          onClick={() => handleClick(cat)}
         >
           {cat.label}
         </span>

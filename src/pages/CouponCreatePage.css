@@ -1,0 +1,240 @@
+/* ── MAIN ── */
+.cc2-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #F5F7FA;
+  min-width: 0;
+}
+
+/* ── PAGE HEADER ── */
+.cc2-page-header {
+  box-sizing: border-box;
+  width: 100%;
+  height: 72px;
+  background: #FFFFFF;
+  border-bottom: 1px solid #EBEDF0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  flex-shrink: 0;
+}
+
+.cc2-page-title {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+  color: #121212;
+  margin: 0 0 4px 0;
+}
+
+.cc2-page-sub {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-weight: 400;
+  font-size: 12px;
+  color: #9EA6B5;
+  margin: 0;
+}
+
+.cc2-header-btns { display: flex; gap: 8px; align-items: center; }
+
+.cc2-btn-cancel {
+  height: 32px; padding: 0 16px;
+  background: #FFFFFF; border: 1px solid #E0E4E8; border-radius: 6px;
+  font-family: 'Noto Sans KR', sans-serif; font-size: 12px; color: #80858A;
+  cursor: pointer; transition: background 0.15s;
+}
+.cc2-btn-cancel:hover { background: #f5f5f5; }
+
+.cc2-btn-submit {
+  height: 32px; padding: 0 18px;
+  background: #3B81F5; border: none; border-radius: 6px;
+  font-family: 'Noto Sans KR', sans-serif; font-weight: 600; font-size: 12px; color: #FFFFFF;
+  cursor: pointer; transition: background 0.15s;
+}
+.cc2-btn-submit:hover { background: #2d6de0; }
+
+/* ── CONTENT ── */
+.cc2-content {
+  flex: 1; padding: 24px 28px;
+  display: flex; gap: 20px;
+  overflow-y: auto; align-items: flex-start;
+}
+
+.cc2-left { flex: 1; display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.cc2-right { width: 380px; flex-shrink: 0; }
+
+/* ── SECTION CARD ── */
+.cc2-section {
+  background: #FFFFFF; border: 1px solid #E0E4E8;
+  border-radius: 8px; padding: 20px 24px 24px;
+}
+
+.cc2-section-title {
+  font-family: 'Noto Sans KR', sans-serif; font-weight: 600;
+  font-size: 13px; color: #212121; margin: 0 0 12px 0;
+}
+
+.cc2-divider { width: 100%; height: 1px; background: #E0E4E8; margin-bottom: 20px; }
+.cc2-divider-mid { margin-top: 16px; margin-bottom: 12px; }
+
+/* ── FIELD ── */
+.cc2-field { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 16px; }
+.cc2-field:last-child { margin-bottom: 0; }
+
+.cc2-label {
+  font-family: 'Noto Sans KR', sans-serif; font-weight: 400;
+  font-size: 12px; color: #80858A;
+  width: 90px; flex-shrink: 0; padding-top: 9px;
+}
+
+/* ── INPUTS ── */
+.cc2-input {
+  height: 36px; background: #F2F3F5; border: 1px solid #E0E4E8;
+  border-radius: 6px; padding: 0 12px;
+  font-family: 'Noto Sans KR', sans-serif; font-size: 12px; color: #333;
+  outline: none; box-sizing: border-box;
+}
+.cc2-input:focus { background: #fff; border-color: #3B81F5; }
+.cc2-input::placeholder { color: #666B70; }
+.cc2-input-wide { flex: 1; }
+.cc2-input-sm { width: 100px; }
+
+/* ── SELECT ── */
+.cc2-select-wrap { position: relative; display: flex; align-items: center; }
+.cc2-select {
+  width: 100%; height: 36px; background: #F2F3F5; border: 1px solid #E0E4E8;
+  border-radius: 6px; padding: 0 12px;
+  font-family: 'Noto Sans KR', sans-serif; font-size: 12px; color: #666B70;
+  outline: none; appearance: none; cursor: pointer;
+}
+.cc2-select-wrap::after {
+  content: "▾"; position: absolute; right: 12px;
+  font-size: 10px; color: #A6A8B8; pointer-events: none;
+}
+
+/* ── INLINE GROUP ── */
+.cc2-inline-group { display: flex; align-items: center; gap: 8px; flex: 1; }
+.cc2-unit { font-family: 'Noto Sans KR', sans-serif; font-size: 11px; color: #A6A8B8; white-space: nowrap; }
+
+/* ── COUPON PREVIEW CARD ── */
+.cc2-coupon-card {
+  display: flex;
+  height: 171px;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0px 4px 8px -3px rgba(35, 39, 47, 0.12), 0px 2px 4px -3px rgba(35, 39, 47, 0.04);
+}
+
+/* 좌측: 그라디언트 영역 */
+.cc2-coupon-gradient {
+  flex: 1;
+  background: linear-gradient(43.84deg, #1C2E5C 7.19%, #3B61C2 75.51%);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 16px 16px 14px;
+  position: relative;
+}
+
+/* 우측 경계에 점선 */
+.cc2-coupon-gradient::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 12px;
+  bottom: 12px;
+  width: 1px;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255,255,255,0.3) 0px,
+    rgba(255,255,255,0.3) 4px,
+    transparent 4px,
+    transparent 8px
+  );
+}
+
+.cc2-coupon-body { display: flex; align-items: baseline; gap: 4px; }
+
+.cc2-coupon-value {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 42px;
+  color: #FFFFFF;
+  margin: 0;
+  line-height: 1;
+}
+
+.cc2-coupon-type {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: #FFFFFF;
+  margin: 0;
+}
+
+.cc2-coupon-footer { display: flex; flex-direction: column; gap: 2px; }
+
+.cc2-coupon-name {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-weight: 500; font-size: 13px;
+  color: rgba(255, 255, 255, 0.85); margin: 0;
+}
+
+.cc2-coupon-validity {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 10px; color: rgba(255, 255, 255, 0.5); margin: 0;
+}
+
+/* 우측: 흰색 다운로드 영역 */
+.cc2-coupon-white {
+  width: 72px;
+  flex-shrink: 0;
+  background: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+/* 노치 반원 */
+.cc2-notch {
+  position: absolute;
+  width: 20px;
+  height: 10px;
+  background: #F5F7FA;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+}
+.cc2-notch-top    { top: -1px;    border-radius: 0 0 10px 10px; }
+.cc2-notch-bottom { bottom: -1px; border-radius: 10px 10px 0 0; }
+
+/* 다운로드 아이콘 원 */
+.cc2-download-circle {
+  width: 33px; height: 33px;
+  border-radius: 50%;
+  background: #395DBA;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 2;
+}
+
+/* ── SUMMARY ── */
+.cc2-summary-title {
+  font-family: 'Noto Sans KR', sans-serif; font-weight: 600;
+  font-size: 11px; color: #666B70; margin: 0 0 10px 0;
+}
+
+.cc2-summary-row { display: flex; justify-content: space-between; margin-bottom: 8px; }
+.cc2-summary-key { font-family: 'Noto Sans KR', sans-serif; font-size: 11px; color: #A6A8B8; }
+.cc2-summary-val { font-family: 'Noto Sans KR', sans-serif; font-size: 11px; color: #212121; }
+
+/* ── NOTICE ── */
+.cc2-notice {
+  margin-top: 16px; background: #FEEEDA;
+  border-radius: 8px; padding: 14px 16px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.cc2-notice p { font-family: 'Noto Sans KR', sans-serif; font-size: 11px; color: #854E0B; margin: 0; }

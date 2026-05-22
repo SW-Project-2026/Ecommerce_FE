@@ -1,0 +1,162 @@
+/* ── MAIN ── */
+.ad-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #F5F7FA;
+  min-width: 0;
+}
+
+/* ── PAGE HEADER ── */
+.ad-page-header {
+  box-sizing: border-box;
+  width: 100%;
+  height: 72px;
+  background: #FFFFFF;
+  border-bottom: 1px solid #EBEDF0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  flex-shrink: 0;
+}
+
+.ad-page-title {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+  color: #121212;
+  margin: 0 0 4px 0;
+}
+
+.ad-page-sub {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-weight: 400;
+  font-size: 12px;
+  color: #9EA6B5;
+  margin: 0;
+}
+
+.ad-btn-primary {
+  height: 36px;
+  padding: 0 16px;
+  background: #3F76E4;
+  border: none;
+  border-radius: 6px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  color: #FFFFFF;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.ad-btn-primary:hover { background: #2d5ed0; }
+
+/* ── CONTENT ── */
+.ad-content {
+  flex: 1;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+}
+
+/* ── TABLE CARD ── */
+.ad-table-card {
+  background: #FFFFFF;
+  border-radius: 12px;
+  box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+/* ── TABLE ── */
+.ad-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ad-table thead tr {
+  background: #FAFCFF;
+  border-bottom: 1px solid #EBEDF0;
+}
+
+.ad-table th {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  color: #666666;
+  padding: 16px 10px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.ad-table td {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  color: #666666;
+  padding: 16px 10px;
+  text-align: center;
+  border-bottom: 1px solid #F0F2F5;
+  vertical-align: middle;
+}
+
+.ad-table tbody tr:last-child td { border-bottom: none; }
+
+.ad-table tbody tr {
+  transition: background 0.15s;
+}
+
+.ad-table tbody tr:hover {
+  background: #EEF3FF;
+}
+
+.ad-table tbody tr:hover td {
+  color: #333333;
+}
+
+.ad-td-name {
+  font-weight: 700 !important;
+  color: #111111 !important;
+}
+
+/* ── ACTION BUTTONS ── */
+.ad-action-btns {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+
+.ad-btn-edit {
+  height: 24px;
+  padding: 0 12px;
+  background: #F2F2F2;
+  border: none;
+  border-radius: 4px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  color: #666666;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.ad-btn-edit:hover { background: #e0e0e0; }
+
+.ad-btn-stop {
+  height: 24px;
+  padding: 0 12px;
+  background: #FFEDED;
+  border: none;
+  border-radius: 4px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  color: #B82B2B;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.ad-btn-stop:hover { background: #ffd5d5; }
