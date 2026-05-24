@@ -24,6 +24,8 @@ jobs:
           context: .
           push: true
           tags: jiwoodd/daon:latest
+          build-args: |
+            VITE_API_URL=${{ secrets.VITE_API_URL }}
 
       - name: Oracle Cloud 서버에 배포
         uses: appleboy/ssh-action@v1
