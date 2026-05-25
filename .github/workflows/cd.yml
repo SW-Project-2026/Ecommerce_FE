@@ -28,7 +28,7 @@ jobs:
             VITE_API_URL=${{ secrets.VITE_API_URL }}
 
       - name: Oracle Cloud 서버에 배포
-        uses: appleboy/ssh-action@v1.2.3
+        uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.ORACLE_HOST }}
           username: ${{ secrets.ORACLE_USER }}
