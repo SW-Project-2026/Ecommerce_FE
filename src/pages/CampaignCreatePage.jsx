@@ -44,7 +44,8 @@ const TARGET_TYPE_DISPLAY   = { PRODUCT: "상품", CATEGORY: "카테고리", KEY
 const ISSUANCE_METHOD_OPTIONS = [
   { label: "자동 지급", value: "AUTO" },
   { label: "다운로드",  value: "DOWNLOAD" },
-  { label: "메세징",    value: "MESSAGING" },
+  { label: "SMS",       value: "MESSAGING" },
+  { label: "LMS",       value: "LMS" },
 ];
 
 const CAT1_OPTIONS = ["조기정착", "이탈방지", "재구매"];
@@ -138,8 +139,10 @@ export default function CampaignCreatePage({ onNavigate }) {
 
   const [issuanceMethod, setIssuanceMethod] = useState("AUTO");
   const [msgContent,     setMsgContent]     = useState("");
+  const [msgTitle,       setMsgTitle]       = useState("");
 
   const isMessaging = issuanceMethod === "MESSAGING";
+  const isLms       = issuanceMethod === "LMS";
 
   const selectedCouponName = coupons.find(c => c.couponId === selectedCoupon)?.name ?? "쿠폰명";
 
@@ -214,7 +217,8 @@ export default function CampaignCreatePage({ onNavigate }) {
         deduplicationType:     dedupeType,
         deduplicationDays:     dedupeType === "period" ? parseInt(dedupeDays, 10) : null,
         issuanceMethod,
-        messagingContent:      isMessaging ? msgContent : null,
+        messagingContent:      (isMessaging || isLms) ? msgContent : null,
+        messagingTitle:        isLms ? msgTitle : null,
         filters:               apiFilters,
       }));
       onNavigate && onNavigate("list");
@@ -463,16 +467,26 @@ export default function CampaignCreatePage({ onNavigate }) {
                 ))}
               </div>
 
-              {isMessaging && (
+              {(isMessaging || isLms) && (
                 <div className="cc-msg-wrap">
+                  {isLms && (
+                    <input
+                      className="cc-input cc-input-wide"
+                      placeholder="제목 입력 (LMS 제목)"
+                      value={msgTitle}
+                      onChange={e => setMsgTitle(e.target.value)}
+                      maxLength={40}
+                      style={{ marginBottom: 8 }}
+                    />
+                  )}
                   <textarea
                     className="cc-msg-textarea"
                     placeholder={`예) [Da-On] 회원님께 특별 쿠폰을 발송해드립니다.\n쿠폰명: ${selectedCouponName}\n앱에서 바로 사용해보세요!`}
                     value={msgContent}
                     onChange={e => setMsgContent(e.target.value)}
-                    maxLength={90}
+                    maxLength={isLms ? 2000 : 90}
                   />
-                  <p className="cc-msg-char-count">{msgContent.length} / 90자</p>
+                  <p className="cc-msg-char-count">{msgContent.length} / {isLms ? "2000" : "90"}자</p>
                 </div>
               )}
             </>

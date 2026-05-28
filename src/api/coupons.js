@@ -1,3 +1,5 @@
+import { UnauthorizedError } from '../utils/withAutoRefresh'
+
 const BASE = import.meta.env.VITE_API_URL || 'http://localhost:8080'
 
 function authHeaders() {
@@ -6,6 +8,10 @@ function authHeaders() {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   }
+}
+
+function check401(res) {
+  if (res.status === 401) throw new UnauthorizedError()
 }
 
 // ── 쿠폰 생성 ──
@@ -24,6 +30,7 @@ export async function couponCreate({
     }),
   })
   const json = await res.json()
+  check401(res)
   if (res.status === 400) throw new Error(json.message || '잘못된 요청')
   if (!res.ok) throw new Error(json.message || '쿠폰 생성 실패')
   return json.data
@@ -40,6 +47,7 @@ export async function couponList({ page = 0, size = 100 } = {}) {
     headers: authHeaders(),
   })
   const json = await res.json()
+  check401(res)
   if (!res.ok) throw new Error(json.message || '쿠폰 목록 조회 실패')
   return json.data.content
 }
@@ -51,6 +59,7 @@ export async function couponDetail({ couponId }) {
     headers: authHeaders(),
   })
   const json = await res.json()
+  check401(res)
   if (res.status === 404) throw new Error('존재하지 않는 쿠폰')
   if (!res.ok) throw new Error(json.message || '쿠폰 조회 실패')
   return json.data
@@ -72,6 +81,7 @@ export async function couponUpdate({
     }),
   })
   const json = await res.json()
+  check401(res)
   if (res.status === 404) throw new Error('존재하지 않는 쿠폰')
   if (res.status === 400) throw new Error(json.message || '잘못된 요청')
   if (!res.ok) throw new Error(json.message || '쿠폰 수정 실패')
@@ -84,6 +94,7 @@ export async function couponDelete({ couponId }) {
     method: 'DELETE',
     headers: authHeaders(),
   })
+  check401(res)
   if (res.status === 404) throw new Error('존재하지 않는 쿠폰')
   if (!res.ok) {
     try {
@@ -102,6 +113,7 @@ export async function couponIssue({ couponId, userId }) {
     headers: authHeaders(),
   })
   const json = await res.json()
+  check401(res)
   if (res.status === 404) throw new Error('존재하지 않는 쿠폰 또는 유저')
   if (res.status === 400) throw new Error(json.message || '잘못된 요청')
   if (!res.ok) throw new Error(json.message || '쿠폰 발급 실패')
@@ -115,6 +127,7 @@ export async function couponUse({ userId, userCouponId }) {
     headers: authHeaders(),
   })
   const json = await res.json()
+  check401(res)
   if (res.status === 404) throw new Error('존재하지 않는 쿠폰')
   if (res.status === 400) throw new Error(json.message || '잘못된 요청')
   if (!res.ok) throw new Error(json.message || '쿠폰 사용 처리 실패')
@@ -128,6 +141,7 @@ export async function userCouponList({ userId }) {
     headers: authHeaders(),
   })
   const json = await res.json()
+  check401(res)
   if (res.status === 404) throw new Error('존재하지 않는 유저')
   if (!res.ok) throw new Error(json.message || '회원 쿠폰 목록 조회 실패')
   return json.data

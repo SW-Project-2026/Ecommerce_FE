@@ -1,3 +1,5 @@
+import { UnauthorizedError } from '../utils/withAutoRefresh'
+
 const BASE = import.meta.env.VITE_API_URL || 'http://localhost:8080'
 
 function authHeaders() {
@@ -8,6 +10,10 @@ function authHeaders() {
   }
 }
 
+function check401(res) {
+  if (res.status === 401) throw new UnauthorizedError()
+}
+
 // ── 내 정보 조회 ──
 export async function getMyProfile() {
   const res = await fetch(`${BASE}/api/users/me`, {
@@ -15,6 +21,7 @@ export async function getMyProfile() {
     headers: authHeaders(),
   })
   const json = await res.json()
+  check401(res)
   if (!res.ok) throw new Error(json.message || '내 정보 조회 실패')
   return json.data
 }
@@ -27,6 +34,7 @@ export async function updateProfile({ name, phone }) {
     body: JSON.stringify({ name, phone }),
   })
   const json = await res.json()
+  check401(res)
   if (!res.ok) throw new Error(json.message || '내 정보 수정 실패')
   return json.data
 }
@@ -38,6 +46,7 @@ export async function getUserDetail({ userId }) {
     headers: authHeaders(),
   })
   const json = await res.json()
+  check401(res)
   if (res.status === 404) throw new Error('존재하지 않는 유저')
   if (!res.ok) throw new Error(json.message || '회원 조회 실패')
   return json.data
@@ -51,6 +60,7 @@ export async function getUserList({ page = 0, size = 20 } = {}) {
     headers: authHeaders(),
   })
   const json = await res.json()
+  check401(res)
   if (!res.ok) throw new Error(json.message || '회원 목록 조회 실패')
   return json.data
 }

@@ -74,9 +74,9 @@ export default function DataManagePage() {
       try {
         const data = await withAutoRefresh(() => syncProducts());
         setNotice({ type: "success", text: `수집 완료 — ${data.savedCount?.toLocaleString()}개 저장됨` });
-        if (data.syncedAt) {
-          setLastSynced(formatDate(data.syncedAt));
-          setSyncStatus("정상");
+        if (data.lastSyncedAt) {
+          setLastSynced(formatDate(data.lastSyncedAt));
+          setSyncStatus(data.syncStatus ?? "정상");
         }
         fetchStats();
         fetchSchedule();

@@ -21,16 +21,19 @@ import { getMyProfile } from './api/users'
 import './App.css'
 
 export default function App() {
-  const [page, setPage] = useState('home')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [category, setCategory] = useState({ id: 'all', label: '전체' })
-  const [productId, setProductId] = useState(null)
+  const [page, setPage] = useState(() => sessionStorage.getItem('page') || 'home')
+  const [searchQuery, setSearchQuery] = useState(() => sessionStorage.getItem('searchQuery') || '')
+  const [category, setCategory] = useState(() => {
+    try { return JSON.parse(sessionStorage.getItem('category')) || { id: 'all', label: '전체' } }
+    catch { return { id: 'all', label: '전체' } }
+  })
+  const [productId, setProductId] = useState(() => sessionStorage.getItem('productId') || null)
   const [prevCategory, setPrevCategory] = useState(null)
   const [cart, setCart] = useState([])
   const [orderInfo, setOrderInfo] = useState(null)
-  const [checkoutItems, setCheckoutItems] = useState([])   // 결제할 상품
-  const [selectedCoupon, setSelectedCoupon] = useState(null) // 선택된 쿠폰
-  const [mypageTab, setMypageTab] = useState('home')        // 마이페이지 초기 탭
+  const [checkoutItems, setCheckoutItems] = useState([])
+  const [selectedCoupon, setSelectedCoupon] = useState(null)
+  const [mypageTab, setMypageTab] = useState(() => sessionStorage.getItem('mypageTab') || 'home')
   const [auth, setAuth] = useState(() => {
     const token = localStorage.getItem('accessToken')
     const role = localStorage.getItem('role')
@@ -64,6 +67,7 @@ export default function App() {
     localStorage.removeItem('accessToken')
     localStorage.removeItem('role')
     localStorage.removeItem('userId')
+    sessionStorage.clear()
     setAuth(null)
     setPage('home')
   }
@@ -82,7 +86,6 @@ export default function App() {
     })
   }
 
-  // 장바구니 → 주문/결제 진입
   function handleGoCheckout({ items, coupon }) {
     setCheckoutItems(items)
     setSelectedCoupon(coupon)
@@ -93,22 +96,31 @@ export default function App() {
     if (target === 'search') {
       setSearchQuery(payload)
       setCategory({ id: 'all', label: '전체' })
+      sessionStorage.setItem('searchQuery', payload)
+      sessionStorage.setItem('category', JSON.stringify({ id: 'all', label: '전체' }))
     }
     if (target === 'list') {
       setCategory(payload)
       setSearchQuery('')
+      sessionStorage.setItem('category', JSON.stringify(payload))
+      sessionStorage.setItem('searchQuery', '')
     }
     if (target === 'home') {
       setSearchQuery('')
       setCategory({ id: 'all', label: '전체' })
+      sessionStorage.setItem('searchQuery', '')
+      sessionStorage.setItem('category', JSON.stringify({ id: 'all', label: '전체' }))
     }
     if (target === 'product') {
       setPrevCategory(page === 'list' ? category : null)
       setProductId(payload)
+      sessionStorage.setItem('productId', payload)
     }
     if (target === 'mypage') {
       setMypageTab(payload ?? 'home')
+      sessionStorage.setItem('mypageTab', payload ?? 'home')
     }
+    sessionStorage.setItem('page', target)
     setPage(target)
   }
 

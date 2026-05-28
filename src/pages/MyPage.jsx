@@ -17,14 +17,19 @@ const MENU = [
 
 const USER = { name: '김다온', grade: 'GOLD', coupons: 3 }
 
-export default function MyPage({ onNavigate, userId = null }) {
+export default function MyPage({ onNavigate, userId = null, initialTab = 'home' }) {
   usePageView('마이페이지', userId)
 
-  const [tab, setTab] = useState('home')
+  const [tab, setTab] = useState(() => sessionStorage.getItem('mypageTab') || initialTab)
+
+  function handleSetTab(key) {
+    sessionStorage.setItem('mypageTab', key)
+    setTab(key)
+  }
 
   function handleTabNavigate(target, payload) {
     if (target === 'orders' || target === 'wishlist' || target === 'coupons' || target === 'profile') {
-      setTab(target)
+      handleSetTab(target)
     } else {
       onNavigate(target, payload)
     }
@@ -47,7 +52,7 @@ export default function MyPage({ onNavigate, userId = null }) {
 
         <nav className="myp-sb-menu">
           {MENU.map(m => (
-            <div key={m.key} className={`myp-sb-menu-item${tab === m.key ? ' active' : ''}`} onClick={() => setTab(m.key)}>
+            <div key={m.key} className={`myp-sb-menu-item${tab === m.key ? ' active' : ''}`} onClick={() => handleSetTab(m.key)}>
               <i className={m.icon} />
               {m.label}
             </div>

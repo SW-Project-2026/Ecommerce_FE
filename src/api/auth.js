@@ -1,3 +1,5 @@
+import { UnauthorizedError } from '../utils/withAutoRefresh'
+
 const BASE = import.meta.env.VITE_API_URL || 'http://localhost:8080'
 
 function authHeaders() {
@@ -6,6 +8,10 @@ function authHeaders() {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   }
+}
+
+function check401(res) {
+  if (res.status === 401) throw new UnauthorizedError()
 }
 
 export async function login({ loginId, password }) {
@@ -52,6 +58,7 @@ export async function updatePassword({ currentPassword, newPassword, newPassword
     body: JSON.stringify({ currentPassword, newPassword, newPasswordConfirm }),
   })
   const json = await res.json()
+  check401(res)
   if (!res.ok) throw new Error(json.message || '비밀번호 변경 실패')
   return json.data
 }
@@ -63,6 +70,7 @@ export async function withdraw() {
     headers: authHeaders(),
   })
   const json = await res.json()
+  check401(res)
   if (!res.ok) throw new Error(json.message || '회원 탈퇴 실패')
   return json.data
 }

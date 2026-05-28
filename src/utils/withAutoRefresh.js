@@ -1,14 +1,19 @@
 import { refreshToken } from "../api/auth";
 
+export class UnauthorizedError extends Error {
+  constructor() { super('401'); this.status = 401; }
+}
+
 export async function withAutoRefresh(fn, onRefreshed) {
   try {
     return await fn();
   } catch (err) {
-    if (err.message?.includes('401') || err.message?.includes('Unauthorized')) {
+    if (err instanceof UnauthorizedError || err.status === 401) {
       try {
         const data = await refreshToken();
         if (data?.accessToken) {
           localStorage.setItem('accessToken', data.accessToken);
+          if (data.role) localStorage.setItem('role', data.role);
           onRefreshed?.();
         }
         return await fn();
