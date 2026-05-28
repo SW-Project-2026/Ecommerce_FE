@@ -12,7 +12,7 @@ import DashboardPage from "./DashboardPage";
 import CustomerDashboardPage from "./CustomerDashboardPage";
 import { campaignList, campaignDetail } from "../api/campaigns";
 import { getMyProfile } from "../api/users";
-import { refreshToken } from "../api/auth";
+import { withAutoRefresh } from "../utils/withAutoRefresh";
 
 const PAGE_SIZE = 10;
 
@@ -46,35 +46,14 @@ const NAV_ITEMS = [
   { label: "데이터 관리",        key: "데이터 관리",        depth: 0 },
 ];
 
-// ── 401 시 자동 토큰 갱신 후 재시도하는 공통 래퍼 ──
-async function withAutoRefresh(fn, onRefreshed) {
-  try {
-    return await fn();
-  } catch (err) {
-    if (err.message?.includes('401') || err.message?.includes('Unauthorized')) {
-      try {
-        const data = await refreshToken();
-        if (data?.accessToken) {
-          localStorage.setItem('accessToken', data.accessToken);
-          onRefreshed?.();
-        }
-        return await fn(); // 갱신 후 재시도
-      } catch {
-        throw new Error('세션이 만료되었습니다. 다시 로그인해주세요.');
-      }
-    }
-    throw err;
-  }
-}
-
 export default function CampaignListPage() {
-  const [activePage,       setActivePage]       = useState("캠페인 목록");
+  const [activePage,       setActivePage]       = useState(() => sessionStorage.getItem('adminPage') || "캠페인 목록");
   const [selectedCampaign, setSelectedCampaign] = useState(null);
   const [detailLoading,    setDetailLoading]    = useState(false);
   const [detailError,      setDetailError]      = useState(null);
-  const [campaignOpen,     setCampaignOpen]     = useState(true);
-  const [couponOpen,       setCouponOpen]       = useState(false);
-  const [adOpen,           setAdOpen]           = useState(false);
+  const [campaignOpen,     setCampaignOpen]     = useState(() => sessionStorage.getItem('adminCampaignOpen') !== 'false');
+  const [couponOpen,       setCouponOpen]       = useState(() => sessionStorage.getItem('adminCouponOpen') === 'true');
+  const [adOpen,           setAdOpen]           = useState(() => sessionStorage.getItem('adminAdOpen') === 'true');
   const [activeTab,        setActiveTab]        = useState("전체");
   const [searchText,       setSearchText]       = useState("");
   const [selectedNo,       setSelectedNo]       = useState(null);
@@ -88,7 +67,14 @@ export default function CampaignListPage() {
   const [loading,      setLoading]      = useState(false);
   const [error,        setError]        = useState(null);
 
-  // 토큰 갱신 후 adminId 재조회
+  useEffect(() => {
+    const savedPage = sessionStorage.getItem('adminPage');
+    const savedCampaignId = sessionStorage.getItem('adminCampaignId');
+    if (savedPage === "캠페인 상세" && savedCampaignId) {
+      handleCampaignDetailClick(Number(savedCampaignId));
+    }
+  }, []);
+
   const fetchAdminId = useCallback(() => {
     getMyProfile()
       .then(profile => { if (profile?.loginId) setAdminId(profile.loginId) })
@@ -101,8 +87,23 @@ export default function CampaignListPage() {
     localStorage.removeItem('accessToken')
     localStorage.removeItem('role')
     localStorage.removeItem('userId')
+    sessionStorage.removeItem('adminPage')
+    sessionStorage.removeItem('adminCampaignId')
+    sessionStorage.removeItem('adminCampaignOpen')
+    sessionStorage.removeItem('adminCouponOpen')
+    sessionStorage.removeItem('adminAdOpen')
     window.location.href = '/'
   }
+
+  const navigateTo = (page, campaignId = null) => {
+    sessionStorage.setItem('adminPage', page);
+    if (campaignId) {
+      sessionStorage.setItem('adminCampaignId', campaignId);
+    } else {
+      sessionStorage.removeItem('adminCampaignId');
+    }
+    setActivePage(page);
+  };
 
   const fetchCampaigns = useCallback(() => {
     if (activePage !== "캠페인 목록") return;
@@ -112,7 +113,7 @@ export default function CampaignListPage() {
 
     withAutoRefresh(
       () => campaignList({ status: apiStatus }),
-      fetchAdminId  // 토큰 갱신됐으면 adminId도 새로 가져오기
+      fetchAdminId
     )
       .then(data => { setCampaignData(Array.isArray(data) ? data : []); setCurrentPage(1); })
       .catch(err => setError(err.message))
@@ -131,7 +132,7 @@ export default function CampaignListPage() {
         fetchAdminId
       );
       setSelectedCampaign(detail);
-      setActivePage("캠페인 상세");
+      navigateTo("캠페인 상세", campaignId);
     } catch (err) {
       setDetailError(err.message);
     } finally {
@@ -150,14 +151,29 @@ export default function CampaignListPage() {
   useEffect(() => { setCurrentPage(1); }, [searchText]);
 
   const handleNavClick = (item) => {
-    if (item.key === "캠페인 관리") { setCampaignOpen((p) => !p); return; }
-    if (item.key === "쿠폰 관리")   { setCouponOpen((p) => !p);   return; }
-    if (item.key === "광고 관리")   { setAdOpen((p) => !p);       return; }
-    if (item.group === "coupon") setCouponOpen(true);
-    if (item.group === "ad")     setAdOpen(true);
+    if (item.key === "캠페인 관리") {
+      const next = !campaignOpen;
+      setCampaignOpen(next);
+      sessionStorage.setItem('adminCampaignOpen', next);
+      return;
+    }
+    if (item.key === "쿠폰 관리") {
+      const next = !couponOpen;
+      setCouponOpen(next);
+      sessionStorage.setItem('adminCouponOpen', next);
+      return;
+    }
+    if (item.key === "광고 관리") {
+      const next = !adOpen;
+      setAdOpen(next);
+      sessionStorage.setItem('adminAdOpen', next);
+      return;
+    }
+    if (item.group === "coupon") { setCouponOpen(true); sessionStorage.setItem('adminCouponOpen', true); }
+    if (item.group === "ad")     { setAdOpen(true);     sessionStorage.setItem('adminAdOpen', true); }
     if (item.key === "쿠폰 등록") setEditCoupon(null);
     if (item.key === "광고 등록") setEditAd(null);
-    setActivePage(item.key);
+    navigateTo(item.key);
   };
 
   const renderNavHeader = () => (
@@ -231,10 +247,10 @@ export default function CampaignListPage() {
               onNavigate={(page) => {
                 if (page === "list") {
                   setSelectedCampaign(null);
-                  setActivePage("캠페인 목록");
+                  navigateTo("캠페인 목록");
                   fetchCampaigns();
                 } else {
-                  setActivePage(page);
+                  navigateTo(page);
                 }
               }}
             />
@@ -251,10 +267,10 @@ export default function CampaignListPage() {
           <CampaignCreatePage
             onNavigate={(page) => {
               if (page === "list") {
-                setActivePage("캠페인 목록");
+                navigateTo("캠페인 목록");
                 fetchCampaigns();
               } else {
-                setActivePage(page);
+                navigateTo(page);
               }
             }}
           />
@@ -270,9 +286,9 @@ export default function CampaignListPage() {
           onNavigate={(page, data) => {
             if (page === "create") {
               setEditCoupon(data ?? null);
-              setActivePage("쿠폰 등록");
+              navigateTo("쿠폰 등록");
             } else {
-              setActivePage(page);
+              navigateTo(page);
             }
           }}
         />
@@ -287,7 +303,7 @@ export default function CampaignListPage() {
           coupon={editCoupon}
           onNavigate={(page) => {
             setEditCoupon(null);
-            setActivePage(page === "list" ? "쿠폰 목록" : page);
+            navigateTo(page === "list" ? "쿠폰 목록" : page);
           }}
         />
       </Layout>
@@ -309,9 +325,9 @@ export default function CampaignListPage() {
           onNavigate={(page, data) => {
             if (page === "create") {
               setEditAd(data ?? null);
-              setActivePage("광고 등록");
+              navigateTo("광고 등록");
             } else {
-              setActivePage(page);
+              navigateTo(page);
             }
           }}
         />
@@ -326,7 +342,7 @@ export default function CampaignListPage() {
           ad={editAd}
           onNavigate={(page) => {
             setEditAd(null);
-            setActivePage(page === "list" ? "광고 목록" : page);
+            navigateTo(page === "list" ? "광고 목록" : page);
           }}
         />
       </Layout>
@@ -349,7 +365,7 @@ export default function CampaignListPage() {
             <h1 className="cl-page-title">캠페인 목록</h1>
             <p className="cl-page-sub">캠페인 목록을 조회합니다</p>
           </div>
-          <button className="cl-btn-primary" onClick={() => setActivePage("캠페인 생성")}>
+          <button className="cl-btn-primary" onClick={() => navigateTo("캠페인 생성")}>
             + 캠페인 생성
           </button>
         </div>

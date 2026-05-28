@@ -72,10 +72,11 @@ const STATUS_LABEL = { IN_PROGRESS: "수행중", PAUSED: "일시정지", ENDED: 
 const ISSUANCE_METHOD_OPTIONS = [
   { label: "자동 지급", value: "AUTO" },
   { label: "다운로드",  value: "DOWNLOAD" },
-  { label: "메세징",    value: "MESSAGING" },
+  { label: "SMS",       value: "MESSAGING" },
+  { label: "LMS",       value: "LMS" },
 ];
 const ISSUANCE_METHOD_DISPLAY = {
-  AUTO: "자동 지급", DOWNLOAD: "다운로드", MESSAGING: "메세징",
+  AUTO: "자동 지급", DOWNLOAD: "다운로드", MESSAGING: "SMS", LMS: "LMS",
 };
 
 const CAT1_OPTIONS = ["조기정착", "이탈방지", "재구매"];
@@ -257,7 +258,10 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
 
   const [issuanceMethod, setIssuanceMethod] = useState(campaign?.issuanceMethod ?? "AUTO");
   const [msgContent,     setMsgContent]     = useState(campaign?.messagingContent ?? "");
+  const [msgTitle,       setMsgTitle]       = useState(campaign?.messagingTitle   ?? "");
+
   const isMessaging = issuanceMethod === "MESSAGING";
+  const isLms       = issuanceMethod === "LMS";
 
   const initialTab = campaign?.adId ? "광고" : "쿠폰";
   const [rewardTab, setRewardTab] = useState(initialTab);
@@ -338,7 +342,8 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
         couponId:              selectedCoupon ?? null,
         adId:                  selectedAd     ?? null,
         issuanceMethod,
-        messagingContent:      isMessaging ? msgContent : null,
+        messagingContent:      (isMessaging || isLms) ? msgContent : null,
+        messagingTitle:        isLms ? msgTitle : null,
         filters:               apiFilters,
       }));
       setEditMode(false);
@@ -654,7 +659,10 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
                 <div className="cdp-dedupe-readonly" style={{ marginTop: 10 }}>
                   <span className="cdp-dedupe-readonly-label">발급 방식</span>
                   <span className="cdp-dedupe-readonly-value">{ISSUANCE_METHOD_DISPLAY[issuanceMethod] ?? issuanceMethod}</span>
-                  {isMessaging && msgContent && (
+                  {(isMessaging || isLms) && msgTitle && (
+                    <div className="cdp-msg-readonly-content" style={{ fontWeight: 700 }}>{msgTitle}</div>
+                  )}
+                  {(isMessaging || isLms) && msgContent && (
                     <div className="cdp-msg-readonly-content">{msgContent}</div>
                   )}
                 </div>
@@ -675,16 +683,26 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
                       </label>
                     ))}
                   </div>
-                  {isMessaging && (
+                  {(isMessaging || isLms) && (
                     <div className="cdp-msg-wrap">
+                      {isLms && (
+                        <input
+                          className="cdp-input cdp-input-wide"
+                          placeholder="제목 입력 (LMS 제목)"
+                          value={msgTitle}
+                          onChange={e => setMsgTitle(e.target.value)}
+                          maxLength={40}
+                          style={{ marginBottom: 8 }}
+                        />
+                      )}
                       <textarea
                         className="cdp-msg-textarea"
                         placeholder={`예) [Da-On] 회원님께 특별 쿠폰을 발송해드립니다.\n쿠폰명: ${selectedCouponName}\n앱에서 바로 사용해보세요!`}
                         value={msgContent}
                         onChange={e => setMsgContent(e.target.value)}
-                        maxLength={90}
+                        maxLength={isLms ? 2000 : 90}
                       />
-                      <p className="cdp-msg-char-count">{msgContent.length} / 90자</p>
+                      <p className="cdp-msg-char-count">{msgContent.length} / {isLms ? "2000" : "90"}자</p>
                     </div>
                   )}
                 </div>

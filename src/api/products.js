@@ -1,3 +1,5 @@
+import { UnauthorizedError } from '../utils/withAutoRefresh'
+
 const BASE = import.meta.env.VITE_API_URL || 'http://localhost:8080'
 
 function authHeaders() {
@@ -6,6 +8,10 @@ function authHeaders() {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   }
+}
+
+function check401(res) {
+  if (res.status === 401) throw new UnauthorizedError()
 }
 
 export async function searchProducts({ query, display = 10, start = 1, sort = 'sim' }) {
@@ -39,6 +45,7 @@ export async function syncProducts() {
     headers: authHeaders(),
   })
   const json = await res.json()
+  check401(res)
   if (!res.ok) throw new Error(json.message || '상품 수동 수집 실패')
   return json.data
 }
@@ -50,6 +57,7 @@ export async function getSchedule() {
     headers: authHeaders(),
   })
   const json = await res.json()
+  check401(res)
   if (!res.ok) throw new Error(json.message || '스케줄 조회 실패')
   return json.data
 }
@@ -64,6 +72,7 @@ export async function setSchedule({ cycle, time }) {
     body: JSON.stringify({ cycle, time }),
   })
   const json = await res.json()
+  check401(res)
   if (!res.ok) throw new Error(json.message || '스케줄 등록 실패')
   return json.data
 }
@@ -75,6 +84,7 @@ export async function cancelSchedule() {
     headers: authHeaders(),
   })
   const json = await res.json()
+  check401(res)
   if (!res.ok) throw new Error(json.message || '스케줄 취소 실패')
   return json.data
 }

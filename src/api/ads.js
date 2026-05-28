@@ -1,3 +1,5 @@
+import { UnauthorizedError } from '../utils/withAutoRefresh'
+
 const BASE = import.meta.env.VITE_API_URL || 'http://localhost:8080'
 
 function authHeaders() {
@@ -6,6 +8,10 @@ function authHeaders() {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   }
+}
+
+function check401(res) {
+  if (res.status === 401) throw new UnauthorizedError()
 }
 
 // ── 광고 생성 ──
@@ -22,6 +28,7 @@ export async function adCreate({ adName, targetType, productId, category, keywor
     }),
   })
   const json = await res.json()
+  check401(res)
   if (res.status === 400) throw new Error(json.message || '잘못된 요청')
   if (!res.ok) throw new Error(json.message || '광고 생성 실패')
   return json.data
@@ -38,6 +45,7 @@ export async function adList({ page = 0, size = 100 } = {}) {
     headers: authHeaders(),
   })
   const json = await res.json()
+  check401(res)
   if (!res.ok) throw new Error(json.message || '광고 목록 조회 실패')
   return json.data.content
 }
@@ -49,6 +57,7 @@ export async function adDetail({ adId }) {
     headers: authHeaders(),
   })
   const json = await res.json()
+  check401(res)
   if (res.status === 404) throw new Error('존재하지 않는 광고')
   if (!res.ok) throw new Error(json.message || '광고 조회 실패')
   return json.data
@@ -68,6 +77,7 @@ export async function adUpdate({ adId, adName, targetType, productId, category, 
     }),
   })
   const json = await res.json()
+  check401(res)
   if (res.status === 404) throw new Error('존재하지 않는 광고')
   if (res.status === 400) throw new Error(json.message || '잘못된 요청')
   if (!res.ok) throw new Error(json.message || '광고 수정 실패')
@@ -80,6 +90,7 @@ export async function adDelete({ adId }) {
     method: 'DELETE',
     headers: authHeaders(),
   })
+  check401(res)
   if (res.status === 404) throw new Error('존재하지 않는 광고')
   if (!res.ok) {
     try {
@@ -98,6 +109,7 @@ export async function adExpose({ adId }) {
     headers: authHeaders(),
   })
   const json = await res.json()
+  check401(res)
   if (res.status === 400) throw new Error(json.message || '잘못된 요청')
   if (!res.ok) throw new Error(json.message || '광고 노출 기록 실패')
   return json.data
@@ -110,6 +122,7 @@ export async function adClick({ adId }) {
     headers: authHeaders(),
   })
   const json = await res.json()
+  check401(res)
   if (res.status === 400) throw new Error(json.message || '잘못된 요청')
   if (!res.ok) throw new Error(json.message || '광고 클릭 기록 실패')
   return json.data
@@ -122,6 +135,7 @@ export async function userAdList({ userId }) {
     headers: authHeaders(),
   })
   const json = await res.json()
+  check401(res)
   if (res.status === 404) throw new Error('존재하지 않는 유저')
   if (!res.ok) throw new Error(json.message || '사용자 광고 조회 실패')
   return json.data
