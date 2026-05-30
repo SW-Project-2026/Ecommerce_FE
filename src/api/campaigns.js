@@ -63,8 +63,14 @@ export async function campaignCreate({
   batchDayOfWeek,
   batchDayOfMonth,
   filterLogicalOperator,
+  couponRestrictionDays,
+  issueType,
   couponId,
   adId,
+  messageType,
+  messageSubject,
+  messageContent,
+  duplicatePolicy,
   filters,
 }) {
   const res = await fetch(`${BASE}/api/campaigns`, {
@@ -78,13 +84,19 @@ export async function campaignCreate({
       startedAt,
       endedAt,
       collectionType,
-      batchCycle:            batchCycle      || null,
-      batchTime:             batchTime       || null,
-      batchDayOfWeek:        batchDayOfWeek  || null,
-      batchDayOfMonth:       batchDayOfMonth || null,
+      batchCycle:            batchCycle            || null,
+      batchTime:             batchTime             || null,
+      batchDayOfWeek:        batchDayOfWeek        || null,
+      batchDayOfMonth:       batchDayOfMonth       || null,
       filterLogicalOperator,
-      couponId:              couponId        ?? null,
-      adId:                  adId            ?? null,
+      couponRestrictionDays: couponRestrictionDays ?? null,
+      issueType:             issueType             ?? null,
+      couponId:              couponId              ?? null,
+      adId:                  adId                  ?? null,
+      messageType:           messageType           ?? null,
+      messageSubject:        messageSubject        ?? null,
+      messageContent:        messageContent        ?? null,
+      duplicatePolicy:       duplicatePolicy       ?? null,
       filters,
     }),
   })
@@ -110,8 +122,14 @@ export async function campaignUpdate({
   batchDayOfWeek,
   batchDayOfMonth,
   filterLogicalOperator,
+  couponRestrictionDays,
+  issueType,
   couponId,
   adId,
+  messageType,
+  messageSubject,
+  messageContent,
+  duplicatePolicy,
   filters,
 }) {
   const res = await fetch(`${BASE}/api/campaigns/${campaignId}`, {
@@ -125,13 +143,19 @@ export async function campaignUpdate({
       startedAt,
       endedAt,
       collectionType,
-      batchCycle:            batchCycle      || null,
-      batchTime:             batchTime       || null,
-      batchDayOfWeek:        batchDayOfWeek  || null,
-      batchDayOfMonth:       batchDayOfMonth || null,
+      batchCycle:            batchCycle            || null,
+      batchTime:             batchTime             || null,
+      batchDayOfWeek:        batchDayOfWeek        || null,
+      batchDayOfMonth:       batchDayOfMonth       || null,
       filterLogicalOperator,
-      couponId:              couponId        ?? null,
-      adId:                  adId            ?? null,
+      couponRestrictionDays: couponRestrictionDays ?? null,
+      issueType:             issueType             ?? null,
+      couponId:              couponId              ?? null,
+      adId:                  adId                  ?? null,
+      messageType:           messageType           ?? null,
+      messageSubject:        messageSubject        ?? null,
+      messageContent:        messageContent        ?? null,
+      duplicatePolicy:       duplicatePolicy       ?? null,
       filters,
     }),
   })
@@ -176,4 +200,57 @@ export async function campaignDelete({ campaignId }) {
       throw new Error('캠페인 삭제 실패')
     }
   }
+}
+
+// ── 캠페인 문자 발송 (SMS/LMS) ──
+export async function sendCampaignSms({ campaignId, messageType, subject, content, duplicatePolicy }) {
+  const res = await fetch(`${BASE}/api/campaigns/${campaignId}/send-sms`, {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify({
+      messageType,
+      subject:         subject         ?? null,
+      content,
+      duplicatePolicy: duplicatePolicy ?? null,
+    }),
+  })
+  const json = await res.json()
+  check401(res)
+  if (!res.ok) throw new Error(json.message || '문자 발송 실패')
+  return json.data
+}
+
+// ── 캠페인 문자 재발송 (실패 대상) ──
+export async function retryCampaignSms({ campaignId, messageType, subject, content, duplicatePolicy }) {
+  const res = await fetch(`${BASE}/api/campaigns/${campaignId}/retry-sms`, {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify({
+      messageType,
+      subject:         subject         ?? null,
+      content,
+      duplicatePolicy: duplicatePolicy ?? null,
+    }),
+  })
+  const json = await res.json()
+  check401(res)
+  if (!res.ok) throw new Error(json.message || '문자 재발송 실패')
+  return json.data
+}
+
+// ── 캠페인 SMS 발송 현황 조회 ──
+export async function getCampaignSmsStatus({ campaignId, cursor, date, time } = {}) {
+  const params = new URLSearchParams()
+  if (cursor) params.append('cursor', cursor)
+  if (date)   params.append('date', date)
+  if (time)   params.append('time', time)
+
+  const res = await fetch(`${BASE}/api/campaigns/${campaignId}/sms-status?${params}`, {
+    method: 'GET',
+    headers: authHeaders(),
+  })
+  const json = await res.json()
+  check401(res)
+  if (!res.ok) throw new Error(json.message || 'SMS 발송 현황 조회 실패')
+  return json.data
 }

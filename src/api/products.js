@@ -44,9 +44,9 @@ export async function syncProducts() {
     method: 'POST',
     headers: authHeaders(),
   })
-  const json = await res.json()
   check401(res)
-  if (!res.ok) throw new Error(json.message || '상품 수동 수집 실패')
+  if (!res.ok) throw new Error('상품 수동 수집 실패')
+  const json = await res.json()
   return json.data
 }
 
@@ -56,8 +56,9 @@ export async function getSchedule() {
     method: 'GET',
     headers: authHeaders(),
   })
-  const json = await res.json()
   check401(res)
+  if (res.status === 404) return null  // 등록된 스케줄 없음
+  const json = await res.json()
   if (!res.ok) throw new Error(json.message || '스케줄 조회 실패')
   return json.data
 }

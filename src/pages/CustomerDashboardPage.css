@@ -62,16 +62,15 @@
 
 /* ══════════ PROFILE CARD ══════════ */
 .cd-profile-card {
-  background: #1A2E52;
+  background: #FFFFFF;
+  border: 0.5px solid #DBDFF0;
   border-radius: 16px;
-  padding: 24px 28px;
+  padding: 28px 32px;
   display: flex;
-  flex-direction: column;
-  gap: 0;
+  align-items: center;
+  gap: 32px;
   position: relative;
   overflow: hidden;
-  height: 100%;
-  box-sizing: border-box;
 }
 
 .cd-profile-deco {
@@ -80,9 +79,16 @@
   height: 150px;
   background: rgba(79, 110, 247, 0.08);
   border-radius: 50%;
-  right: 200px;
+  right: 400px;
   top: -30px;
   pointer-events: none;
+}
+
+.cd-profile-top {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex: 1;
 }
 
 .cd-avatar {
@@ -110,14 +116,14 @@
   font-family: 'Inter', sans-serif;
   font-weight: 700;
   font-size: 20px;
-  color: #FFFFFF;
+  color: #3C3C3C;
   margin: 0;
 }
 
 .cd-profile-tier {
   font-family: 'Inter', sans-serif;
   font-size: 12px;
-  color: rgba(255,255,255,0.45);
+  color: rgba(51, 51, 51, 0.5);
   margin: 0;
 }
 
@@ -137,23 +143,17 @@
   white-space: nowrap;
 }
 
-.cd-badge-vip     { background: rgba(232,93,69,0.22);   color: #FF7CAC; }
-.cd-badge-freq    { background: rgba(79,110,247,0.22);  color: #A0E1FF; }
-.cd-badge-churn   { background: rgba(24,184,122,0.18);  color: #18B87A; }
-
-.cd-profile-divider {
-  width: 1px;
-  height: 60px;
-  background: rgba(255,255,255,0.08);
-  flex-shrink: 0;
-  margin: 0 8px;
-}
+.cd-badge-vip   { background: rgba(255,149,187,0.3); border: 1px solid rgba(255,43,121,0.4); color: #FF2B79; }
+.cd-badge-freq  { background: rgba(79,110,247,0.3);  border: 1px solid rgba(32,73,255,0.4);  color: #2049FF; }
+.cd-badge-churn { background: rgba(24,184,122,0.3);  border: 1px solid rgba(24,184,122,0.3); color: #005A37; }
 
 .cd-profile-stats {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  flex: 1;
+  gap: 14px;
+  min-width: 280px;
+  padding-left: 32px;
+  border-left: 1px solid #E0E4E8;
 }
 
 .cd-profile-stat-row {
@@ -164,74 +164,100 @@
   font-size: 12px;
 }
 
-.cd-profile-stat-label {
-  color: rgba(255,255,255,0.4);
+.cd-profile-stat-label { color: rgba(93, 93, 93, 0.6); }
+.cd-profile-stat-value { color: rgba(71, 71, 71, 0.9); font-weight: 500; }
+
+/* ══════════ DONUT ROW ══════════ */
+.cd-donut-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
 }
 
-.cd-profile-stat-value {
-  color: rgba(255,255,255,0.75);
-  font-weight: 500;
-}
-
-/* ══════════ CAMPAIGN STAT CARDS ══════════ */
-.cd-section-label {
-  font-family: 'Inter', sans-serif;
-  font-weight: 600;
-  font-size: 14px;
-  color: #8892AA;
-  margin-bottom: -4px;
-}
-
-.cd-stat-row {
-  display: flex;
-  gap: 12px;
-}
-
-.cd-stat-card {
-  flex: 1;
+.cd-donut-card {
   background: #FFFFFF;
   border-radius: 12px;
-  padding: 20px 20px 16px;
-  position: relative;
-  overflow: hidden;
+  padding: 18px 20px 16px;
   box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.cd-stat-bar {
+.cd-donut-card-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.cd-donut-card-title {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  color: #0F1E3D;
+}
+
+.cd-donut-card-sub {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  color: #9BAAC0;
+}
+
+.cd-donut-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.cd-donut-label {
   position: absolute;
-  top: 0; left: 0;
-  width: 3px;
-  height: 100%;
-  border-radius: 12px 0 0 12px;
-}
-
-.cd-stat-label {
-  font-family: 'Inter', sans-serif;
-  font-size: 13px;
-  color: #8892AA;
-  margin: 0 0 8px 0;
-  font-weight: 500;
-}
-
-.cd-stat-value {
-  font-family: 'Inter', sans-serif;
+  font-family: 'DM Sans', 'Inter', sans-serif;
   font-weight: 700;
   font-size: 20px;
-  color: #1A2E5A;
-  margin: 0 0 4px 0;
+  color: #212023;
 }
 
-.cd-stat-sub {
+.cd-donut-legends {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cd-donut-legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cd-donut-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.cd-donut-legend-text {
   font-family: 'Inter', sans-serif;
-  font-size: 11px;
-  color: #8892AA;
-  margin: 0;
+  font-size: 10px;
+  color: #5A6A8A;
+}
+
+/* ══════════ MID ROW ══════════ */
+.cd-mid-row {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 14px;
 }
 
 /* ══════════ WHITE CARD BASE ══════════ */
 .cd-card {
   background: #FFFFFF;
-  border: 0.5px solid #E3E8F4;
+  border: 0.5px solid #E3EDF4;
   border-radius: 14px;
   padding: 20px 22px 18px;
   box-shadow: 0 1px 4px rgba(0,0,0,0.03);
@@ -255,18 +281,13 @@
 .cd-card-divider {
   width: 100%;
   height: 1px;
-  background: #E3E8F4;
+  background: #E3EDF4;
   margin: 10px 0;
 }
 
-/* ══════════ 2열 그리드 ══════════ */
-.cd-grid-2 {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-}
-
 /* ══════════ 관심 키워드 ══════════ */
+.cd-keyword-card { display: flex; flex-direction: column; }
+
 .cd-keyword-wrap {
   display: flex;
   flex-wrap: wrap;
@@ -284,28 +305,22 @@
   color: #5A6A8A;
 }
 
-/* ══════════ 주 접속 시간대 차트 ══════════ */
-.cd-timeslot-card {
-  background: #FFFFFF;
-  border: 0.5px solid #E3E8F4;
-  border-radius: 14px;
-  padding: 20px 22px 18px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
-}
+/* ══════════ 주 접속 시간대 ══════════ */
+.cd-timeslot-card { display: flex; flex-direction: column; }
 
 .cd-chart-wrap {
   display: flex;
   gap: 0;
   align-items: flex-end;
   margin-top: 12px;
-  height: 200px;
+  height: 180px;
 }
 
 .cd-chart-y {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  height: 160px;
+  height: 150px;
   margin-bottom: 22px;
   margin-right: 8px;
   align-items: flex-end;
@@ -327,11 +342,10 @@
   position: relative;
 }
 
-/* grid lines */
 .cd-chart-grid {
   position: absolute;
   left: 0; right: 0;
-  height: 160px;
+  height: 150px;
   bottom: 22px;
   display: flex;
   flex-direction: column;
@@ -357,24 +371,29 @@
 
 .cd-bar-track {
   width: 100%;
-  height: 160px;
+  height: 150px;
   display: flex;
   align-items: flex-end;
-  position: relative;
 }
 
 .cd-bar-fill {
   width: 100%;
   border-radius: 4px 4px 0 0;
-  transition: height 0.4s;
 }
 
 .cd-bar-label {
   font-family: 'Inter', sans-serif;
-  font-size: 10px;
+  font-size: 9px;
   color: #9BAAC0;
   text-align: center;
   white-space: nowrap;
+}
+
+/* ══════════ 2열 그리드 ══════════ */
+.cd-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
 }
 
 /* ══════════ 장바구니 / 최근 구매 이력 ══════════ */
@@ -383,10 +402,9 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 0;
-  border-bottom: 1px solid #E3E8F4;
+  border-bottom: 1px solid #E3EDF4;
 }
-
-.cd-list-item:last-child { border-bottom: none; }
+.cd-list-item:last-child  { border-bottom: none; }
 .cd-list-item:first-child { padding-top: 0; }
 
 .cd-list-name {
@@ -410,66 +428,4 @@
   font-size: 13px;
   color: #0F1E3D;
   white-space: nowrap;
-}
-
-/* ══════════ 캠페인 성과 개인 stat 카드 (오른쪽 3개) ══════════ */
-.cd-perf-row {
-  display: flex;
-  gap: 12px;
-}
-
-.cd-perf-card {
-  flex: 1;
-  background: #FFFFFF;
-  border-radius: 12px;
-  padding: 18px 20px 14px;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-  border: 0.5px solid #E3E8F4;
-}
-
-.cd-perf-bar {
-  position: absolute;
-  top: 0; left: 0;
-  width: 3px;
-  height: 100%;
-  border-radius: 12px 0 0 12px;
-}
-
-.cd-perf-label {
-  font-family: 'Inter', sans-serif;
-  font-size: 13px;
-  color: #8892AA;
-  font-weight: 500;
-  margin: 0 0 6px 0;
-}
-
-.cd-perf-value {
-  font-family: 'Inter', sans-serif;
-  font-weight: 700;
-  font-size: 20px;
-  color: #1A2E5A;
-  margin: 0 0 4px 0;
-}
-
-.cd-perf-sub {
-  font-family: 'Inter', sans-serif;
-  font-size: 11px;
-  color: #8892AA;
-  margin: 0;
-}
-
-/* ══════════ TOP LAYOUT: 프로필 + 캠페인성과 ══════════ */
-.cd-top-grid {
-  display: grid;
-  grid-template-columns: 380px 1fr;
-  gap: 14px;
-  align-items: stretch;
-}
-
-.cd-top-right {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
 }

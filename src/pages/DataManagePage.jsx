@@ -59,6 +59,10 @@ export default function DataManagePage() {
   async function fetchSchedule() {
     try {
       const data = await withAutoRefresh(() => getSchedule());
+      if (data === null) {  // 등록된 스케줄 없음
+        setCurrentSchedule(null);
+        return;
+      }
       setCurrentSchedule(data);
       setLastSynced(formatDate(data.lastSyncedAt));
       setSyncStatus(data.syncStatus === "IDLE" ? "정상" : data.syncStatus ?? "–");
