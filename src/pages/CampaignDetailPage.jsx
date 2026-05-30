@@ -1,10 +1,24 @@
 import { useState, useEffect } from "react";
 import "./CampaignDetailPage.css";
-import { campaignDelete, campaignUpdate, campaignStatusUpdate } from "../api/campaigns";
+import { campaignDelete, campaignUpdate, campaignStatusUpdate, getCampaignSmsStatus, retryCampaignSms } from "../api/campaigns";
 import { eventList } from "../api/events";
 import { couponList } from "../api/coupons";
 import { adList } from "../api/ads";
 import { withAutoRefresh } from "../utils/withAutoRefresh";
+
+const FLUENTD_URL = import.meta.env.VITE_FLUENTD_URL || "http://localhost:9880"
+
+async function sendCampaignToFluentd(payload) {
+  try {
+    await fetch(`${FLUENTD_URL}/campaign.logs`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+  } catch {
+    // Fluentd 전송 실패 시 무시
+  }
+}
 
 const OPERATORS_NUMBER   = ["≥ (이상)", "≤ (이하)", "> (초과)", "< (미만)", "= (동등)"];
 const OPERATORS_STRING   = ["포함", "= (동등)"];
@@ -72,11 +86,10 @@ const STATUS_LABEL = { IN_PROGRESS: "수행중", PAUSED: "일시정지", ENDED: 
 const ISSUANCE_METHOD_OPTIONS = [
   { label: "자동 지급", value: "AUTO" },
   { label: "다운로드",  value: "DOWNLOAD" },
-  { label: "SMS",       value: "MESSAGING" },
-  { label: "LMS",       value: "LMS" },
+  { label: "메세징",    value: "MESSAGING" },
 ];
 const ISSUANCE_METHOD_DISPLAY = {
-  AUTO: "자동 지급", DOWNLOAD: "다운로드", MESSAGING: "SMS", LMS: "LMS",
+  AUTO: "자동 지급", DOWNLOAD: "다운로드", MESSAGING: "메세징",
 };
 
 const CAT1_OPTIONS = ["조기정착", "이탈방지", "재구매"];
@@ -129,6 +142,158 @@ const S = {
   cell:    { fontFamily: "'Noto Sans KR', sans-serif", fontSize: 12, color: "#333" },
   subCell: { fontFamily: "'Noto Sans KR', sans-serif", fontSize: 11, color: "#9EA6B5" },
 };
+
+const TIME_OPTIONS = Array.from({ length: 24 }, (_, h) =>
+  ["00", "10", "20", "30", "40", "50"].map(m => `${String(h).padStart(2, "0")}:${m}`)
+).flat();
+
+// ── 전송 현황 섹션 (getCampaignSmsStatus, retryCampaignSms API 연동) ──
+function SendStatusSection({ campaignId }) {
+  const [logs,           setLogs]           = useState([]);
+  const [loading,        setLoading]        = useState(false);
+  const [selected,       setSelected]       = useState(new Set());
+  const [filterDate,     setFilterDate]     = useState("");
+  const [filterTime,     setFilterTime]     = useState("");
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [totalCount,     setTotalCount]     = useState(0);
+  const [successCount,   setSuccessCount]   = useState(0);
+  const [failCount,      setFailCount]      = useState(0);
+  const [resending,      setResending]      = useState(false);
+  const [error,          setError]          = useState(null);
+
+  const fetchStatus = async (date, time) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await withAutoRefresh(() =>
+        getCampaignSmsStatus({ campaignId, date: date || undefined, time: time || undefined })
+      );
+      setLogs(data?.targets?.content ?? []);
+      setTotalCount(data?.todaySentCount + data?.todayFailedCount ?? 0);
+      setSuccessCount(data?.todaySentCount ?? 0);
+      setFailCount(data?.todayFailedCount ?? 0);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchStatus("", ""); }, []);
+
+  const toggleSelect = (loginId) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      next.has(loginId) ? next.delete(loginId) : next.add(loginId);
+      return next;
+    });
+  };
+
+  const handleSearch = () => {
+    fetchStatus(filterDate, filterTime);
+  };
+
+  const handleReset = () => {
+    setFilterDate("");
+    setFilterTime("");
+    fetchStatus("", "");
+  };
+
+  const handleResend = async () => {
+    if (selected.size === 0) return;
+    setResending(true);
+    try {
+      await withAutoRefresh(() =>
+        retryCampaignSms({ campaignId, messageType: "SMS", content: "" })
+      );
+      setSelected(new Set());
+      fetchStatus(filterDate, filterTime);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setResending(false);
+    }
+  };
+
+  return (
+    <div className="cdp-send-section">
+      <p className="cdp-send-summary">
+        전송 성공 <strong>{successCount}명</strong> / 전송 실패 <strong style={{ color: "#F74F52" }}>{failCount}명</strong>
+      </p>
+
+      <div className="cdp-send-filter-row">
+        <span className="cdp-send-title">사용자 조회</span>
+        <div className="cdp-send-filter-inputs">
+          <input
+            type="date"
+            className="cdp-send-date-input"
+            value={filterDate}
+            onChange={e => setFilterDate(e.target.value)}
+          />
+          <div className="cdp-send-time-wrap">
+            <input
+              className="cdp-send-time-input"
+              placeholder="시간 선택"
+              value={filterTime}
+              readOnly
+              onClick={() => setShowTimePicker(p => !p)}
+            />
+            {showTimePicker && (
+              <div className="cdp-send-time-dropdown">
+                <div className="cdp-send-time-list">
+                  {TIME_OPTIONS.map(t => (
+                    <div
+                      key={t}
+                      className={`cdp-send-time-item ${filterTime === t ? "cdp-send-time-item-active" : ""}`}
+                      onClick={() => { setFilterTime(t); setShowTimePicker(false); }}
+                    >
+                      {t}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          {(filterDate || filterTime) && (
+            <button className="cdp-send-reset-btn" onClick={handleReset}>✕</button>
+          )}
+          <button className="cdp-send-search-btn" onClick={handleSearch}>조회</button>
+        </div>
+      </div>
+
+      {error && <div style={{ fontSize: 12, color: "#B82B2B", marginBottom: 8 }}>{error}</div>}
+
+      <div className="cdp-send-table">
+        {loading ? (
+          <div style={{ padding: 24, textAlign: "center", fontSize: 12, color: "#9EA6B5" }}>불러오는 중...</div>
+        ) : logs.length === 0 ? (
+          <div style={{ padding: 24, textAlign: "center", fontSize: 12, color: "#BFBFBF" }}>발송 내역이 없습니다</div>
+        ) : logs.map((log, i) => (
+          <div key={i} className="cdp-send-row">
+            <div
+              className={`cdp-send-check ${selected.has(log.loginId) ? "cdp-send-check-on" : ""}`}
+              onClick={() => log.status === "FAILED" && toggleSelect(log.loginId)}
+              style={{ cursor: log.status === "FAILED" ? "pointer" : "default" }}
+            >
+              {selected.has(log.loginId) && "✓"}
+            </div>
+            <span className="cdp-send-loginid">{log.loginId}</span>
+            <span className={`cdp-send-status ${log.status === "FAILED" ? "cdp-send-failed" : "cdp-send-success"}`}>
+              {log.status === "FAILED" ? "전송 실패" : "전송 성공"}
+            </span>
+            <span className="cdp-send-date">{log.sentAt?.substring(0, 16).replace("T", " ")}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="cdp-send-footer">
+        <button className="cdp-btn-resend" onClick={handleResend} disabled={selected.size === 0 || resending}>
+          {resending ? "재전송 중..." : "재전송"}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 function DeleteModal({ campaignName, onConfirm, onCancel }) {
   return (
@@ -253,15 +418,15 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
   const [selectedCoupon, setSelectedCoupon] = useState(campaign?.couponId ?? null);
   const [selectedAd,     setSelectedAd]     = useState(campaign?.adId     ?? null);
 
-  const [dedupeType, setDedupeType] = useState(campaign?.deduplicationType ?? "none");
-  const [dedupeDays, setDedupeDays] = useState(campaign?.deduplicationDays ? String(campaign.deduplicationDays) : "30");
+  // ── duplicatePolicy, couponRestrictionDays로 필드명 변경 ──
+  const [dedupeType, setDedupeType] = useState(campaign?.duplicatePolicy ?? "none");
+  const [dedupeDays, setDedupeDays] = useState(campaign?.couponRestrictionDays ? String(campaign.couponRestrictionDays) : "30");
 
-  const [issuanceMethod, setIssuanceMethod] = useState(campaign?.issuanceMethod ?? "AUTO");
-  const [msgContent,     setMsgContent]     = useState(campaign?.messagingContent ?? "");
-  const [msgTitle,       setMsgTitle]       = useState(campaign?.messagingTitle   ?? "");
-
+  // ── issueType으로 필드명 변경 ──
+  const [issuanceMethod, setIssuanceMethod] = useState(campaign?.issueType ?? "AUTO");
+  // ── messageContent로 필드명 변경 ──
+  const [msgContent,     setMsgContent]     = useState(campaign?.messageContent ?? "");
   const isMessaging = issuanceMethod === "MESSAGING";
-  const isLms       = issuanceMethod === "LMS";
 
   const initialTab = campaign?.adId ? "광고" : "쿠폰";
   const [rewardTab, setRewardTab] = useState(initialTab);
@@ -310,6 +475,7 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
     setDeleting(true); setApiError(null);
     try {
       await withAutoRefresh(() => campaignDelete({ campaignId: campaign.campaignId }));
+      await sendCampaignToFluentd({ action: "DELETE", campaignId: campaign.campaignId });
       onNavigate("list");
     } catch (err) { setApiError(err.message); setShowDeleteModal(false); }
     finally { setDeleting(false); }
@@ -325,6 +491,7 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
         value:          f.value,
         periodDays:     parseInt(f.period, 10),
       }));
+      // ── campaignUpdate에 Swagger 기준 필드명 적용 ──
       await withAutoRefresh(() => campaignUpdate({
         campaignId:            campaign.campaignId,
         campaignName:          name,
@@ -341,11 +508,24 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
         filterLogicalOperator: filterLogic,
         couponId:              selectedCoupon ?? null,
         adId:                  selectedAd     ?? null,
-        issuanceMethod,
-        messagingContent:      (isMessaging || isLms) ? msgContent : null,
-        messagingTitle:        isLms ? msgTitle : null,
+        issueType:             issuanceMethod,
+        messageContent:        isMessaging ? msgContent : null,
+        duplicatePolicy:       dedupeType !== "none" ? dedupeType : null,
+        couponRestrictionDays: dedupeType === "period" ? parseInt(dedupeDays, 10) : null,
         filters:               apiFilters,
       }));
+      await sendCampaignToFluentd({
+        action:                "UPSERT",
+        campaignId:            campaign.campaignId,
+        collectionType:        COLLECTION_TYPE_MAP[processType],
+        filterLogicalOperator: filterLogic,
+        batchCycle:            processType === "batch" ? getBatchCycle()      : "",
+        batchTime:             processType === "batch" ? getBatchTime()       : "",
+        batchDayOfWeek:        processType === "batch" ? (getBatchDayOfWeek() ?? "") : "",
+        batchDayOfMonth:       processType === "batch" ? (getBatchDayOfMonth() ?? 0) : 0,
+        status:                status,
+        filters:               apiFilters,
+      });
       setEditMode(false);
     } catch (err) { setApiError(err.message); }
     finally { setSaving(false); }
@@ -356,6 +536,7 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
     try {
       const updated = await withAutoRefresh(() => campaignStatusUpdate({ campaignId: campaign.campaignId, status: newStatus }));
       setStatus(updated?.status ?? newStatus);
+      await sendCampaignToFluentd({ action: "STATUS_UPDATE", campaignId: campaign.campaignId, status: newStatus });
       setShowStatusModal(false);
     } catch (err) { setApiError(err.message); setShowStatusModal(false); }
   };
@@ -380,6 +561,9 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
     : "사용 안 함";
 
   const selectedCouponName = coupons.find(c => c.couponId === selectedCoupon)?.name ?? "쿠폰명";
+
+  // 전송 현황 표시 조건: readOnly + 쿠폰 선택됨 + 메세징 방식
+  const showSendStatus = isReadOnly && selectedCoupon && isMessaging;
 
   return (
     <div className="cdp-main">
@@ -659,10 +843,7 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
                 <div className="cdp-dedupe-readonly" style={{ marginTop: 10 }}>
                   <span className="cdp-dedupe-readonly-label">발급 방식</span>
                   <span className="cdp-dedupe-readonly-value">{ISSUANCE_METHOD_DISPLAY[issuanceMethod] ?? issuanceMethod}</span>
-                  {(isMessaging || isLms) && msgTitle && (
-                    <div className="cdp-msg-readonly-content" style={{ fontWeight: 700 }}>{msgTitle}</div>
-                  )}
-                  {(isMessaging || isLms) && msgContent && (
+                  {isMessaging && msgContent && (
                     <div className="cdp-msg-readonly-content">{msgContent}</div>
                   )}
                 </div>
@@ -683,30 +864,23 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
                       </label>
                     ))}
                   </div>
-                  {(isMessaging || isLms) && (
+                  {isMessaging && (
                     <div className="cdp-msg-wrap">
-                      {isLms && (
-                        <input
-                          className="cdp-input cdp-input-wide"
-                          placeholder="제목 입력 (LMS 제목)"
-                          value={msgTitle}
-                          onChange={e => setMsgTitle(e.target.value)}
-                          maxLength={40}
-                          style={{ marginBottom: 8 }}
-                        />
-                      )}
                       <textarea
                         className="cdp-msg-textarea"
                         placeholder={`예) [Da-On] 회원님께 특별 쿠폰을 발송해드립니다.\n쿠폰명: ${selectedCouponName}\n앱에서 바로 사용해보세요!`}
                         value={msgContent}
                         onChange={e => setMsgContent(e.target.value)}
-                        maxLength={isLms ? 2000 : 90}
+                        maxLength={90}
                       />
-                      <p className="cdp-msg-char-count">{msgContent.length} / {isLms ? "2000" : "90"}자</p>
+                      <p className="cdp-msg-char-count">{msgContent.length} / 90자</p>
                     </div>
                   )}
                 </div>
               )}
+
+              {/* ── 전송 현황 (readOnly + 쿠폰 선택 + 메세징일 때만) ── */}
+              {showSendStatus && <SendStatusSection campaignId={campaign.campaignId} />}
             </>
           )}
 
