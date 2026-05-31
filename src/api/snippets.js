@@ -1,4 +1,4 @@
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080'
+const FLUENTD_URL = import.meta.env.VITE_FLUENTD_URL || 'http://localhost:9880'
 
 let timer = null
 const INACTIVE_THRESHOLD = 5000
@@ -15,7 +15,7 @@ export const clickSearchButton = async (query, userId = null) => {
   if (timer) clearTimeout(timer)
 
   timer = setTimeout(async () => {
-    await fetch(`${BASE_URL}/snippets/search`, {
+    await fetch(`${FLUENTD_URL}/kafka.logs`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -29,7 +29,7 @@ export const clickSearchButton = async (query, userId = null) => {
 }
 
 export const clickPurchaseButton = async ({ approvedAmount, productName, productId, productCategory = null, userId = null }) => {
-  await fetch(`${BASE_URL}/snippets/search`, {
+  await fetch(`${FLUENTD_URL}/kafka.logs`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -45,7 +45,7 @@ export const clickPurchaseButton = async ({ approvedAmount, productName, product
 }
 
 export const viewProductDetail = async ({ productName, productId, dwellTime, productCategory = null, userId = null }) => {
-  await fetch(`${BASE_URL}/snippets/search`, {
+  await fetch(`${FLUENTD_URL}/kafka.logs`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -61,7 +61,7 @@ export const viewProductDetail = async ({ productName, productId, dwellTime, pro
 }
 
 export const pageView = async ({ pageName, dwellTime, userId = null }) => {
-  await fetch(`${BASE_URL}/snippets/search`, {
+  await fetch(`${FLUENTD_URL}/kafka.logs`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
