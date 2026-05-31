@@ -208,7 +208,9 @@ export default function CampaignCreatePage({ onNavigate }) {
     try {
       const apiFilters = filters.map(f => ({
         eventId:        f.eventId,
+        eventName:      f.event,
         eventFieldName: f.field,
+        fieldType:      f.dataType,
         operator:       OPERATOR_MAP[f.operator] ?? f.operator,
         value:          f.value,
         periodDays:     parseInt(f.period, 10),
@@ -248,13 +250,7 @@ export default function CampaignCreatePage({ onNavigate }) {
         batchDayOfWeek:        processType === "batch" ? (getBatchDayOfWeek() ?? "") : "",
         batchDayOfMonth:       processType === "batch" ? (getBatchDayOfMonth() ?? 0) : 0,
         status:                "IN_PROGRESS",
-        filters:               apiFilters.map(f => ({
-          eventId:        f.eventId,
-          eventFieldName: f.eventFieldName,
-          operator:       f.operator,
-          value:          f.value,
-          periodDays:     f.periodDays,
-        })),
+        filters:               apiFilters,
       });
 
       onNavigate && onNavigate("list");
