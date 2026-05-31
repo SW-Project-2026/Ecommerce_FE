@@ -486,7 +486,9 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
     try {
       const apiFilters = filters.map(f => ({
         eventId:        f.eventId,
+        eventName:      f.event,
         eventFieldName: f.field,
+        fieldType:      f.dataType,
         operator:       OPERATOR_MAP[f.operator] ?? f.operator,
         value:          f.value,
         periodDays:     parseInt(f.period, 10),
