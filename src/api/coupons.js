@@ -146,3 +146,17 @@ export async function userCouponList({ userId }) {
   if (!res.ok) throw new Error(json.message || '회원 쿠폰 목록 조회 실패')
   return json.data
 }
+
+// ── SMS 링크 쿠폰 수령 (인증 불필요) ──
+export async function couponClaim({ token }) {
+  const params = new URLSearchParams({ token })
+  const res = await fetch(`${BASE}/api/coupons/claim?${params}`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  })
+  const json = await res.json()
+  if (res.status === 404) throw new Error('존재하지 않는 쿠폰 또는 토큰')
+  if (res.status === 400) throw new Error(json.message || '잘못된 요청')
+  if (!res.ok) throw new Error(json.message || '쿠폰 수령 실패')
+  return json.data
+}
