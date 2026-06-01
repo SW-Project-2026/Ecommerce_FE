@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import "./AdManagePage.css";
 import { adList, adDelete } from "../api/ads";
-import { withAutoRefresh } from "../utils/withAutoRefresh";
 
 const TARGET_TYPE_DISPLAY = {
   PRODUCT:  "상품",
@@ -46,7 +45,7 @@ export default function AdManagePage({ onNavigate }) {
   async function fetchAds() {
     setLoading(true); setError(null);
     try {
-      const data = await withAutoRefresh(() => adList());
+      const data = await adList();
       setAds(Array.isArray(data) ? data : []);
     } catch (err) { setError(err.message); }
     finally { setLoading(false); }
@@ -55,7 +54,7 @@ export default function AdManagePage({ onNavigate }) {
   async function handleDelete(adId) {
     if (!window.confirm("광고를 삭제하시겠습니까?")) return;
     try {
-      await withAutoRefresh(() => adDelete({ adId }));
+      await adDelete({ adId });
       setAds(prev => prev.filter(a => a.adId !== adId));
     } catch (err) { alert(err.message); }
   }

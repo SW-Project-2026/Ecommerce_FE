@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import "./DataManagePage.css";
-import { getProducts, syncProducts, getSchedule, setSchedule, cancelSchedule } from "../api/products";
-import { withAutoRefresh } from "../utils/withAutoRefresh";
+import { getProducts, syncProducts, getSchedule, setSchedule as setScheduleApi, cancelSchedule } from "../api/products";
 
 const CYCLE_OPTIONS    = ["매일", "매주", "매달"];
 const HOUR_OPTIONS     = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"));
@@ -49,7 +48,7 @@ export default function DataManagePage() {
 
   async function fetchStats() {
     try {
-      const data = await withAutoRefresh(() => getProducts({ page: 0, size: 1 }));
+      const data = await getProducts({ page: 0, size: 1 });
       setTotalCount(data.totalElements?.toLocaleString() ?? "0");
     } catch {
       setTotalCount("조회 실패");
@@ -58,8 +57,8 @@ export default function DataManagePage() {
 
   async function fetchSchedule() {
     try {
-      const data = await withAutoRefresh(() => getSchedule());
-      if (data === null) {  // 등록된 스케줄 없음
+      const data = await getSchedule();
+      if (data === null) {
         setCurrentSchedule(null);
         return;
       }
@@ -76,7 +75,7 @@ export default function DataManagePage() {
       setCollecting(true);
       setNotice(null);
       try {
-        const data = await withAutoRefresh(() => syncProducts());
+        const data = await syncProducts();
         setNotice({ type: "success", text: `수집 완료 — ${data.savedCount?.toLocaleString()}개 저장됨` });
         if (data.lastSyncedAt) {
           setLastSynced(formatDate(data.lastSyncedAt));
@@ -96,7 +95,7 @@ export default function DataManagePage() {
       try {
         const cycle = CYCLE_MAP[schedule.cycle] ?? "DAILY";
         const time  = `${schedule.hour}:${schedule.minute}`;
-        await withAutoRefresh(() => setSchedule({ cycle, time }));
+        await setScheduleApi({ cycle, time });
         setNotice({ type: "success", text: `자동 스케줄 등록 완료 — ${schedule.cycle} ${time}` });
         fetchSchedule();
       } catch (err) {
@@ -111,7 +110,7 @@ export default function DataManagePage() {
     setCancelling(true);
     setNotice(null);
     try {
-      await withAutoRefresh(() => cancelSchedule());
+      await cancelSchedule();
       setNotice({ type: "success", text: "자동 스케줄이 취소되었습니다." });
       setCurrentSchedule(null);
       fetchSchedule();
@@ -160,22 +159,12 @@ export default function DataManagePage() {
 
           <div className="dm-collect-section">
             <label className="dm-checkbox-label">
-              <input
-                type="checkbox"
-                className="dm-checkbox"
-                checked={collectMode === "manual"}
-                onChange={() => setCollectMode("manual")}
-              />
+              <input type="checkbox" className="dm-checkbox" checked={collectMode === "manual"} onChange={() => setCollectMode("manual")} />
               <span className="dm-checkbox-text">수동 수집</span>
             </label>
 
             <label className="dm-checkbox-label dm-checkbox-label-mt">
-              <input
-                type="checkbox"
-                className="dm-checkbox"
-                checked={collectMode === "auto"}
-                onChange={() => setCollectMode("auto")}
-              />
+              <input type="checkbox" className="dm-checkbox" checked={collectMode === "auto"} onChange={() => setCollectMode("auto")} />
               <span className="dm-checkbox-text">자동 스케줄</span>
             </label>
 
@@ -189,7 +178,6 @@ export default function DataManagePage() {
                     </select>
                   </div>
                 </div>
-
                 {schedule.cycle === "매주" && (
                   <div className="dm-schedule-group">
                     <span className="dm-schedule-label">요일</span>
@@ -200,7 +188,6 @@ export default function DataManagePage() {
                     </div>
                   </div>
                 )}
-
                 {schedule.cycle === "매달" && (
                   <div className="dm-schedule-group">
                     <span className="dm-schedule-label">날짜</span>
@@ -211,7 +198,6 @@ export default function DataManagePage() {
                     </div>
                   </div>
                 )}
-
                 <div className="dm-schedule-group">
                   <span className="dm-schedule-label">시</span>
                   <div className="dm-select-wrap">
@@ -220,7 +206,6 @@ export default function DataManagePage() {
                     </select>
                   </div>
                 </div>
-
                 <div className="dm-schedule-group">
                   <span className="dm-schedule-label">분</span>
                   <div className="dm-select-wrap">
@@ -264,11 +249,7 @@ export default function DataManagePage() {
                     </span>
                   )}
                 </div>
-                <button
-                  className="dm-btn-cancel-schedule"
-                  onClick={handleCancel}
-                  disabled={cancelling}
-                >
+                <button className="dm-btn-cancel-schedule" onClick={handleCancel} disabled={cancelling}>
                   {cancelling ? "취소 중..." : "취소"}
                 </button>
               </div>

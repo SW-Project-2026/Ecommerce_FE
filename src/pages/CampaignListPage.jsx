@@ -12,7 +12,6 @@ import DashboardPage from "./DashboardPage";
 import CustomerDashboardPage from "./CustomerDashboardPage";
 import { campaignList, campaignDetail } from "../api/campaigns";
 import { getMyProfile } from "../api/users";
-import { withAutoRefresh } from "../utils/withAutoRefresh";
 
 const PAGE_SIZE = 10;
 
@@ -111,14 +110,11 @@ export default function CampaignListPage() {
     setError(null);
     const apiStatus = STATUS_TAB_TO_API[activeTab] ?? undefined;
 
-    withAutoRefresh(
-      () => campaignList({ status: apiStatus }),
-      fetchAdminId
-    )
+    campaignList({ status: apiStatus })
       .then(data => { setCampaignData(Array.isArray(data) ? data : []); setCurrentPage(1); })
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
-  }, [activePage, activeTab, fetchAdminId]);
+  }, [activePage, activeTab]);
 
   useEffect(() => { fetchCampaigns(); }, [activePage, activeTab]);
 
@@ -127,10 +123,7 @@ export default function CampaignListPage() {
     setDetailLoading(true);
     setDetailError(null);
     try {
-      const detail = await withAutoRefresh(
-        () => campaignDetail({ campaignId }),
-        fetchAdminId
-      );
+      const detail = await campaignDetail({ campaignId });
       setSelectedCampaign(detail);
       navigateTo("캠페인 상세", campaignId);
     } catch (err) {

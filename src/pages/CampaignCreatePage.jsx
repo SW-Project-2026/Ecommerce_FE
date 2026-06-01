@@ -4,7 +4,6 @@ import { campaignCreate } from "../api/campaigns";
 import { eventList } from "../api/events";
 import { couponList } from "../api/coupons";
 import { adList } from "../api/ads";
-import { withAutoRefresh } from "../utils/withAutoRefresh";
 
 const FLUENTD_URL = import.meta.env.VITE_FLUENTD_URL || 'http://localhost:9880'
 
@@ -117,16 +116,13 @@ export default function CampaignCreatePage({ onNavigate }) {
 
   useEffect(() => {
     setEventsLoading(true);
-    withAutoRefresh(() => eventList({ isActive: true }))
+    eventList({ isActive: true })
       .then(data => setEvents(Array.isArray(data) ? data : []))
       .catch(err => console.error("이벤트 조회 실패:", err))
       .finally(() => setEventsLoading(false));
 
     setRewardLoading(true);
-    Promise.all([
-      withAutoRefresh(() => couponList()),
-      withAutoRefresh(() => adList()),
-    ])
+    Promise.all([couponList(), adList()])
       .then(([couponData, adData]) => {
         setCoupons(Array.isArray(couponData) ? couponData : []);
         setAds(Array.isArray(adData) ? adData : []);
@@ -216,7 +212,7 @@ export default function CampaignCreatePage({ onNavigate }) {
         periodDays:     parseInt(f.period, 10),
       }));
 
-      const result = await withAutoRefresh(() => campaignCreate({
+      const result = await campaignCreate({
         campaignName:          name,
         description:           desc,
         campaignGoalType:      GOAL_TYPE_MAP[cat1] ?? cat1,
@@ -237,9 +233,8 @@ export default function CampaignCreatePage({ onNavigate }) {
         messagingContent:      (isMessaging || isLms) ? msgContent : null,
         messagingTitle:        isLms ? msgTitle : null,
         filters:               apiFilters,
-      }));
+      });
 
-      // BE 저장 성공 후 Fluentd로 UPSERT 전송
       await sendCampaignToFluentd({
         action:                "UPSERT",
         campaignId:            result?.campaignId,
@@ -406,7 +401,6 @@ export default function CampaignCreatePage({ onNavigate }) {
 
           {rewardLoading && <div style={{ padding: 16, fontSize: 12, color: "#9EA6B5" }}>불러오는 중...</div>}
 
-          {/* 쿠폰 탭 */}
           {!rewardLoading && rewardTab === "쿠폰" && (
             <>
               <p className="cc-reward-sub-label">쿠폰 선택 <span className="cc-req">*</span></p>
@@ -447,10 +441,7 @@ export default function CampaignCreatePage({ onNavigate }) {
               <p className="cc-reward-sub-label" style={{ marginTop: 20 }}>중복 제거 <span className="cc-req">*</span></p>
               <div className="cc-dedupe-section">
                 <div className="cc-dedupe-cards">
-                  <div
-                    className={`cc-dedupe-card ${dedupeType === "none" ? "cc-dedupe-card-inactive" : "cc-dedupe-card-default"}`}
-                    onClick={() => setDedupeType("none")}
-                  >
+                  <div className={`cc-dedupe-card ${dedupeType === "none" ? "cc-dedupe-card-inactive" : "cc-dedupe-card-default"}`} onClick={() => setDedupeType("none")}>
                     <div style={{ width: 18, height: 18, borderRadius: "50%", border: "1.5px solid #E0E4E8", background: "#FFFFFF", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                       {dedupeType === "none" && <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#E0E4E8" }} />}
                     </div>
@@ -459,10 +450,7 @@ export default function CampaignCreatePage({ onNavigate }) {
                       <div className="cc-dedupe-card-desc" style={{ color: dedupeType === "none" ? "rgba(90,106,138,0.75)" : "#C0C5D0" }}>중복 제거 없이 조건 충족 시 항상 발송</div>
                     </div>
                   </div>
-                  <div
-                    className={`cc-dedupe-card ${dedupeType === "period" ? "cc-dedupe-card-active" : "cc-dedupe-card-default"}`}
-                    onClick={() => setDedupeType("period")}
-                  >
+                  <div className={`cc-dedupe-card ${dedupeType === "period" ? "cc-dedupe-card-active" : "cc-dedupe-card-default"}`} onClick={() => setDedupeType("period")}>
                     <div style={{ width: 18, height: 18, borderRadius: "50%", border: dedupeType === "period" ? "1.5px solid #4F6EF7" : "1.5px solid #A6A8B8", background: dedupeType === "period" ? "#4F6EF7" : "#FFFFFF", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                       {dedupeType === "period" && <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#FFFFFF" }} />}
                     </div>
@@ -487,13 +475,7 @@ export default function CampaignCreatePage({ onNavigate }) {
               <div className="cc-issuance-group">
                 {ISSUANCE_METHOD_OPTIONS.map(opt => (
                   <label key={opt.value} className="cc-issuance-label">
-                    <input
-                      type="radio"
-                      name="issuanceMethod"
-                      checked={issuanceMethod === opt.value}
-                      onChange={() => setIssuanceMethod(opt.value)}
-                      className="cc-issuance-radio"
-                    />
+                    <input type="radio" name="issuanceMethod" checked={issuanceMethod === opt.value} onChange={() => setIssuanceMethod(opt.value)} className="cc-issuance-radio" />
                     {opt.label}
                   </label>
                 ))}
@@ -502,14 +484,7 @@ export default function CampaignCreatePage({ onNavigate }) {
               {(isMessaging || isLms) && (
                 <div className="cc-msg-wrap">
                   {isLms && (
-                    <input
-                      className="cc-input cc-input-wide"
-                      placeholder="제목 입력 (LMS 제목)"
-                      value={msgTitle}
-                      onChange={e => setMsgTitle(e.target.value)}
-                      maxLength={40}
-                      style={{ marginBottom: 8 }}
-                    />
+                    <input className="cc-input cc-input-wide" placeholder="제목 입력 (LMS 제목)" value={msgTitle} onChange={e => setMsgTitle(e.target.value)} maxLength={40} style={{ marginBottom: 8 }} />
                   )}
                   <textarea
                     className="cc-msg-textarea"
@@ -524,7 +499,6 @@ export default function CampaignCreatePage({ onNavigate }) {
             </>
           )}
 
-          {/* 광고 탭 */}
           {!rewardLoading && rewardTab === "광고" && (
             <div style={{ ...S.rewardTable, maxHeight: ads.length > REWARD_MAX_ROWS ? REWARD_MAX_HEIGHT : "none", overflow: ads.length > REWARD_MAX_ROWS ? "auto" : "visible" }}>
               <div style={{ ...S.rewardHeader, ...S.rewardHeaderAd, position: "sticky", top: 0, zIndex: 1 }}>
@@ -542,10 +516,7 @@ export default function CampaignCreatePage({ onNavigate }) {
                 return (
                   <div key={a.adId} style={{ ...S.row, ...S.rowAd, ...(isSelected ? S.rowSelected : {}), borderBottom: idx === ads.length - 1 ? "none" : "0.5px solid #F0F2F5" }}>
                     <div style={{ display: "flex", justifyContent: "center" }}>
-                      <div
-                        onClick={() => { handleSelectAd(a.adId); setSelectedCoupon(null); }}
-                        style={{ width: 17, height: 17, borderRadius: 4, border: isSelected ? "none" : "1.5px solid #D0D5DD", background: isSelected ? "#3B82F5" : "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: 10, color: "#fff", fontWeight: 700 }}
-                      >
+                      <div onClick={() => { handleSelectAd(a.adId); setSelectedCoupon(null); }} style={{ width: 17, height: 17, borderRadius: 4, border: isSelected ? "none" : "1.5px solid #D0D5DD", background: isSelected ? "#3B82F5" : "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: 10, color: "#fff", fontWeight: 700 }}>
                         {isSelected && "✓"}
                       </div>
                     </div>
