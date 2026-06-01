@@ -1,48 +1,57 @@
-import { useState } from 'react'
-
-const ORDERS = [
-  {
-    date: '2025.04.15',
-    num: 'ORD-20250415-001',
-    items: [
-      { emoji: '💻', name: '삼성 갤럭시북4 Pro 360 16인치', meta: '실버 / 1개', price: '1,290,000원', status: 'shipping' },
-    ],
-  },
-  {
-    date: '2025.04.02',
-    num: 'ORD-20250402-088',
-    items: [
-      { emoji: '🎧', name: '소니 WH-1000XM5 무선 헤드폰', meta: '블랙 / 1개', price: '389,000원', status: 'complete' },
-      { emoji: '🔌', name: 'USB-C 고속충전 케이블 1.5m', meta: '화이트 / 2개', price: '19,800원', status: 'complete' },
-    ],
-  },
-  {
-    date: '2025.03.20',
-    num: 'ORD-20250320-042',
-    items: [
-      { emoji: '👟', name: '나이키 에어맥스 270 리액트', meta: '270 / 270mm / 1개', price: '149,000원', status: 'complete' },
-    ],
-  },
-  {
-    date: '2025.03.10',
-    num: 'ORD-20250310-011',
-    items: [
-      { emoji: '🧻', name: '유한킴벌리 화이트 3겹 휴지 30롤', meta: '1박스', price: '28,900원', status: 'complete' },
-    ],
-  },
-]
+import { useState, useEffect } from 'react'
+import { orderList } from '../../api/orders'
 
 const STATUS_MAP = {
-  shipping: { label: '배송중',   cls: 'myp-status--shipping' },
-  complete: { label: '배송완료', cls: 'myp-status--complete' },
-  pending:  { label: '결제완료', cls: 'myp-status--pending'  },
-  cancel:   { label: '취소/반품', cls: 'myp-status--cancel'   },
+  PENDING:   { label: '결제완료', cls: 'myp-status--pending'  },
+  CONFIRMED: { label: '결제완료', cls: 'myp-status--pending'  },
+  SHIPPING:  { label: '배송중',   cls: 'myp-status--shipping' },
+  DELIVERED: { label: '배송완료', cls: 'myp-status--complete' },
+  CANCELLED: { label: '취소/반품', cls: 'myp-status--cancel'  },
+}
+
+const FILTER_PERIOD_MAP = {
+  '전체':  'all',
+  '1개월': '1m',
+  '3개월': '3m',
+  '6개월': '6m',
 }
 
 const FILTERS = ['전체', '1개월', '3개월', '6개월']
 
-export default function MyOrderList() {
-  const [filter, setFilter] = useState('전체')
+export default function MyOrderList({ onNavigate }) {
+  const [filter,  setFilter]  = useState('전체')
+  const [orders,  setOrders]  = useState([])
+  const [loading, setLoading] = useState(false)
+  const [error,   setError]   = useState(null)
+  const [cursor,  setCursor]  = useState(null)
+  const [hasNext, setHasNext] = useState(false)
+
+  useEffect(() => {
+    fetchOrders(null, filter)
+  }, [filter])
+
+  async function fetchOrders(nextCursor = null, currentFilter = filter) {
+    setLoading(true)
+    setError(null)
+    try {
+      const period = FILTER_PERIOD_MAP[currentFilter] ?? 'all'
+      const data = await orderList({ cursor: nextCursor, period, size: 10 })
+      const content = data.content ?? []
+      setOrders(prev => nextCursor ? [...prev, ...content] : content)
+      setCursor(data.nextCursor ?? null)
+      setHasNext(data.hasNext ?? false)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  function handleFilterChange(f) {
+    setFilter(f)
+    setOrders([])
+    setCursor(null)
+  }
 
   return (
     <div className="myp-section">
@@ -53,39 +62,60 @@ export default function MyOrderList() {
 
       <div className="myp-order-filters">
         {FILTERS.map(f => (
-          <button
-            key={f}
-            className={`myp-filter-btn${filter === f ? ' active' : ''}`}
-            onClick={() => setFilter(f)}
-          >
+          <button key={f} className={`myp-filter-btn${filter === f ? ' active' : ''}`} onClick={() => handleFilterChange(f)}>
             {f}
           </button>
         ))}
       </div>
 
-      {ORDERS.map((order, oi) => (
-        <div className="myp-order-card" key={oi}>
-          <div className="myp-order-card-header">
-            <span className="myp-order-date">{order.date}</span>
-            <span className="myp-order-num">{order.num}</span>
-            {/* 주문 상세 버튼이 있던 자리입니다. 깔끔하게 삭제되었습니다. */}
-          </div>
+      {loading && orders.length === 0 && (
+        <div style={{ fontSize: 13, color: '#9EA6B4', padding: '24px 0', textAlign: 'center' }}>불러오는 중...</div>
+      )}
+      {error && <div style={{ fontSize: 13, color: '#EF4444', padding: '8px 0' }}>{error}</div>}
+      {!loading && !error && orders.length === 0 && (
+        <div style={{ fontSize: 13, color: '#9EA6B4', padding: '24px 0', textAlign: 'center' }}>주문 내역이 없어요.</div>
+      )}
 
-          {order.items.map((item, ii) => (
-            <div className="myp-order-item" key={ii}>
-              <div className="myp-order-item-thumb">{item.emoji}</div>
-              <div className="myp-order-item-info">
-                <div className="myp-order-item-name">{item.name}</div>
-                <div className="myp-order-item-meta">{item.meta}</div>
-              </div>
-              <span className={`myp-order-status ${STATUS_MAP[item.status].cls}`}>
-                {STATUS_MAP[item.status].label}
-              </span>
-              <span className="myp-order-item-price">{item.price}</span>
+      {orders.map(order => {
+        const statusInfo = STATUS_MAP[order.status] ?? { label: order.status, cls: '' }
+        return (
+          <div
+            className="myp-order-card"
+            key={order.orderId}
+            onClick={() => onNavigate('order-detail', order.orderId)}
+            style={{ cursor: 'pointer' }}
+          >
+            <div className="myp-order-card-header">
+              <span className="myp-order-date">{order.orderDate?.substring(0, 10).replaceAll('-', '.')}</span>
+              <span className="myp-order-num">{order.orderId}</span>
+              <span style={{ fontSize: 12, color: '#6B7280', marginLeft: 'auto' }}>상세보기 &gt;</span>
             </div>
-          ))}
-        </div>
-      ))}
+
+            {(order.items ?? []).map(item => (
+              <div className="myp-order-item" key={item.orderItemId}>
+                <div className="myp-order-item-thumb">
+                  {item.imageUrl
+                    ? <img src={item.imageUrl} alt={item.productName} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 4 }} />
+                    : <div style={{ width: '100%', height: '100%', background: '#F0F0F0', borderRadius: 4 }} />}
+                </div>
+                <div className="myp-order-item-info">
+                  <div className="myp-order-item-name">{item.productName}</div>
+                  <div className="myp-order-item-meta">{item.quantity}개 · {item.unitPrice?.toLocaleString()}원</div>
+                </div>
+                <span className={`myp-order-status ${statusInfo.cls}`}>{statusInfo.label}</span>
+                <span className="myp-order-item-price">{item.subtotal?.toLocaleString()}원</span>
+              </div>
+            ))}
+          </div>
+        )
+      })}
+
+      {hasNext && (
+        <button onClick={() => fetchOrders(cursor)} disabled={loading}
+          style={{ marginTop: 16, width: '100%', height: 40, border: '1px solid #E5E7EB', borderRadius: 8, fontSize: 13, color: '#374151', cursor: 'pointer', background: '#fff' }}>
+          {loading ? '불러오는 중...' : '더보기'}
+        </button>
+      )}
     </div>
   )
 }

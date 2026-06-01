@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { getProduct } from '../api/products'
 import { viewProductDetail } from '../api/snippets'
+import { cartAdd } from '../api/carts'
+import { wishlistAdd, wishlistDelete } from '../api/wishlists'
 import './ReviewSection.css'
 
 const RELATED_VISIBLE = 5
@@ -221,13 +223,15 @@ function CartToast({ visible, onGoCart }) {
 }
 
 export default function ProductDetailPage({ productId, onNavigate, prevCategory, onAddToCart, userId = null, auth = null }) {
-  const [product, setProduct] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [qty, setQty] = useState(1)
+  const [product,   setProduct]   = useState(null)
+  const [loading,   setLoading]   = useState(true)
+  const [error,     setError]     = useState(null)
+  const [qty,       setQty]       = useState(1)
   const [activeTab, setActiveTab] = useState('detail')
-  const [liked, setLiked] = useState(false)
+  const [liked,     setLiked]     = useState(false)
+  const [wishId,    setWishId]    = useState(null)
   const [cartToast, setCartToast] = useState(false)
+  const [cartError, setCartError] = useState(null)
   const toastTimerRef = useRef(null)
 
   const activeDwellRef   = useRef(0)
@@ -246,6 +250,8 @@ export default function ProductDetailPage({ productId, onNavigate, prevCategory,
     setLoading(true)
     setError(null)
     setQty(1)
+    setLiked(false)
+    setWishId(null)
     getProduct(productId)
       .then(data => setProduct(data))
       .catch(() => setError('상품을 불러오지 못했어요.'))
@@ -254,7 +260,6 @@ export default function ProductDetailPage({ productId, onNavigate, prevCategory,
 
   useEffect(() => {
     if (!product) return
-
     const startActive = () => {
       if (activeStartRef.current === null) activeStartRef.current = Date.now()
     }
@@ -269,16 +274,13 @@ export default function ProductDetailPage({ productId, onNavigate, prevCategory,
       if (inactiveTimerRef.current) clearTimeout(inactiveTimerRef.current)
       inactiveTimerRef.current = setTimeout(stopActive, INACTIVE_THRESHOLD)
     }
-
     const events = ['mousemove', 'click', 'scroll', 'keydown']
     events.forEach(e => window.addEventListener(e, handleActivity))
     startActive()
-
     return () => {
       stopActive()
       if (inactiveTimerRef.current) clearTimeout(inactiveTimerRef.current)
       events.forEach(e => window.removeEventListener(e, handleActivity))
-
       const dwellTime = Math.floor(activeDwellRef.current / 1000)
       if (dwellTime > 0) {
         viewProductDetail({
@@ -294,26 +296,56 @@ export default function ProductDetailPage({ productId, onNavigate, prevCategory,
     }
   }, [product])
 
-  function handleBuyNow() {
-    if (!product) return
-    requireAuth(() => {
+  async function addToCartApi() {
+    setCartError(null)
+    try {
+      await cartAdd({ productId: product.productId, quantity: qty })
       onAddToCart?.(product, qty)
-      onNavigate('cart')
+    } catch (err) {
+      setCartError(err.message)
+      throw err
+    }
+  }
+
+  async function handleBuyNow() {
+    if (!product) return
+    requireAuth(async () => {
+      try {
+        await addToCartApi()
+        onNavigate('cart')
+      } catch {}
     })
   }
 
-  function handleAddToCartWithToast() {
+  async function handleAddToCartWithToast() {
     if (!product) return
-    requireAuth(() => {
-      onAddToCart?.(product, qty)
-      setCartToast(true)
-      if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
-      toastTimerRef.current = setTimeout(() => setCartToast(false), 3000)
+    requireAuth(async () => {
+      try {
+        await addToCartApi()
+        setCartToast(true)
+        if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
+        toastTimerRef.current = setTimeout(() => setCartToast(false), 3000)
+      } catch {}
     })
   }
 
-  function handleLike() {
-    requireAuth(() => setLiked(p => !p))
+  // ── 찜하기: 토글 방식으로 추가/삭제 ──
+  async function handleLike() {
+    requireAuth(async () => {
+      try {
+        if (liked) {
+          await wishlistDelete({ wishId })
+          setLiked(false)
+          setWishId(null)
+        } else {
+          const data = await wishlistAdd({ productId: product.productId })
+          setLiked(true)
+          setWishId(data.wishId)
+        }
+      } catch (err) {
+        console.error('찜 처리 실패:', err.message)
+      }
+    })
   }
 
   const total = product ? (product.minPrice * qty).toLocaleString() : '0'
@@ -328,7 +360,6 @@ export default function ProductDetailPage({ productId, onNavigate, prevCategory,
   return (
     <div className="pdp-wrap">
       <CartToast visible={cartToast} onGoCart={() => onNavigate('cart')} />
-
       <Breadcrumb product={product} prevCategory={prevCategory} onNavigate={onNavigate} />
 
       <div className="pdp-content">
@@ -374,6 +405,8 @@ export default function ProductDetailPage({ productId, onNavigate, prevCategory,
             <span className="pdp-total-price">{total}원</span>
           </div>
 
+          {cartError && <div style={{ fontSize: 13, color: '#EF4444', marginBottom: 8 }}>{cartError}</div>}
+
           <button className="pdp-buy-btn" disabled={soldOut} onClick={handleBuyNow}>
             {soldOut ? '품절' : '바로 구매하기'}
           </button>
@@ -404,9 +437,7 @@ export default function ProductDetailPage({ productId, onNavigate, prevCategory,
         {activeTab === 'detail' && (
           <p className="pdp-desc">{product.description || '상품 상세 정보가 없습니다.'}</p>
         )}
-        {activeTab === 'review' && (
-          <ReviewSection productId={productId} userId={userId} />
-        )}
+        {activeTab === 'review' && <ReviewSection productId={productId} userId={userId} />}
         {activeTab === 'return' && (
           <div className="pdp-desc">
             <p>· 반품/교환: 수령 후 30일 이내 무료</p>

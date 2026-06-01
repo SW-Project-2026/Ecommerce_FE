@@ -1,29 +1,35 @@
 import { useState, useEffect, useRef } from 'react'
-
-// ── 하드코딩 배송지 데이터 (TODO: API 연동 시 교체) ──────────────────────
-const INIT_ADDRESSES = [
-  {
-    id: 1,
-    isDefault: true,
-    road: '서울특별시 강남구 테헤란로 123',
-    detail: '역삼동 456호',
-  },
-  {
-    id: 2,
-    isDefault: false,
-    road: '경기도 성남시 분당구 판교역로 235',
-    detail: '알파돔시티 102동 1201호',
-  },
-]
+import {
+  addressList,
+  addressCreate,
+  addressUpdate,
+  addressDelete,
+  addressSetDefault,
+} from '../../api/addresses'
 
 const EMPTY_FORM = { road: '', detail: '' }
 
-// ── 배송지 관리 섹션 ────────────────────────────────────────────────────────
 function MyAddressSection() {
-  const [addresses, setAddresses] = useState(INIT_ADDRESSES)
-  const [showForm, setShowForm] = useState(false)   // 추가 폼 표시 여부
-  const [editId, setEditId] = useState(null)         // 수정 중인 주소 id
-  const [form, setForm] = useState(EMPTY_FORM)
+  const [addresses, setAddresses] = useState([])
+  const [loading,   setLoading]   = useState(false)
+  const [showForm,  setShowForm]  = useState(false)
+  const [editId,    setEditId]    = useState(null)
+  const [form,      setForm]      = useState(EMPTY_FORM)
+  const [error,     setError]     = useState(null)
+
+  useEffect(() => { fetchAddresses() }, [])
+
+  async function fetchAddresses() {
+    setLoading(true)
+    try {
+      const data = await addressList()
+      setAddresses(Array.isArray(data) ? data : [])
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   function handleAddOpen() {
     setEditId(null)
@@ -32,8 +38,8 @@ function MyAddressSection() {
   }
 
   function handleEditOpen(addr) {
-    setEditId(addr.id)
-    setForm({ road: addr.road, detail: addr.detail })
+    setEditId(addr.addressId)
+    setForm({ road: addr.roadNameAddress, detail: addr.addressDetail ?? '' })
     setShowForm(true)
   }
 
@@ -43,44 +49,41 @@ function MyAddressSection() {
     setForm(EMPTY_FORM)
   }
 
-  function handleSave() {
+  async function handleSave() {
     if (!form.road.trim()) return
-    if (editId !== null) {
-      // 수정
-      setAddresses(prev =>
-        prev.map(a => a.id === editId ? { ...a, road: form.road, detail: form.detail } : a)
-      )
-    } else {
-      // 추가 — 첫 주소면 기본 배송지로
-      const newAddr = {
-        id: Date.now(),
-        isDefault: addresses.length === 0,
-        road: form.road,
-        detail: form.detail,
+    try {
+      if (editId !== null) {
+        // 수정 → PUT /api/addresses/{addressId}
+        await addressUpdate({ addressId: editId, roadNameAddress: form.road, addressDetail: form.detail })
+      } else {
+        // 추가 → POST /api/addresses
+        await addressCreate({ roadNameAddress: form.road, addressDetail: form.detail, isDefault: addresses.length === 0 })
       }
-      setAddresses(prev => [...prev, newAddr])
+      handleCancel()
+      fetchAddresses()
+    } catch (err) {
+      setError(err.message)
     }
-    handleCancel()
-    // TODO: API 연동 시 POST/PUT /api/addresses 호출
   }
 
-  function handleDelete(id) {
-    setAddresses(prev => {
-      const next = prev.filter(a => a.id !== id)
-      // 삭제된 게 기본 배송지였으면 첫 번째를 기본으로
-      if (prev.find(a => a.id === id)?.isDefault && next.length > 0) {
-        next[0] = { ...next[0], isDefault: true }
-      }
-      return next
-    })
-    // TODO: API 연동 시 DELETE /api/addresses/{id} 호출
+  async function handleDelete(addressId) {
+    try {
+      // 삭제 → DELETE /api/addresses/{addressId}
+      await addressDelete({ addressId })
+      fetchAddresses()
+    } catch (err) {
+      setError(err.message)
+    }
   }
 
-  function handleSetDefault(id) {
-    setAddresses(prev =>
-      prev.map(a => ({ ...a, isDefault: a.id === id }))
-    )
-    // TODO: API 연동 시 PATCH /api/addresses/{id}/default 호출
+  async function handleSetDefault(addressId) {
+    try {
+      // 기본 설정 → PATCH /api/addresses/{addressId}/default
+      await addressSetDefault({ addressId })
+      fetchAddresses()
+    } catch (err) {
+      setError(err.message)
+    }
   }
 
   return (
@@ -90,73 +93,44 @@ function MyAddressSection() {
         배송지 관리
       </div>
 
+      {loading && <p style={{ fontSize: 13, color: '#9EA6B4' }}>불러오는 중...</p>}
+      {error   && <p style={{ fontSize: 13, color: '#EF4444' }}>{error}</p>}
+
       <div className="myp-addr-list">
         {addresses.map(addr => (
-          <div key={addr.id} className={`myp-addr-card${addr.isDefault ? ' myp-addr-card--default' : ''}`}>
+          <div key={addr.addressId} className={`myp-addr-card${addr.default ? ' myp-addr-card--default' : ''}`}>
             <div className="myp-addr-info">
-              {addr.isDefault && (
-                <span className="myp-addr-default-badge">기본 배송지</span>
-              )}
-              <p className="myp-addr-road">{addr.road}</p>
-              {addr.detail && <p className="myp-addr-detail">{addr.detail}</p>}
+              {addr.default && <span className="myp-addr-default-badge">기본 배송지</span>}
+              <p className="myp-addr-road">{addr.roadNameAddress}</p>
+              {addr.addressDetail && <p className="myp-addr-detail">{addr.addressDetail}</p>}
             </div>
             <div className="myp-addr-actions">
-              {!addr.isDefault && (
-                <button
-                  className="myp-addr-btn myp-addr-btn--default"
-                  onClick={() => handleSetDefault(addr.id)}
-                >
+              {!addr.default && (
+                <button className="myp-addr-btn myp-addr-btn--default" onClick={() => handleSetDefault(addr.addressId)}>
                   기본 설정
                 </button>
               )}
-              <button
-                className="myp-addr-btn myp-addr-btn--edit"
-                onClick={() => handleEditOpen(addr)}
-              >
-                수정
-              </button>
-              <button
-                className="myp-addr-btn myp-addr-btn--del"
-                onClick={() => handleDelete(addr.id)}
-              >
-                삭제
-              </button>
+              <button className="myp-addr-btn myp-addr-btn--edit" onClick={() => handleEditOpen(addr)}>수정</button>
+              <button className="myp-addr-btn myp-addr-btn--del" onClick={() => handleDelete(addr.addressId)}>삭제</button>
             </div>
           </div>
         ))}
       </div>
 
-      {/* 추가/수정 인라인 폼 */}
       {showForm && (
         <div className="myp-addr-form">
-          <p className="myp-addr-form-title">
-            {editId !== null ? '배송지 수정' : '새 배송지 추가'}
-          </p>
+          <p className="myp-addr-form-title">{editId !== null ? '배송지 수정' : '새 배송지 추가'}</p>
           <div className="myp-form-group">
             <label className="myp-form-label">도로명 주소</label>
-            <input
-              className="myp-form-input"
-              placeholder="도로명 주소를 입력해주세요"
-              value={form.road}
-              onChange={e => setForm(p => ({ ...p, road: e.target.value }))}
-            />
+            <input className="myp-form-input" placeholder="도로명 주소를 입력해주세요" value={form.road} onChange={e => setForm(p => ({ ...p, road: e.target.value }))} />
           </div>
           <div className="myp-form-group" style={{ marginBottom: 0 }}>
             <label className="myp-form-label">상세 주소</label>
-            <input
-              className="myp-form-input"
-              placeholder="동, 호수 등 상세 주소"
-              value={form.detail}
-              onChange={e => setForm(p => ({ ...p, detail: e.target.value }))}
-            />
+            <input className="myp-form-input" placeholder="동, 호수 등 상세 주소" value={form.detail} onChange={e => setForm(p => ({ ...p, detail: e.target.value }))} />
           </div>
           <div className="myp-addr-form-btns">
-            <button className="myp-addr-form-save" onClick={handleSave}>
-              {editId !== null ? '수정 완료' : '추가하기'}
-            </button>
-            <button className="myp-addr-form-cancel" onClick={handleCancel}>
-              취소
-            </button>
+            <button className="myp-addr-form-save" onClick={handleSave}>{editId !== null ? '수정 완료' : '추가하기'}</button>
+            <button className="myp-addr-form-cancel" onClick={handleCancel}>취소</button>
           </div>
         </div>
       )}
@@ -171,11 +145,9 @@ function MyAddressSection() {
   )
 }
 
-// ── 메인 컴포넌트 ────────────────────────────────────────────────────────────
 export default function MyProfileEdit({ initialSection = null }) {
   const addrRef = useRef(null)
 
-  // 배송지 섹션으로 자동 스크롤
   useEffect(() => {
     if (initialSection === 'address' && addrRef.current) {
       setTimeout(() => {
@@ -183,6 +155,7 @@ export default function MyProfileEdit({ initialSection = null }) {
       }, 100)
     }
   }, [initialSection])
+
   const [form, setForm] = useState({
     name: '김다온',
     loginId: 'daon123',
@@ -217,39 +190,22 @@ export default function MyProfileEdit({ initialSection = null }) {
           <div className="myp-form-row">
             <div className="myp-form-group">
               <label className="myp-form-label">이름</label>
-              <input
-                className="myp-form-input"
-                value={form.name}
-                onChange={e => handleChange('name', e.target.value)}
-              />
+              <input className="myp-form-input" value={form.name} onChange={e => handleChange('name', e.target.value)} />
             </div>
             <div className="myp-form-group">
               <label className="myp-form-label">아이디</label>
-              <input
-                className="myp-form-input"
-                value={form.loginId}
-                disabled
-              />
+              <input className="myp-form-input" value={form.loginId} disabled />
             </div>
           </div>
 
           <div className="myp-form-group">
             <label className="myp-form-label">이메일</label>
-            <input
-              className="myp-form-input"
-              type="email"
-              value={form.email}
-              onChange={e => handleChange('email', e.target.value)}
-            />
+            <input className="myp-form-input" type="email" value={form.email} onChange={e => handleChange('email', e.target.value)} />
           </div>
 
           <div className="myp-form-group">
             <label className="myp-form-label">휴대폰 번호</label>
-            <input
-              className="myp-form-input"
-              value={form.phone}
-              onChange={e => handleChange('phone', e.target.value)}
-            />
+            <input className="myp-form-input" value={form.phone} onChange={e => handleChange('phone', e.target.value)} />
           </div>
 
           <div className="myp-section-divider" />
@@ -257,29 +213,15 @@ export default function MyProfileEdit({ initialSection = null }) {
           <div className="myp-form-row">
             <div className="myp-form-group">
               <label className="myp-form-label">새 비밀번호</label>
-              <input
-                className="myp-form-input"
-                type="password"
-                placeholder="새 비밀번호 입력"
-                value={form.newPw}
-                onChange={e => handleChange('newPw', e.target.value)}
-              />
+              <input className="myp-form-input" type="password" placeholder="새 비밀번호 입력" value={form.newPw} onChange={e => handleChange('newPw', e.target.value)} />
             </div>
             <div className="myp-form-group">
               <label className="myp-form-label">비밀번호 확인</label>
-              <input
-                className="myp-form-input"
-                type="password"
-                placeholder="비밀번호 재입력"
-                value={form.confirmPw}
-                onChange={e => handleChange('confirmPw', e.target.value)}
-              />
+              <input className="myp-form-input" type="password" placeholder="비밀번호 재입력" value={form.confirmPw} onChange={e => handleChange('confirmPw', e.target.value)} />
             </div>
           </div>
 
-          <button type="submit" className="myp-save-btn">
-            {saved ? '✓ 저장됨' : '저장하기'}
-          </button>
+          <button type="submit" className="myp-save-btn">{saved ? '✓ 저장됨' : '저장하기'}</button>
         </form>
       </div>
 

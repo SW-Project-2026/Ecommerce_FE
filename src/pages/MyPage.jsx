@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import MyHome from '../components/mypage/MyHome'
 import MyOrderList from '../components/mypage/MyOrderList'
+import MyOrderDetail from '../components/mypage/MyOrderDetail'
 import MyWishlist from '../components/mypage/MyWishlist'
 import MyCoupons from '../components/mypage/MyCoupons'
 import MyProfileEdit from '../components/mypage/MyProfileEdit'
@@ -20,7 +21,8 @@ const USER = { name: '김다온', grade: 'GOLD', coupons: 3 }
 export default function MyPage({ onNavigate, userId = null, initialTab = 'home' }) {
   usePageView('마이페이지', userId)
 
-  const [tab, setTab] = useState(() => sessionStorage.getItem('mypageTab') || initialTab)
+  const [tab,     setTab]     = useState(() => sessionStorage.getItem('mypageTab') || initialTab)
+  const [orderId, setOrderId] = useState(null)
 
   function handleSetTab(key) {
     sessionStorage.setItem('mypageTab', key)
@@ -28,7 +30,10 @@ export default function MyPage({ onNavigate, userId = null, initialTab = 'home' 
   }
 
   function handleTabNavigate(target, payload) {
-    if (target === 'orders' || target === 'wishlist' || target === 'coupons' || target === 'profile') {
+    if (target === 'order-detail') {
+      setOrderId(payload)
+      setTab('order-detail')
+    } else if (target === 'orders' || target === 'wishlist' || target === 'coupons' || target === 'profile') {
       handleSetTab(target)
     } else {
       onNavigate(target, payload)
@@ -52,7 +57,11 @@ export default function MyPage({ onNavigate, userId = null, initialTab = 'home' 
 
         <nav className="myp-sb-menu">
           {MENU.map(m => (
-            <div key={m.key} className={`myp-sb-menu-item${tab === m.key ? ' active' : ''}`} onClick={() => handleSetTab(m.key)}>
+            <div
+              key={m.key}
+              className={`myp-sb-menu-item${(tab === m.key || (tab === 'order-detail' && m.key === 'orders')) ? ' active' : ''}`}
+              onClick={() => handleSetTab(m.key)}
+            >
               <i className={m.icon} />
               {m.label}
             </div>
@@ -65,11 +74,12 @@ export default function MyPage({ onNavigate, userId = null, initialTab = 'home' 
       </aside>
 
       <main className="myp-content">
-        {tab === 'home'     && <MyHome      onNavigate={handleTabNavigate} />}
-        {tab === 'orders'   && <MyOrderList />}
-        {tab === 'wishlist' && <MyWishlist   onNavigate={handleTabNavigate} />}
-        {tab === 'coupons'  && <MyCoupons />}
-        {tab === 'profile'  && <MyProfileEdit />}
+        {tab === 'home'         && <MyHome        onNavigate={handleTabNavigate} />}
+        {tab === 'orders'       && <MyOrderList    onNavigate={handleTabNavigate} />}
+        {tab === 'order-detail' && <MyOrderDetail  orderId={orderId} onBack={() => handleSetTab('orders')} />}
+        {tab === 'wishlist'     && <MyWishlist      onNavigate={handleTabNavigate} />}
+        {tab === 'coupons'      && <MyCoupons />}
+        {tab === 'profile'      && <MyProfileEdit />}
       </main>
     </div>
   )

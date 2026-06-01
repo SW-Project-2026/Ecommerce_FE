@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { searchProducts, getProducts } from '../api/products'
 import { usePageView } from '../hooks/usePageView'
+import { wishlistAdd, wishlistDelete } from '../api/wishlists'
 
 const DISPLAY = 20
 const NAVER_SORT_OPTIONS = [
@@ -11,17 +12,32 @@ const NAVER_SORT_OPTIONS = [
 ]
 
 function DbCard({ product, onNavigate, auth }) {
-  const [liked, setLiked] = useState(false)
+  const [liked,  setLiked]  = useState(false)
+  const [wishId, setWishId] = useState(null) // 찜 삭제 시 필요한 wishId
   const image = product.imageUrl ?? product.image
 
-  function handleLike(e) {
+  async function handleLike(e) {
     e.preventDefault()
     e.stopPropagation()
     if (!auth) {
       onNavigate?.('login')
       return
     }
-    setLiked(p => !p)
+    try {
+      if (liked) {
+        // 찜 취소 → DELETE
+        await wishlistDelete({ wishId })
+        setLiked(false)
+        setWishId(null)
+      } else {
+        // 찜 추가 → POST
+        const data = await wishlistAdd({ productId: product.productId })
+        setLiked(true)
+        setWishId(data.wishId)
+      }
+    } catch (err) {
+      console.error('찜 처리 실패:', err.message)
+    }
   }
 
   return (
@@ -68,14 +84,14 @@ function Pagination({ current, totalPages, onChange }) {
 export default function SearchPage({ query, category, onNavigate, userId = null, auth = null }) {
   usePageView('상품목록', userId)
 
-  const [products, setProducts] = useState([])
-  const [total, setTotal] = useState(0)
+  const [products,   setProducts]   = useState([])
+  const [total,      setTotal]      = useState(0)
   const [totalPages, setTotalPages] = useState(0)
-  const [page, setPage] = useState(1)
-  const [sort, setSort] = useState('sim')
-  const [dbSort, setDbSort] = useState('createdAt,desc')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
+  const [page,       setPage]       = useState(1)
+  const [sort,       setSort]       = useState('sim')
+  const [dbSort,     setDbSort]     = useState('createdAt,desc')
+  const [loading,    setLoading]    = useState(false)
+  const [error,      setError]      = useState(null)
 
   const isSearch = !!query
   const isList = !query && category?.id && category.id !== 'home'
