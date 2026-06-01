@@ -14,7 +14,7 @@ const ITEMS = [
 
 const CARD_STEP = 332
 
-export default function RepurchaseSection() {
+export default function RepurchaseSection({ onNavigate, auth }) {
   const [offset, setOffset] = useState(0)
   const maxOffset = (ITEMS.length - 4) * CARD_STEP
 
@@ -33,7 +33,7 @@ export default function RepurchaseSection() {
       <div className="carousel-clip">
         <div className="products-row" style={{ transform: `translateX(-${offset}px)` }}>
           {ITEMS.map((item, i) => (
-            <ProductCard key={i} thumbHeight={186.69} name={item.name} price={item.price} />
+            <ProductCard key={i} thumbHeight={186.69} name={item.name} price={item.price} onNavigate={onNavigate} auth={auth} />
           ))}
         </div>
       </div>

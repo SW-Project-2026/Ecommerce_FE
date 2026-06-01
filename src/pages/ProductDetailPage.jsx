@@ -32,16 +32,9 @@ function StarRating({ value, onChange, size = 28 }) {
   return (
     <div className="review-stars">
       {[1, 2, 3, 4, 5].map(n => (
-        <button
-          key={n}
-          className={`review-star-btn${display >= n ? ' active' : ''}`}
-          style={{ fontSize: size }}
-          onMouseEnter={() => setHovered(n)}
-          onMouseLeave={() => setHovered(0)}
-          onClick={() => onChange(n)}
-          type="button"
-          aria-label={`${n}점`}
-        >★</button>
+        <button key={n} className={`review-star-btn${display >= n ? ' active' : ''}`} style={{ fontSize: size }}
+          onMouseEnter={() => setHovered(n)} onMouseLeave={() => setHovered(0)}
+          onClick={() => onChange(n)} type="button" aria-label={`${n}점`}>★</button>
       ))}
     </div>
   )
@@ -116,26 +109,15 @@ function ReviewSection({ productId, userId }) {
           <span className="review-rating-text">{RATING_LABELS[rating]}</span>
         </div>
         <div className="review-input-col">
-          <textarea
-            className="review-textarea"
-            placeholder="상품 사용 후기를 남겨주세요. (최소 5자)"
-            value={text}
-            onChange={e => setText(e.target.value)}
-            maxLength={500}
-          />
+          <textarea className="review-textarea" placeholder="상품 사용 후기를 남겨주세요. (최소 5자)"
+            value={text} onChange={e => setText(e.target.value)} maxLength={500} />
           <div className="review-submit-row">
             <span className="review-char-count">{text.length} / 500</span>
-            <button className="review-submit-btn" onClick={handleSubmit} disabled={!canSubmit}>
-              리뷰 등록
-            </button>
+            <button className="review-submit-btn" onClick={handleSubmit} disabled={!canSubmit}>리뷰 등록</button>
           </div>
         </div>
       </div>
-
-      {submitted && (
-        <div className="review-submitted-msg">✓ 리뷰가 등록되었습니다. 감사합니다!</div>
-      )}
-
+      {submitted && <div className="review-submitted-msg">✓ 리뷰가 등록되었습니다. 감사합니다!</div>}
       {reviews.length > 0 && (
         <div className="review-summary">
           <span className="review-avg-score">{avg.toFixed(1)}</span>
@@ -145,7 +127,6 @@ function ReviewSection({ productId, userId }) {
           </div>
         </div>
       )}
-
       <div className="review-list-header">
         <span className="review-list-title">리뷰 {reviews.length}개</span>
         {reviews.length > 1 && (
@@ -156,7 +137,6 @@ function ReviewSection({ productId, userId }) {
           </select>
         )}
       </div>
-
       {reviews.length === 0 ? (
         <div className="review-empty">
           <div className="review-empty-icon">★</div>
@@ -231,7 +211,6 @@ function RelatedProducts() {
   )
 }
 
-// ── 장바구니 추가 토스트 ──────────────────────────────────────────────────
 function CartToast({ visible, onGoCart }) {
   return (
     <div className={`pdp-cart-toast${visible ? ' pdp-cart-toast--show' : ''}`}>
@@ -241,7 +220,7 @@ function CartToast({ visible, onGoCart }) {
   )
 }
 
-export default function ProductDetailPage({ productId, onNavigate, prevCategory, onAddToCart, userId = null }) {
+export default function ProductDetailPage({ productId, onNavigate, prevCategory, onAddToCart, userId = null, auth = null }) {
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -254,6 +233,14 @@ export default function ProductDetailPage({ productId, onNavigate, prevCategory,
   const activeDwellRef   = useRef(0)
   const activeStartRef   = useRef(null)
   const inactiveTimerRef = useRef(null)
+
+  function requireAuth(callback) {
+    if (!auth) {
+      onNavigate('login')
+      return
+    }
+    callback()
+  }
 
   useEffect(() => {
     setLoading(true)
@@ -309,16 +296,24 @@ export default function ProductDetailPage({ productId, onNavigate, prevCategory,
 
   function handleBuyNow() {
     if (!product) return
-    onAddToCart?.(product, qty)
-    onNavigate('cart')
+    requireAuth(() => {
+      onAddToCart?.(product, qty)
+      onNavigate('cart')
+    })
   }
 
   function handleAddToCartWithToast() {
     if (!product) return
-    onAddToCart?.(product, qty)
-    setCartToast(true)
-    if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
-    toastTimerRef.current = setTimeout(() => setCartToast(false), 3000)
+    requireAuth(() => {
+      onAddToCart?.(product, qty)
+      setCartToast(true)
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
+      toastTimerRef.current = setTimeout(() => setCartToast(false), 3000)
+    })
+  }
+
+  function handleLike() {
+    requireAuth(() => setLiked(p => !p))
   }
 
   const total = product ? (product.minPrice * qty).toLocaleString() : '0'
@@ -383,14 +378,10 @@ export default function ProductDetailPage({ productId, onNavigate, prevCategory,
             {soldOut ? '품절' : '바로 구매하기'}
           </button>
           <div className="pdp-sub-btns">
-            <button
-              className="pdp-cart-btn"
-              disabled={soldOut}
-              onClick={handleAddToCartWithToast}
-            >
+            <button className="pdp-cart-btn" disabled={soldOut} onClick={handleAddToCartWithToast}>
               장바구니 담기
             </button>
-            <button className={`pdp-like-btn${liked ? ' active' : ''}`} onClick={() => setLiked(p => !p)}>
+            <button className={`pdp-like-btn${liked ? ' active' : ''}`} onClick={handleLike}>
               <i className={liked ? 'ri-heart-fill' : 'ri-heart-line'} /> 찜하기
             </button>
           </div>
@@ -403,11 +394,7 @@ export default function ProductDetailPage({ productId, onNavigate, prevCategory,
           { key: 'review', label: '리뷰' },
           { key: 'return', label: '배송/반품/교환' },
         ].map(tab => (
-          <button
-            key={tab.key}
-            className={`pdp-tab${activeTab === tab.key ? ' active' : ''}`}
-            onClick={() => setActiveTab(tab.key)}
-          >
+          <button key={tab.key} className={`pdp-tab${activeTab === tab.key ? ' active' : ''}`} onClick={() => setActiveTab(tab.key)}>
             {tab.label}
           </button>
         ))}

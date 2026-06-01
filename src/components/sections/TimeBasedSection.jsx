@@ -14,7 +14,7 @@ const ITEMS = [
 
 const CARD_STEP = 332
 
-export default function TimeBasedSection() {
+export default function TimeBasedSection({ onNavigate, auth }) {
   const [offset, setOffset] = useState(0)
   const maxOffset = (ITEMS.length - 4) * CARD_STEP
 
@@ -24,7 +24,6 @@ export default function TimeBasedSection() {
 
   return (
     <section className="section-timebased">
-      {/* 재구매 섹션과 동일한 #1C2E5C 색상으로 변경 */}
       <div className="section-indicator" style={{ background: '#1C2E5C' }} />
       <div className="section-title">이전에 구매한 상품</div>
       <div className="view-all" style={{ color: '#1C2E5C' }}>전체보기 ›</div>
@@ -34,7 +33,7 @@ export default function TimeBasedSection() {
       <div className="carousel-clip">
         <div className="products-row" style={{ transform: `translateX(-${offset}px)` }}>
           {ITEMS.map((item, i) => (
-            <ProductCard key={i} thumbHeight={186.69} name={item.name} price={item.price} />
+            <ProductCard key={i} thumbHeight={186.69} name={item.name} price={item.price} onNavigate={onNavigate} auth={auth} />
           ))}
         </div>
       </div>

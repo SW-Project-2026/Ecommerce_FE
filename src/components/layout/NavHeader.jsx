@@ -15,6 +15,14 @@ export default function NavHeader({ onNavigate, cartCount = 0, auth, onLogout, u
     if (e.key === 'Enter') handleSearch()
   }
 
+  function requireAuth(callback) {
+    if (!auth) {
+      onNavigate('login')
+      return
+    }
+    callback()
+  }
+
   return (
     <header className="nav-header">
       <div className="logo" onClick={() => onNavigate('home')}>
@@ -40,14 +48,14 @@ export default function NavHeader({ onNavigate, cartCount = 0, auth, onLogout, u
       </div>
 
       {/* 장바구니 */}
-      <div className="cart-wrap" onClick={() => onNavigate('cart')} style={{ cursor: 'pointer' }}>
+      <div className="cart-wrap" onClick={() => requireAuth(() => onNavigate('cart'))} style={{ cursor: 'pointer' }}>
         <span className="cart-label">장바구니</span>
         {cartCount > 0 && <div className="cart-badge">{cartCount}</div>}
       </div>
 
       {/* 찜 */}
       <div
-        onClick={() => onNavigate('mypage', 'wishlist')}
+        onClick={() => requireAuth(() => onNavigate('mypage', 'wishlist'))}
         style={{
           position: 'absolute',
           left: 945,
@@ -63,7 +71,7 @@ export default function NavHeader({ onNavigate, cartCount = 0, auth, onLogout, u
 
       {/* 마이페이지 */}
       <div
-        onClick={() => onNavigate('mypage')}
+        onClick={() => requireAuth(() => onNavigate('mypage'))}
         style={{
           position: 'absolute',
           left: 1005,
@@ -79,7 +87,6 @@ export default function NavHeader({ onNavigate, cartCount = 0, auth, onLogout, u
 
       {auth ? (
         <>
-          {/* userId님 - 로그아웃 바로 왼쪽 */}
           {userId && (
             <div style={{
               position: 'absolute',

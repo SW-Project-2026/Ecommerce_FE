@@ -21,7 +21,6 @@ import { getMyProfile } from './api/users'
 import { refreshToken } from './api/auth'
 import './App.css'
 
-// ── JWT payload 디코딩 (만료 체크용) ──
 function isTokenExpired(token) {
   try {
     const payload = JSON.parse(atob(token.split('.')[1]))
@@ -53,7 +52,6 @@ export default function App() {
   const [selectedCoupon, setSelectedCoupon] = useState(null)
   const [mypageTab, setMypageTab] = useState(() => sessionStorage.getItem('mypageTab') || 'home')
 
-  // ── auth 초기값: null로 시작하고 useEffect에서 비동기 체크 ──
   const [auth, setAuth] = useState(null)
   const [authLoading, setAuthLoading] = useState(true)
 
@@ -63,20 +61,17 @@ export default function App() {
       const role = localStorage.getItem('role')
       const userId = localStorage.getItem('userId')
 
-      // 토큰 없으면 비로그인
       if (!token) {
         setAuthLoading(false)
         return
       }
 
-      // 토큰 유효하면 그대로 사용
       if (!isTokenExpired(token)) {
         setAuth({ token, role, userId: userId ?? null })
         setAuthLoading(false)
         return
       }
 
-      // 토큰 만료 → refresh 시도
       try {
         const data = await refreshToken()
         if (data?.accessToken) {
@@ -85,7 +80,6 @@ export default function App() {
           setAuth({ token: data.accessToken, role: data.role ?? role, userId: userId ?? null })
         }
       } catch {
-        // refresh 실패(refresh token도 만료 등) → 로그아웃
         clearAuth()
         setAuth(null)
       } finally {
@@ -179,7 +173,6 @@ export default function App() {
   const cartCount = cart.reduce((s, i) => s + i.qty, 0)
   const userId = auth?.userId ?? null
 
-  // auth 체크 중에는 빈 화면 (깜빡임 방지)
   if (authLoading) return null
 
   if (page === 'cart') return (
@@ -236,6 +229,7 @@ export default function App() {
         prevCategory={prevCategory}
         onAddToCart={handleAddToCart}
         userId={userId}
+        auth={auth}
       />
       <Footer />
     </div>
@@ -253,6 +247,7 @@ export default function App() {
         category={category}
         onNavigate={handleNavigate}
         userId={userId}
+        auth={auth}
       />
       <Footer />
     </div>
@@ -263,11 +258,11 @@ export default function App() {
       <NavHeader onNavigate={handleNavigate} cartCount={cartCount} auth={auth} onLogout={handleLogout} userId={userId} />
       <CategoryBar onNavigate={handleNavigate} activeCategory="home" />
       <HeroBanner />
-      <RecommendSection />
+      <RecommendSection onNavigate={handleNavigate} auth={auth} />
       <AdBanner />
-      <RepurchaseSection />
-      <TimeBasedSection />
-      <BestSection />
+      <RepurchaseSection onNavigate={handleNavigate} auth={auth} />
+      <TimeBasedSection onNavigate={handleNavigate} auth={auth} />
+      <BestSection onNavigate={handleNavigate} auth={auth} />
       <Footer />
     </div>
   )

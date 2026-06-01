@@ -10,16 +10,27 @@ const NAVER_SORT_OPTIONS = [
   { value: 'dsc',  label: '가격 높은순' },
 ]
 
-function DbCard({ product, onNavigate }) {
+function DbCard({ product, onNavigate, auth }) {
   const [liked, setLiked] = useState(false)
   const image = product.imageUrl ?? product.image
+
+  function handleLike(e) {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!auth) {
+      onNavigate?.('login')
+      return
+    }
+    setLiked(p => !p)
+  }
+
   return (
     <div className="sp-card" onClick={() => onNavigate?.('product', product.productId)} style={{ cursor: 'pointer' }}>
       <div className="sp-card-thumb">
         {image
           ? <img src={image} alt={product.name ?? product.title} loading="lazy" />
           : <div className="sp-no-image" />}
-        <button className="sp-heart" onClick={e => { e.preventDefault(); e.stopPropagation(); setLiked(p => !p) }} aria-label="찜하기">
+        <button className="sp-heart" onClick={handleLike} aria-label="찜하기">
           <i className={liked ? 'ri-heart-fill' : 'ri-heart-line'} style={{ color: '#FF6B6B' }} />
         </button>
       </div>
@@ -54,7 +65,7 @@ function Pagination({ current, totalPages, onChange }) {
   )
 }
 
-export default function SearchPage({ query, category, onNavigate, userId = null }) {
+export default function SearchPage({ query, category, onNavigate, userId = null, auth = null }) {
   usePageView('상품목록', userId)
 
   const [products, setProducts] = useState([])
@@ -165,7 +176,7 @@ export default function SearchPage({ query, category, onNavigate, userId = null 
       {!loading && !error && products.length > 0 && (
         <div className="sp-grid">
           {products.map(p => (
-            <DbCard key={p.productId} product={p} onNavigate={onNavigate} />
+            <DbCard key={p.productId} product={p} onNavigate={onNavigate} auth={auth} />
           ))}
         </div>
       )}
