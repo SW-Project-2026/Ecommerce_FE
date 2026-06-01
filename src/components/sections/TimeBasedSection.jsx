@@ -24,9 +24,10 @@ export default function TimeBasedSection() {
 
   return (
     <section className="section-timebased">
-      <div className="section-indicator" />
-      <div className="section-title">시간대별 추천 상품</div>
-      <div className="view-all">전체보기 ›</div>
+      {/* 재구매 섹션과 동일한 #1C2E5C 색상으로 변경 */}
+      <div className="section-indicator" style={{ background: '#1C2E5C' }} />
+      <div className="section-title">이전에 구매한 상품</div>
+      <div className="view-all" style={{ color: '#1C2E5C' }}>전체보기 ›</div>
       <div className="nav-arrow" onClick={handleNext}>
         <i className="ri-arrow-down-wide-fill" />
       </div>

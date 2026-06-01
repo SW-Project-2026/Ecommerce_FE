@@ -20,6 +20,37 @@ import { usePageView } from './hooks/usePageView'
 import { getMyProfile } from './api/users'
 import './App.css'
 
+// ── JWT payload 디코딩 (만료 체크용) ──
+function isTokenExpired(token) {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    // exp는 초 단위, Date.now()는 밀리초
+    return payload.exp * 1000 < Date.now()
+  } catch {
+    return true // 디코딩 실패 시 만료된 것으로 간주
+  }
+}
+
+// ── 초기 auth 상태: 토큰 만료 여부까지 체크 ──
+function getInitialAuth() {
+  const token = localStorage.getItem('accessToken')
+  const role = localStorage.getItem('role')
+  const userId = localStorage.getItem('userId')
+
+  if (!token) return null
+
+  // 토큰이 만료됐으면 localStorage 비우고 비로그인 상태로
+  if (isTokenExpired(token)) {
+    localStorage.removeItem('accessToken')
+    localStorage.removeItem('role')
+    localStorage.removeItem('userId')
+    sessionStorage.clear()
+    return null
+  }
+
+  return { token, role, userId: userId ?? null }
+}
+
 export default function App() {
   const [page, setPage] = useState(() => sessionStorage.getItem('page') || 'home')
   const [searchQuery, setSearchQuery] = useState(() => sessionStorage.getItem('searchQuery') || '')
@@ -34,12 +65,9 @@ export default function App() {
   const [checkoutItems, setCheckoutItems] = useState([])
   const [selectedCoupon, setSelectedCoupon] = useState(null)
   const [mypageTab, setMypageTab] = useState(() => sessionStorage.getItem('mypageTab') || 'home')
-  const [auth, setAuth] = useState(() => {
-    const token = localStorage.getItem('accessToken')
-    const role = localStorage.getItem('role')
-    const userId = localStorage.getItem('userId')
-    return token ? { token, role, userId: userId ?? null } : null
-  })
+
+  // ── 만료 체크 포함한 초기 auth 상태 ──
+  const [auth, setAuth] = useState(getInitialAuth)
 
   usePageView(page === 'home' ? '홈' : null)
 
