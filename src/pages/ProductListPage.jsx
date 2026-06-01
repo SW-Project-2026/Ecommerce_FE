@@ -10,42 +10,25 @@ const NAVER_SORT_OPTIONS = [
   { value: 'dsc',  label: '가격 높은순' },
 ]
 
-function NaverCard({ product }) {
-  const [liked, setLiked] = useState(false)
-  return (
-    <a href={product.link} target="_blank" rel="noreferrer" className="sp-card">
-      <div className="sp-card-thumb">
-        <img src={product.image} alt={product.title} loading="lazy" />
-        <button className="sp-heart" onClick={e => { e.preventDefault(); setLiked(p => !p) }} aria-label="찜하기">
-          <i className={liked ? 'ri-heart-fill' : 'ri-heart-line'} style={{ color: '#FF6B6B' }} />
-        </button>
-      </div>
-      <div className="sp-card-info">
-        {product.mallName && <div className="sp-mall">{product.mallName}</div>}
-        <div className="sp-title">{product.title}</div>
-        <div className="sp-price">{Number(product.lowestPrice).toLocaleString()}원</div>
-      </div>
-    </a>
-  )
-}
-
 function DbCard({ product, onNavigate }) {
   const [liked, setLiked] = useState(false)
-  const image = product.imageUrl
+  const image = product.imageUrl ?? product.image
   return (
     <div className="sp-card" onClick={() => onNavigate?.('product', product.productId)} style={{ cursor: 'pointer' }}>
       <div className="sp-card-thumb">
         {image
-          ? <img src={image} alt={product.name} loading="lazy" />
+          ? <img src={image} alt={product.name ?? product.title} loading="lazy" />
           : <div className="sp-no-image" />}
         <button className="sp-heart" onClick={e => { e.preventDefault(); e.stopPropagation(); setLiked(p => !p) }} aria-label="찜하기">
           <i className={liked ? 'ri-heart-fill' : 'ri-heart-line'} style={{ color: '#FF6B6B' }} />
         </button>
       </div>
       <div className="sp-card-info">
-        {product.productCategory && <div className="sp-mall">{product.productCategory}</div>}
-        <div className="sp-title">{product.name}</div>
-        <div className="sp-price">{(product.minPrice ?? 0).toLocaleString()}원</div>
+        {(product.productCategory ?? product.mallName) && (
+          <div className="sp-mall">{product.productCategory ?? product.mallName}</div>
+        )}
+        <div className="sp-title">{product.name ?? product.title}</div>
+        <div className="sp-price">{((product.minPrice ?? Number(product.lowestPrice)) || 0).toLocaleString()}원</div>
       </div>
     </div>
   )
@@ -181,11 +164,9 @@ export default function SearchPage({ query, category, onNavigate, userId = null 
       {!loading && !error && (isSearch || isList) && products.length === 0 && <div className="sp-status">상품이 없어요.</div>}
       {!loading && !error && products.length > 0 && (
         <div className="sp-grid">
-          {products.map(p =>
-            isSearch
-              ? <NaverCard key={p.productId} product={p} />
-              : <DbCard key={p.productId} product={p} onNavigate={onNavigate} />
-          )}
+          {products.map(p => (
+            <DbCard key={p.productId} product={p} onNavigate={onNavigate} />
+          ))}
         </div>
       )}
 

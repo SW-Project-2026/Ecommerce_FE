@@ -25,7 +25,7 @@ export default function RepurchaseSection() {
   return (
     <section className="section-repurchase">
       <div className="section-indicator" />
-      <div className="section-title">재구매 시기가 된 상품</div>
+      <div className="section-title">최근 본 상품</div>
       <div className="view-all">전체보기 ›</div>
       <div className="nav-arrow" onClick={handleNext}>
         <i className="ri-arrow-down-wide-fill" />
