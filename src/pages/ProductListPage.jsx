@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { searchProducts, getProducts } from '../api/products'
 import { usePageView } from '../hooks/usePageView'
-import { wishlistAdd, wishlistDelete } from '../api/wishlists'
+import { wishlistAdd, wishlistDelete, wishlistGet } from '../api/wishlists'
 
 const DISPLAY = 20
 const NAVER_SORT_OPTIONS = [
@@ -11,29 +11,23 @@ const NAVER_SORT_OPTIONS = [
   { value: 'dsc',  label: '가격 높은순' },
 ]
 
-function DbCard({ product, onNavigate, auth }) {
-  const [liked,  setLiked]  = useState(false)
-  const [wishId, setWishId] = useState(null) // 찜 삭제 시 필요한 wishId
-  const image = product.imageUrl ?? product.image
+// productId → wishId 맵
+function DbCard({ product, onNavigate, auth, wishMap, setWishMap }) {
+  const wishId = wishMap[product.productId] ?? null
+  const liked  = wishId !== null
+  const image  = product.imageUrl ?? product.image
 
   async function handleLike(e) {
     e.preventDefault()
     e.stopPropagation()
-    if (!auth) {
-      onNavigate?.('login')
-      return
-    }
+    if (!auth) { onNavigate?.('login'); return }
     try {
       if (liked) {
-        // 찜 취소 → DELETE
         await wishlistDelete({ wishId })
-        setLiked(false)
-        setWishId(null)
+        setWishMap(prev => { const next = { ...prev }; delete next[product.productId]; return next })
       } else {
-        // 찜 추가 → POST
         const data = await wishlistAdd({ productId: product.productId })
-        setLiked(true)
-        setWishId(data.wishId)
+        setWishMap(prev => ({ ...prev, [product.productId]: data.wishId }))
       }
     } catch (err) {
       console.error('찜 처리 실패:', err.message)
@@ -65,10 +59,9 @@ function Pagination({ current, totalPages, onChange }) {
   if (totalPages <= 1) return null
   const block = Math.floor((current - 1) / 3)
   const start = block * 3 + 1
-  const end = Math.min(start + 2, totalPages)
-  const nums = []
+  const end   = Math.min(start + 2, totalPages)
+  const nums  = []
   for (let i = start; i <= end; i++) nums.push(i)
-
   return (
     <div className="sp-pagination">
       {nums.map(n => (
@@ -92,20 +85,31 @@ export default function SearchPage({ query, category, onNavigate, userId = null,
   const [dbSort,     setDbSort]     = useState('createdAt,desc')
   const [loading,    setLoading]    = useState(false)
   const [error,      setError]      = useState(null)
+  // productId → wishId 맵 (찜 상태 관리)
+  const [wishMap,    setWishMap]    = useState({})
 
   const isSearch = !!query
-  const isList = !query && category?.id && category.id !== 'home'
+  const isList   = !query && category?.id && category.id !== 'home'
+
+  // 로그인 시 찜 목록 로드 → wishMap 초기화
+  useEffect(() => {
+    if (!auth) { setWishMap({}); return }
+    wishlistGet({ size: 100 })
+      .then(data => {
+        const map = {}
+        ;(data.content ?? []).forEach(w => { map[w.productId] = w.wishId })
+        setWishMap(map)
+      })
+      .catch(() => {})
+  }, [auth])
 
   useEffect(() => {
-    setPage(1)
-    setSort('sim')
-    setDbSort('createdAt,desc')
+    setPage(1); setSort('sim'); setDbSort('createdAt,desc')
   }, [query, category])
 
   useEffect(() => {
     if (isSearch) {
-      setLoading(true)
-      setError(null)
+      setLoading(true); setError(null)
       const start = (page - 1) * DISPLAY + 1
       searchProducts({ query, display: DISPLAY, start, sort })
         .then(data => {
@@ -117,10 +121,8 @@ export default function SearchPage({ query, category, onNavigate, userId = null,
         .finally(() => setLoading(false))
       return
     }
-
     if (isList) {
-      setLoading(true)
-      setError(null)
+      setLoading(true); setError(null)
       const cat = category?.id !== 'all' ? (category?.dbKey ?? category?.label) : undefined
       getProducts({ page: page - 1, size: DISPLAY, category: cat, sort: dbSort })
         .then(data => {
@@ -133,8 +135,8 @@ export default function SearchPage({ query, category, onNavigate, userId = null,
     }
   }, [query, category, page, sort, dbSort])
 
-  function handleSort(e) { setSort(e.target.value); setPage(1) }
-  function handleDbSort(value) { setDbSort(value); setPage(1) }
+  function handleSort(e)       { setSort(e.target.value); setPage(1) }
+  function handleDbSort(value) { setDbSort(value);        setPage(1) }
 
   const resultLabel = isSearch
     ? <><b>"{query}"</b> 검색 결과</>
@@ -144,18 +146,8 @@ export default function SearchPage({ query, category, onNavigate, userId = null,
     <div className="sp-wrap">
       <div className="pdp-breadcrumb" style={{ marginBottom: 16 }}>
         <span onClick={() => onNavigate('home')} className="pdp-bc-link">홈</span>
-        {isList && category?.label && (
-          <>
-            <span className="pdp-bc-sep"> &gt; </span>
-            <span className="pdp-bc-current">{category.label}</span>
-          </>
-        )}
-        {isSearch && (
-          <>
-            <span className="pdp-bc-sep"> &gt; </span>
-            <span className="pdp-bc-current">검색: {query}</span>
-          </>
-        )}
+        {isList && category?.label && (<><span className="pdp-bc-sep"> &gt; </span><span className="pdp-bc-current">{category.label}</span></>)}
+        {isSearch && (<><span className="pdp-bc-sep"> &gt; </span><span className="pdp-bc-current">검색: {query}</span></>)}
       </div>
 
       <div className="sp-result-bar">
@@ -186,17 +178,16 @@ export default function SearchPage({ query, category, onNavigate, userId = null,
       </div>
 
       {loading && <div className="sp-status">불러오는 중...</div>}
-      {error && <div className="sp-status sp-error">{error}</div>}
+      {error   && <div className="sp-status sp-error">{error}</div>}
       {!loading && !error && !isSearch && !isList && <div className="sp-status">검색어 또는 카테고리를 선택해주세요.</div>}
       {!loading && !error && (isSearch || isList) && products.length === 0 && <div className="sp-status">상품이 없어요.</div>}
       {!loading && !error && products.length > 0 && (
         <div className="sp-grid">
           {products.map(p => (
-            <DbCard key={p.productId} product={p} onNavigate={onNavigate} auth={auth} />
+            <DbCard key={p.productId} product={p} onNavigate={onNavigate} auth={auth} wishMap={wishMap} setWishMap={setWishMap} />
           ))}
         </div>
       )}
-
       <Pagination current={page} totalPages={totalPages} onChange={n => { setPage(n); window.scrollTo(0, 0) }} />
     </div>
   )
