@@ -4,7 +4,6 @@ import { campaignDelete, campaignUpdate, campaignStatusUpdate, getCampaignSmsSta
 import { eventList } from "../api/events";
 import { couponList } from "../api/coupons";
 import { adList } from "../api/ads";
-import { withAutoRefresh } from "../utils/withAutoRefresh";
 
 const FLUENTD_URL = import.meta.env.VITE_FLUENTD_URL || "http://localhost:9880"
 
@@ -147,7 +146,6 @@ const TIME_OPTIONS = Array.from({ length: 24 }, (_, h) =>
   ["00", "10", "20", "30", "40", "50"].map(m => `${String(h).padStart(2, "0")}:${m}`)
 ).flat();
 
-// ── 전송 현황 섹션 (getCampaignSmsStatus, retryCampaignSms API 연동) ──
 function SendStatusSection({ campaignId }) {
   const [logs,           setLogs]           = useState([]);
   const [loading,        setLoading]        = useState(false);
@@ -165,9 +163,7 @@ function SendStatusSection({ campaignId }) {
     setLoading(true);
     setError(null);
     try {
-      const data = await withAutoRefresh(() =>
-        getCampaignSmsStatus({ campaignId, date: date || undefined, time: time || undefined })
-      );
+      const data = await getCampaignSmsStatus({ campaignId, date: date || undefined, time: time || undefined });
       setLogs(data?.targets?.content ?? []);
       setTotalCount(data?.todaySentCount + data?.todayFailedCount ?? 0);
       setSuccessCount(data?.todaySentCount ?? 0);
@@ -189,9 +185,7 @@ function SendStatusSection({ campaignId }) {
     });
   };
 
-  const handleSearch = () => {
-    fetchStatus(filterDate, filterTime);
-  };
+  const handleSearch = () => { fetchStatus(filterDate, filterTime); };
 
   const handleReset = () => {
     setFilterDate("");
@@ -203,9 +197,7 @@ function SendStatusSection({ campaignId }) {
     if (selected.size === 0) return;
     setResending(true);
     try {
-      await withAutoRefresh(() =>
-        retryCampaignSms({ campaignId, messageType: "SMS", content: "" })
-      );
+      await retryCampaignSms({ campaignId, messageType: "SMS", content: "" });
       setSelected(new Set());
       fetchStatus(filterDate, filterTime);
     } catch (err) {
@@ -220,33 +212,17 @@ function SendStatusSection({ campaignId }) {
       <p className="cdp-send-summary">
         전송 성공 <strong>{successCount}명</strong> / 전송 실패 <strong style={{ color: "#F74F52" }}>{failCount}명</strong>
       </p>
-
       <div className="cdp-send-filter-row">
         <span className="cdp-send-title">사용자 조회</span>
         <div className="cdp-send-filter-inputs">
-          <input
-            type="date"
-            className="cdp-send-date-input"
-            value={filterDate}
-            onChange={e => setFilterDate(e.target.value)}
-          />
+          <input type="date" className="cdp-send-date-input" value={filterDate} onChange={e => setFilterDate(e.target.value)} />
           <div className="cdp-send-time-wrap">
-            <input
-              className="cdp-send-time-input"
-              placeholder="시간 선택"
-              value={filterTime}
-              readOnly
-              onClick={() => setShowTimePicker(p => !p)}
-            />
+            <input className="cdp-send-time-input" placeholder="시간 선택" value={filterTime} readOnly onClick={() => setShowTimePicker(p => !p)} />
             {showTimePicker && (
               <div className="cdp-send-time-dropdown">
                 <div className="cdp-send-time-list">
                   {TIME_OPTIONS.map(t => (
-                    <div
-                      key={t}
-                      className={`cdp-send-time-item ${filterTime === t ? "cdp-send-time-item-active" : ""}`}
-                      onClick={() => { setFilterTime(t); setShowTimePicker(false); }}
-                    >
+                    <div key={t} className={`cdp-send-time-item ${filterTime === t ? "cdp-send-time-item-active" : ""}`} onClick={() => { setFilterTime(t); setShowTimePicker(false); }}>
                       {t}
                     </div>
                   ))}
@@ -254,15 +230,11 @@ function SendStatusSection({ campaignId }) {
               </div>
             )}
           </div>
-          {(filterDate || filterTime) && (
-            <button className="cdp-send-reset-btn" onClick={handleReset}>✕</button>
-          )}
+          {(filterDate || filterTime) && <button className="cdp-send-reset-btn" onClick={handleReset}>✕</button>}
           <button className="cdp-send-search-btn" onClick={handleSearch}>조회</button>
         </div>
       </div>
-
       {error && <div style={{ fontSize: 12, color: "#B82B2B", marginBottom: 8 }}>{error}</div>}
-
       <div className="cdp-send-table">
         {loading ? (
           <div style={{ padding: 24, textAlign: "center", fontSize: 12, color: "#9EA6B5" }}>불러오는 중...</div>
@@ -270,11 +242,7 @@ function SendStatusSection({ campaignId }) {
           <div style={{ padding: 24, textAlign: "center", fontSize: 12, color: "#BFBFBF" }}>발송 내역이 없습니다</div>
         ) : logs.map((log, i) => (
           <div key={i} className="cdp-send-row">
-            <div
-              className={`cdp-send-check ${selected.has(log.loginId) ? "cdp-send-check-on" : ""}`}
-              onClick={() => log.status === "FAILED" && toggleSelect(log.loginId)}
-              style={{ cursor: log.status === "FAILED" ? "pointer" : "default" }}
-            >
+            <div className={`cdp-send-check ${selected.has(log.loginId) ? "cdp-send-check-on" : ""}`} onClick={() => log.status === "FAILED" && toggleSelect(log.loginId)} style={{ cursor: log.status === "FAILED" ? "pointer" : "default" }}>
               {selected.has(log.loginId) && "✓"}
             </div>
             <span className="cdp-send-loginid">{log.loginId}</span>
@@ -285,7 +253,6 @@ function SendStatusSection({ campaignId }) {
           </div>
         ))}
       </div>
-
       <div className="cdp-send-footer">
         <button className="cdp-btn-resend" onClick={handleResend} disabled={selected.size === 0 || resending}>
           {resending ? "재전송 중..." : "재전송"}
@@ -362,16 +329,13 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
 
   useEffect(() => {
     setEventsLoading(true);
-    withAutoRefresh(() => eventList({ isActive: true }))
+    eventList({ isActive: true })
       .then(data => setEvents(Array.isArray(data) ? data : []))
       .catch(err => console.error("이벤트 조회 실패:", err))
       .finally(() => setEventsLoading(false));
 
     setRewardLoading(true);
-    Promise.all([
-      withAutoRefresh(() => couponList()),
-      withAutoRefresh(() => adList()),
-    ])
+    Promise.all([couponList(), adList()])
       .then(([couponData, adData]) => {
         setCoupons(Array.isArray(couponData) ? couponData : []);
         setAds(Array.isArray(adData) ? adData : []);
@@ -418,13 +382,10 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
   const [selectedCoupon, setSelectedCoupon] = useState(campaign?.couponId ?? null);
   const [selectedAd,     setSelectedAd]     = useState(campaign?.adId     ?? null);
 
-  // ── duplicatePolicy, couponRestrictionDays로 필드명 변경 ──
   const [dedupeType, setDedupeType] = useState(campaign?.duplicatePolicy ?? "none");
   const [dedupeDays, setDedupeDays] = useState(campaign?.couponRestrictionDays ? String(campaign.couponRestrictionDays) : "30");
 
-  // ── issueType으로 필드명 변경 ──
   const [issuanceMethod, setIssuanceMethod] = useState(campaign?.issueType ?? "AUTO");
-  // ── messageContent로 필드명 변경 ──
   const [msgContent,     setMsgContent]     = useState(campaign?.messageContent ?? "");
   const isMessaging = issuanceMethod === "MESSAGING";
 
@@ -474,7 +435,7 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
   const handleDelete = async () => {
     setDeleting(true); setApiError(null);
     try {
-      await withAutoRefresh(() => campaignDelete({ campaignId: campaign.campaignId }));
+      await campaignDelete({ campaignId: campaign.campaignId });
       await sendCampaignToFluentd({ action: "DELETE", campaignId: campaign.campaignId });
       onNavigate("list");
     } catch (err) { setApiError(err.message); setShowDeleteModal(false); }
@@ -493,8 +454,7 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
         value:          f.value,
         periodDays:     parseInt(f.period, 10),
       }));
-      // ── campaignUpdate에 Swagger 기준 필드명 적용 ──
-      await withAutoRefresh(() => campaignUpdate({
+      await campaignUpdate({
         campaignId:            campaign.campaignId,
         campaignName:          name,
         description:           desc,
@@ -515,7 +475,7 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
         duplicatePolicy:       dedupeType !== "none" ? dedupeType : null,
         couponRestrictionDays: dedupeType === "period" ? parseInt(dedupeDays, 10) : null,
         filters:               apiFilters,
-      }));
+      });
       await sendCampaignToFluentd({
         action:                "UPSERT",
         campaignId:            campaign.campaignId,
@@ -536,7 +496,7 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
   const handleStatusChange = async (newStatus) => {
     setApiError(null);
     try {
-      const updated = await withAutoRefresh(() => campaignStatusUpdate({ campaignId: campaign.campaignId, status: newStatus }));
+      const updated = await campaignStatusUpdate({ campaignId: campaign.campaignId, status: newStatus });
       setStatus(updated?.status ?? newStatus);
       await sendCampaignToFluentd({ action: "STATUS_UPDATE", campaignId: campaign.campaignId, status: newStatus });
       setShowStatusModal(false);
@@ -547,12 +507,8 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
   const statusInfo      = STATUS_DISPLAY[status] ?? STATUS_DISPLAY["IN_PROGRESS"];
   const canChangeStatus = (STATUS_TRANSITIONS[status] ?? []).length > 0;
 
-  const displayCoupons = isReadOnly && selectedCoupon
-    ? coupons.filter(c => c.couponId === selectedCoupon)
-    : coupons;
-  const displayAds = isReadOnly && selectedAd
-    ? ads.filter(a => a.adId === selectedAd)
-    : ads;
+  const displayCoupons = isReadOnly && selectedCoupon ? coupons.filter(c => c.couponId === selectedCoupon) : coupons;
+  const displayAds     = isReadOnly && selectedAd     ? ads.filter(a => a.adId === selectedAd)             : ads;
 
   const visibleTabs = isReadOnly
     ? selectedCoupon ? ["쿠폰"] : selectedAd ? ["광고"] : []
@@ -563,8 +519,6 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
     : "사용 안 함";
 
   const selectedCouponName = coupons.find(c => c.couponId === selectedCoupon)?.name ?? "쿠폰명";
-
-  // 전송 현황 표시 조건: readOnly + 쿠폰 선택됨 + 메세징 방식
   const showSendStatus = isReadOnly && selectedCoupon && isMessaging;
 
   return (
@@ -759,16 +713,11 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
 
           {rewardLoading && <div style={{ padding: 16, fontSize: 12, color: "#9EA6B5" }}>불러오는 중...</div>}
 
-          {/* 쿠폰 탭 */}
           {!rewardLoading && rewardTab === "쿠폰" && visibleTabs.includes("쿠폰") && (
             <>
               <div style={{ ...S.rewardTable, maxHeight: displayCoupons.length > REWARD_MAX_ROWS ? REWARD_MAX_HEIGHT : "none", overflow: displayCoupons.length > REWARD_MAX_ROWS ? "auto" : "visible" }}>
                 <div style={{ ...S.rewardHeader, ...S.rewardHeaderCoupon, position: "sticky", top: 0, zIndex: 1 }}>
-                  <span style={S.th} />
-                  <span style={S.th}>쿠폰명</span>
-                  <span style={S.th}>코드</span>
-                  <span style={S.th}>할인</span>
-                  <span style={S.th}>유효기간</span>
+                  <span style={S.th} /><span style={S.th}>쿠폰명</span><span style={S.th}>코드</span><span style={S.th}>할인</span><span style={S.th}>유효기간</span>
                 </div>
                 {displayCoupons.length === 0 ? (
                   <div className="cdp-reward-empty">등록된 쿠폰이 없습니다</div>
@@ -777,10 +726,7 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
                   return (
                     <div key={c.couponId} style={{ ...S.row, ...S.rowCoupon, ...(isSelected ? S.rowSelected : {}), borderBottom: idx === displayCoupons.length - 1 ? "none" : "0.5px solid #F0F2F5" }}>
                       <div style={{ display: "flex", justifyContent: "center" }}>
-                        <div
-                          onClick={() => !isReadOnly && handleSelectCoupon(c.couponId)}
-                          style={{ width: 17, height: 17, borderRadius: 4, border: isSelected ? "none" : "1.5px solid #D0D5DD", background: isSelected ? "#4F6EF7" : "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: isReadOnly ? "default" : "pointer", fontSize: 10, color: "#fff", fontWeight: 700 }}
-                        >
+                        <div onClick={() => !isReadOnly && handleSelectCoupon(c.couponId)} style={{ width: 17, height: 17, borderRadius: 4, border: isSelected ? "none" : "1.5px solid #D0D5DD", background: isSelected ? "#4F6EF7" : "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: isReadOnly ? "default" : "pointer", fontSize: 10, color: "#fff", fontWeight: 700 }}>
                           {isSelected && "✓"}
                         </div>
                       </div>
@@ -796,7 +742,6 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
                 })}
               </div>
 
-              {/* ── 중복 발송 제어 ── */}
               {isReadOnly ? (
                 <div className="cdp-dedupe-readonly">
                   <span className="cdp-dedupe-readonly-label">중복 발송 제어</span>
@@ -805,10 +750,7 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
               ) : (
                 <div className="cdp-dedupe-section">
                   <div className="cdp-dedupe-cards">
-                    <div
-                      className={`cdp-dedupe-card ${dedupeType === "none" ? "cdp-dedupe-card-inactive" : "cdp-dedupe-card-default"}`}
-                      onClick={() => setDedupeType("none")}
-                    >
+                    <div className={`cdp-dedupe-card ${dedupeType === "none" ? "cdp-dedupe-card-inactive" : "cdp-dedupe-card-default"}`} onClick={() => setDedupeType("none")}>
                       <div style={{ width: 18, height: 18, borderRadius: "50%", border: "1.5px solid #E0E4E8", background: "#FFFFFF", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                         {dedupeType === "none" && <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#E0E4E8" }} />}
                       </div>
@@ -817,10 +759,7 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
                         <div className="cdp-dedupe-card-desc" style={{ color: dedupeType === "none" ? "rgba(90,106,138,0.75)" : "#C0C5D0" }}>중복 제거 없이 조건 충족 시 항상 발송</div>
                       </div>
                     </div>
-                    <div
-                      className={`cdp-dedupe-card ${dedupeType === "period" ? "cdp-dedupe-card-active" : "cdp-dedupe-card-default"}`}
-                      onClick={() => setDedupeType("period")}
-                    >
+                    <div className={`cdp-dedupe-card ${dedupeType === "period" ? "cdp-dedupe-card-active" : "cdp-dedupe-card-default"}`} onClick={() => setDedupeType("period")}>
                       <div style={{ width: 18, height: 18, borderRadius: "50%", border: dedupeType === "period" ? "1.5px solid #4F6EF7" : "1.5px solid #A6A8B8", background: dedupeType === "period" ? "#4F6EF7" : "#FFFFFF", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                         {dedupeType === "period" && <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#FFFFFF" }} />}
                       </div>
@@ -840,14 +779,11 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
                 </div>
               )}
 
-              {/* ── 발급 방식 ── */}
               {isReadOnly ? (
                 <div className="cdp-dedupe-readonly" style={{ marginTop: 10 }}>
                   <span className="cdp-dedupe-readonly-label">발급 방식</span>
                   <span className="cdp-dedupe-readonly-value">{ISSUANCE_METHOD_DISPLAY[issuanceMethod] ?? issuanceMethod}</span>
-                  {isMessaging && msgContent && (
-                    <div className="cdp-msg-readonly-content">{msgContent}</div>
-                  )}
+                  {isMessaging && msgContent && <div className="cdp-msg-readonly-content">{msgContent}</div>}
                 </div>
               ) : (
                 <div style={{ marginTop: 16 }}>
@@ -855,46 +791,28 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
                   <div className="cdp-issuance-group">
                     {ISSUANCE_METHOD_OPTIONS.map(opt => (
                       <label key={opt.value} className="cdp-issuance-label">
-                        <input
-                          type="radio"
-                          name="issuanceMethod"
-                          checked={issuanceMethod === opt.value}
-                          onChange={() => setIssuanceMethod(opt.value)}
-                          className="cdp-issuance-radio"
-                        />
+                        <input type="radio" name="issuanceMethod" checked={issuanceMethod === opt.value} onChange={() => setIssuanceMethod(opt.value)} className="cdp-issuance-radio" />
                         {opt.label}
                       </label>
                     ))}
                   </div>
                   {isMessaging && (
                     <div className="cdp-msg-wrap">
-                      <textarea
-                        className="cdp-msg-textarea"
-                        placeholder={`예) [Da-On] 회원님께 특별 쿠폰을 발송해드립니다.\n쿠폰명: ${selectedCouponName}\n앱에서 바로 사용해보세요!`}
-                        value={msgContent}
-                        onChange={e => setMsgContent(e.target.value)}
-                        maxLength={90}
-                      />
+                      <textarea className="cdp-msg-textarea" placeholder={`예) [Da-On] 회원님께 특별 쿠폰을 발송해드립니다.\n쿠폰명: ${selectedCouponName}\n앱에서 바로 사용해보세요!`} value={msgContent} onChange={e => setMsgContent(e.target.value)} maxLength={90} />
                       <p className="cdp-msg-char-count">{msgContent.length} / 90자</p>
                     </div>
                   )}
                 </div>
               )}
 
-              {/* ── 전송 현황 (readOnly + 쿠폰 선택 + 메세징일 때만) ── */}
               {showSendStatus && <SendStatusSection campaignId={campaign.campaignId} />}
             </>
           )}
 
-          {/* 광고 탭 */}
           {!rewardLoading && rewardTab === "광고" && visibleTabs.includes("광고") && (
             <div style={{ ...S.rewardTable, maxHeight: displayAds.length > REWARD_MAX_ROWS ? REWARD_MAX_HEIGHT : "none", overflow: displayAds.length > REWARD_MAX_ROWS ? "auto" : "visible" }}>
               <div style={{ ...S.rewardHeader, ...S.rewardHeaderAd, position: "sticky", top: 0, zIndex: 1 }}>
-                <span style={S.th} />
-                <span style={S.th}>광고명</span>
-                <span style={S.th}>타겟 유형</span>
-                <span style={S.th}>타겟 값</span>
-                <span style={S.th}>생성일</span>
+                <span style={S.th} /><span style={S.th}>광고명</span><span style={S.th}>타겟 유형</span><span style={S.th}>타겟 값</span><span style={S.th}>생성일</span>
               </div>
               {displayAds.length === 0 ? (
                 <div className="cdp-reward-empty">등록된 광고가 없습니다</div>
@@ -904,10 +822,7 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
                 return (
                   <div key={a.adId} style={{ ...S.row, ...S.rowAd, ...(isSelected ? S.rowSelected : {}), borderBottom: idx === displayAds.length - 1 ? "none" : "0.5px solid #F0F2F5" }}>
                     <div style={{ display: "flex", justifyContent: "center" }}>
-                      <div
-                        onClick={() => !isReadOnly && handleSelectAd(a.adId)}
-                        style={{ width: 17, height: 17, borderRadius: 4, border: isSelected ? "none" : "1.5px solid #D0D5DD", background: isSelected ? "#4F6EF7" : "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: isReadOnly ? "default" : "pointer", fontSize: 10, color: "#fff", fontWeight: 700 }}
-                      >
+                      <div onClick={() => !isReadOnly && handleSelectAd(a.adId)} style={{ width: 17, height: 17, borderRadius: 4, border: isSelected ? "none" : "1.5px solid #D0D5DD", background: isSelected ? "#4F6EF7" : "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: isReadOnly ? "default" : "pointer", fontSize: 10, color: "#fff", fontWeight: 700 }}>
                         {isSelected && "✓"}
                       </div>
                     </div>

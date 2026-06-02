@@ -1,66 +1,25 @@
-import { UnauthorizedError } from '../utils/withAutoRefresh'
-
-const BASE = import.meta.env.VITE_API_URL || 'http://localhost:8080'
-
-function authHeaders() {
-  const token = localStorage.getItem('accessToken')
-  return {
-    'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  }
-}
-
-function check401(res) {
-  if (res.status === 401) throw new UnauthorizedError()
-}
+import axiosInstance from './axiosInstance'
 
 // ── 내 정보 조회 ──
 export async function getMyProfile() {
-  const res = await fetch(`${BASE}/api/users/me`, {
-    method: 'GET',
-    headers: authHeaders(),
-  })
-  const json = await res.json()
-  check401(res)
-  if (!res.ok) throw new Error(json.message || '내 정보 조회 실패')
-  return json.data
+  const res = await axiosInstance.get('/api/users/me')
+  return res.data.data
 }
 
 // ── 내 정보 수정 ──
 export async function updateProfile({ name, phone }) {
-  const res = await fetch(`${BASE}/api/users/me`, {
-    method: 'PUT',
-    headers: authHeaders(),
-    body: JSON.stringify({ name, phone }),
-  })
-  const json = await res.json()
-  check401(res)
-  if (!res.ok) throw new Error(json.message || '내 정보 수정 실패')
-  return json.data
+  const res = await axiosInstance.put('/api/users/me', { name, phone })
+  return res.data.data
 }
 
 // ── 특정 회원 조회 (ADMIN) ──
 export async function getUserDetail({ userId }) {
-  const res = await fetch(`${BASE}/api/users/admin/${userId}`, {
-    method: 'GET',
-    headers: authHeaders(),
-  })
-  const json = await res.json()
-  check401(res)
-  if (res.status === 404) throw new Error('존재하지 않는 유저')
-  if (!res.ok) throw new Error(json.message || '회원 조회 실패')
-  return json.data
+  const res = await axiosInstance.get(`/api/users/admin/${userId}`)
+  return res.data.data
 }
 
 // ── 전체 회원 목록 조회 (ADMIN) ──
 export async function getUserList({ page = 0, size = 20 } = {}) {
-  const params = new URLSearchParams({ page, size })
-  const res = await fetch(`${BASE}/api/users/admin/list?${params}`, {
-    method: 'GET',
-    headers: authHeaders(),
-  })
-  const json = await res.json()
-  check401(res)
-  if (!res.ok) throw new Error(json.message || '회원 목록 조회 실패')
-  return json.data
+  const res = await axiosInstance.get('/api/users/admin/list', { params: { page, size } })
+  return res.data.data
 }

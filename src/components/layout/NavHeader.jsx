@@ -15,6 +15,14 @@ export default function NavHeader({ onNavigate, cartCount = 0, auth, onLogout, u
     if (e.key === 'Enter') handleSearch()
   }
 
+  function requireAuth(callback) {
+    if (!auth) {
+      onNavigate('login')
+      return
+    }
+    callback()
+  }
+
   return (
     <header className="nav-header">
       <div className="logo" onClick={() => onNavigate('home')}>
@@ -40,61 +48,64 @@ export default function NavHeader({ onNavigate, cartCount = 0, auth, onLogout, u
       </div>
 
       {/* 장바구니 */}
-      <div className="cart-wrap" onClick={() => onNavigate('cart')} style={{ cursor: 'pointer' }}>
+      <div className="cart-wrap" onClick={() => requireAuth(() => onNavigate('cart'))} style={{ cursor: 'pointer' }}>
         <span className="cart-label">장바구니</span>
         {cartCount > 0 && <div className="cart-badge">{cartCount}</div>}
       </div>
 
       {/* 찜 */}
       <div
-        onClick={() => onNavigate('mypage', 'wishlist')}
-        style={{
-          position: 'absolute',
-          left: 945,
-          top: 24,
-          fontSize: 12,
-          color: '#666666',
-          cursor: 'pointer',
-          whiteSpace: 'nowrap',
-        }}
+        onClick={() => requireAuth(() => onNavigate('mypage', 'wishlist'))}
+        style={{ position: 'absolute', left: 945, top: 24, fontSize: 12, color: '#666666', cursor: 'pointer', whiteSpace: 'nowrap' }}
       >
         찜
       </div>
 
       {/* 마이페이지 */}
       <div
-        onClick={() => onNavigate('mypage')}
-        style={{
-          position: 'absolute',
-          left: 1005,
-          top: 24,
-          fontSize: 12,
-          color: '#666666',
-          cursor: 'pointer',
-          whiteSpace: 'nowrap',
-        }}
+        onClick={() => requireAuth(() => onNavigate('mypage'))}
+        style={{ position: 'absolute', left: 1005, top: 24, fontSize: 12, color: '#666666', cursor: 'pointer', whiteSpace: 'nowrap' }}
       >
         마이페이지
       </div>
 
       {auth ? (
-        <>
-          {/* userId님 - 로그아웃 바로 왼쪽 */}
+        /* userId님 + 로그아웃을 flex로 묶어서 login-btn CSS 위치(left:1242)에 배치 */
+        <div style={{
+          position: 'absolute',
+          left: 1100,
+          top: 17,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+        }}>
           {userId && (
-            <div style={{
-              position: 'absolute',
-              left: 1185,
-              top: 24,
+            <span style={{
               fontSize: 12,
               color: '#333333',
               whiteSpace: 'nowrap',
               fontFamily: "'Inter', sans-serif",
+              maxWidth: 130,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
             }}>
               {userId}님
-            </div>
+            </span>
           )}
-          <div className="login-btn" onClick={onLogout} style={{ cursor: 'pointer' }}>로그아웃</div>
-        </>
+          <div
+            onClick={onLogout}
+            style={{
+              width: 68, height: 30,
+              background: 'rgba(235,235,235,0.7)',
+              borderRadius: 6,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 12, color: '#333333', cursor: 'pointer',
+              flexShrink: 0,
+            }}
+          >
+            로그아웃
+          </div>
+        </div>
       ) : (
         <>
           <div className="login-btn" onClick={() => onNavigate('login')}>로그인</div>

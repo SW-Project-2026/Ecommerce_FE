@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import "./CouponListPage.css";
 import { couponList, couponDelete } from "../api/coupons";
-import { withAutoRefresh } from "../utils/withAutoRefresh";
 
 const DISCOUNT_TYPE_DISPLAY = { FIXED: "정액할인", RATE: "정률할인" };
 
@@ -18,7 +17,7 @@ export default function CouponListPage({ onNavigate }) {
   async function fetchCoupons() {
     setLoading(true); setError(null);
     try {
-      const data = await withAutoRefresh(() => couponList());
+      const data = await couponList();
       setCoupons(Array.isArray(data) ? data : []);
     } catch (err) {
       setError(err.message);
@@ -30,7 +29,7 @@ export default function CouponListPage({ onNavigate }) {
   async function handleDelete(couponId) {
     if (!window.confirm("쿠폰을 삭제하시겠습니까?")) return;
     try {
-      await withAutoRefresh(() => couponDelete({ couponId }));
+      await couponDelete({ couponId });
       setCoupons(prev => prev.filter(c => c.couponId !== couponId));
     } catch (err) {
       alert(err.message);

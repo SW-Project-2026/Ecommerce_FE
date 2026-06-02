@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { getProduct } from '../api/products'
 import { viewProductDetail } from '../api/snippets'
+import { cartAdd } from '../api/carts'
+import { wishlistAdd, wishlistDelete, wishlistGet } from '../api/wishlists'
 import './ReviewSection.css'
 
 const RELATED_VISIBLE = 5
@@ -32,16 +34,9 @@ function StarRating({ value, onChange, size = 28 }) {
   return (
     <div className="review-stars">
       {[1, 2, 3, 4, 5].map(n => (
-        <button
-          key={n}
-          className={`review-star-btn${display >= n ? ' active' : ''}`}
-          style={{ fontSize: size }}
-          onMouseEnter={() => setHovered(n)}
-          onMouseLeave={() => setHovered(0)}
-          onClick={() => onChange(n)}
-          type="button"
-          aria-label={`${n}점`}
-        >★</button>
+        <button key={n} className={`review-star-btn${display >= n ? ' active' : ''}`} style={{ fontSize: size }}
+          onMouseEnter={() => setHovered(n)} onMouseLeave={() => setHovered(0)}
+          onClick={() => onChange(n)} type="button" aria-label={`${n}점`}>★</button>
       ))}
     </div>
   )
@@ -74,10 +69,10 @@ function Avatar({ loginId }) {
 
 function ReviewSection({ productId, userId }) {
   const [reviews, setReviews] = useState(() => getMockReviews(productId))
-  const [rating, setRating] = useState(0)
-  const [text, setText] = useState('')
+  const [rating,  setRating]  = useState(0)
+  const [text,    setText]    = useState('')
   const [submitted, setSubmitted] = useState(false)
-  const [sort, setSort] = useState('latest')
+  const [sort,    setSort]    = useState('latest')
 
   const canSubmit = rating > 0 && text.trim().length >= 5
   const avg = reviews.length
@@ -85,25 +80,17 @@ function ReviewSection({ productId, userId }) {
     : 0
 
   const sorted = [...reviews].sort((a, b) => {
-    if (sort === 'latest') return new Date(b.createdAt) - new Date(a.createdAt)
+    if (sort === 'latest')  return new Date(b.createdAt) - new Date(a.createdAt)
     if (sort === 'highest') return b.rating - a.rating
-    if (sort === 'lowest') return a.rating - b.rating
+    if (sort === 'lowest')  return a.rating - b.rating
     return 0
   })
 
   function handleSubmit() {
     if (!canSubmit) return
-    const newReview = {
-      id: Date.now(),
-      loginId: userId ?? '나',
-      rating,
-      text: text.trim(),
-      createdAt: new Date().toISOString().slice(0, 10),
-    }
+    const newReview = { id: Date.now(), loginId: userId ?? '나', rating, text: text.trim(), createdAt: new Date().toISOString().slice(0, 10) }
     setReviews(prev => [newReview, ...prev])
-    setRating(0)
-    setText('')
-    setSubmitted(true)
+    setRating(0); setText(''); setSubmitted(true)
     setTimeout(() => setSubmitted(false), 3000)
   }
 
@@ -116,36 +103,20 @@ function ReviewSection({ productId, userId }) {
           <span className="review-rating-text">{RATING_LABELS[rating]}</span>
         </div>
         <div className="review-input-col">
-          <textarea
-            className="review-textarea"
-            placeholder="상품 사용 후기를 남겨주세요. (최소 5자)"
-            value={text}
-            onChange={e => setText(e.target.value)}
-            maxLength={500}
-          />
+          <textarea className="review-textarea" placeholder="상품 사용 후기를 남겨주세요. (최소 5자)" value={text} onChange={e => setText(e.target.value)} maxLength={500} />
           <div className="review-submit-row">
             <span className="review-char-count">{text.length} / 500</span>
-            <button className="review-submit-btn" onClick={handleSubmit} disabled={!canSubmit}>
-              리뷰 등록
-            </button>
+            <button className="review-submit-btn" onClick={handleSubmit} disabled={!canSubmit}>리뷰 등록</button>
           </div>
         </div>
       </div>
-
-      {submitted && (
-        <div className="review-submitted-msg">✓ 리뷰가 등록되었습니다. 감사합니다!</div>
-      )}
-
+      {submitted && <div className="review-submitted-msg">✓ 리뷰가 등록되었습니다. 감사합니다!</div>}
       {reviews.length > 0 && (
         <div className="review-summary">
           <span className="review-avg-score">{avg.toFixed(1)}</span>
-          <div className="review-avg-right">
-            <AvgStars avg={avg} />
-            <span className="review-avg-count">총 {reviews.length}개의 리뷰</span>
-          </div>
+          <div className="review-avg-right"><AvgStars avg={avg} /><span className="review-avg-count">총 {reviews.length}개의 리뷰</span></div>
         </div>
       )}
-
       <div className="review-list-header">
         <span className="review-list-title">리뷰 {reviews.length}개</span>
         {reviews.length > 1 && (
@@ -156,12 +127,8 @@ function ReviewSection({ productId, userId }) {
           </select>
         )}
       </div>
-
       {reviews.length === 0 ? (
-        <div className="review-empty">
-          <div className="review-empty-icon">★</div>
-          <p>아직 리뷰가 없습니다. 첫 번째 리뷰를 남겨보세요!</p>
-        </div>
+        <div className="review-empty"><div className="review-empty-icon">★</div><p>아직 리뷰가 없습니다. 첫 번째 리뷰를 남겨보세요!</p></div>
       ) : (
         <div className="review-list">
           {sorted.map(r => (
@@ -187,22 +154,12 @@ function ReviewSection({ productId, userId }) {
 
 function Breadcrumb({ product, prevCategory, onNavigate }) {
   const topCategory = prevCategory ?? null
-  const topLabel = topCategory?.label ?? ''
+  const topLabel    = topCategory?.label ?? ''
   return (
     <div className="pdp-breadcrumb">
       <span onClick={() => onNavigate('home')} className="pdp-bc-link">홈</span>
-      {topCategory && (
-        <>
-          <span className="pdp-bc-sep"> &gt; </span>
-          <span onClick={() => onNavigate('list', topCategory)} className="pdp-bc-link">{topLabel}</span>
-        </>
-      )}
-      {product.mallName && (
-        <>
-          <span className="pdp-bc-sep"> &gt; </span>
-          <span className="pdp-bc-current">{product.mallName}</span>
-        </>
-      )}
+      {topCategory && (<><span className="pdp-bc-sep"> &gt; </span><span onClick={() => onNavigate('list', topCategory)} className="pdp-bc-link">{topLabel}</span></>)}
+      {product.mallName && (<><span className="pdp-bc-sep"> &gt; </span><span className="pdp-bc-current">{product.mallName}</span></>)}
       <span className="pdp-bc-sep"> &gt; </span>
       <span className="pdp-bc-current">{product.name}</span>
     </div>
@@ -223,15 +180,12 @@ function RelatedProducts() {
             </div>
           ))}
         </div>
-        <button className="pdp-related-arrow">
-          <i className="ri-arrow-right-s-line" />
-        </button>
+        <button className="pdp-related-arrow"><i className="ri-arrow-right-s-line" /></button>
       </div>
     </div>
   )
 }
 
-// ── 장바구니 추가 토스트 ──────────────────────────────────────────────────
 function CartToast({ visible, onGoCart }) {
   return (
     <div className={`pdp-cart-toast${visible ? ' pdp-cart-toast--show' : ''}`}>
@@ -241,37 +195,52 @@ function CartToast({ visible, onGoCart }) {
   )
 }
 
-export default function ProductDetailPage({ productId, onNavigate, prevCategory, onAddToCart, userId = null }) {
-  const [product, setProduct] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [qty, setQty] = useState(1)
+export default function ProductDetailPage({ productId, onNavigate, prevCategory, onAddToCart, userId = null, auth = null }) {
+  const [product,   setProduct]   = useState(null)
+  const [loading,   setLoading]   = useState(true)
+  const [error,     setError]     = useState(null)
+  const [qty,       setQty]       = useState(1)
   const [activeTab, setActiveTab] = useState('detail')
-  const [liked, setLiked] = useState(false)
+  const [liked,     setLiked]     = useState(false)
+  const [wishId,    setWishId]    = useState(null)
   const [cartToast, setCartToast] = useState(false)
-  const toastTimerRef = useRef(null)
-
+  const [cartError, setCartError] = useState(null)
+  const toastTimerRef    = useRef(null)
   const activeDwellRef   = useRef(0)
   const activeStartRef   = useRef(null)
   const inactiveTimerRef = useRef(null)
 
+  function requireAuth(callback) {
+    if (!auth) { onNavigate('login'); return }
+    callback()
+  }
+
+  // 상품 로드
   useEffect(() => {
-    setLoading(true)
-    setError(null)
-    setQty(1)
+    setLoading(true); setError(null); setQty(1); setLiked(false); setWishId(null)
     getProduct(productId)
       .then(data => setProduct(data))
       .catch(() => setError('상품을 불러오지 못했어요.'))
       .finally(() => setLoading(false))
   }, [productId])
 
+  // ── 로그인 상태일 때 찜 목록에서 현재 상품 찜 여부 확인 ──
+  useEffect(() => {
+    if (!auth || !productId) return
+    wishlistGet({ size: 100 })
+      .then(data => {
+        const found = (data.content ?? []).find(w => String(w.productId) === String(productId))
+        if (found) { setLiked(true); setWishId(found.wishId) }
+        else       { setLiked(false); setWishId(null) }
+      })
+      .catch(() => {})
+  }, [auth, productId])
+
+  // 체류 시간 측정
   useEffect(() => {
     if (!product) return
-
-    const startActive = () => {
-      if (activeStartRef.current === null) activeStartRef.current = Date.now()
-    }
-    const stopActive = () => {
+    const startActive = () => { if (activeStartRef.current === null) activeStartRef.current = Date.now() }
+    const stopActive  = () => {
       if (activeStartRef.current !== null) {
         activeDwellRef.current += Date.now() - activeStartRef.current
         activeStartRef.current = null
@@ -282,58 +251,71 @@ export default function ProductDetailPage({ productId, onNavigate, prevCategory,
       if (inactiveTimerRef.current) clearTimeout(inactiveTimerRef.current)
       inactiveTimerRef.current = setTimeout(stopActive, INACTIVE_THRESHOLD)
     }
-
     const events = ['mousemove', 'click', 'scroll', 'keydown']
     events.forEach(e => window.addEventListener(e, handleActivity))
     startActive()
-
     return () => {
       stopActive()
       if (inactiveTimerRef.current) clearTimeout(inactiveTimerRef.current)
       events.forEach(e => window.removeEventListener(e, handleActivity))
-
       const dwellTime = Math.floor(activeDwellRef.current / 1000)
       if (dwellTime > 0) {
-        viewProductDetail({
-          productName:     product.name,
-          productId:       String(productId),
-          dwellTime,
-          productCategory: product.productCategory ?? null,
-          userId,
-        })
+        viewProductDetail({ productName: product.name, productId: String(productId), dwellTime, productCategory: product.productCategory ?? null, userId })
       }
-      activeDwellRef.current = 0
-      activeStartRef.current = null
+      activeDwellRef.current = 0; activeStartRef.current = null
     }
   }, [product])
 
-  function handleBuyNow() {
-    if (!product) return
-    onAddToCart?.(product, qty)
-    onNavigate('cart')
+  async function addToCartApi() {
+    setCartError(null)
+    try {
+      await cartAdd({ productId: product.productId, quantity: qty })
+      onAddToCart?.(product, qty)
+    } catch (err) { setCartError(err.message); throw err }
   }
 
-  function handleAddToCartWithToast() {
+  async function handleBuyNow() {
     if (!product) return
-    onAddToCart?.(product, qty)
-    setCartToast(true)
-    if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
-    toastTimerRef.current = setTimeout(() => setCartToast(false), 3000)
+    requireAuth(async () => { try { await addToCartApi(); onNavigate('cart') } catch {} })
   }
 
-  const total = product ? (product.minPrice * qty).toLocaleString() : '0'
+  async function handleAddToCartWithToast() {
+    if (!product) return
+    requireAuth(async () => {
+      try {
+        await addToCartApi()
+        setCartToast(true)
+        if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
+        toastTimerRef.current = setTimeout(() => setCartToast(false), 3000)
+      } catch {}
+    })
+  }
 
-  if (loading) return <div className="sp-status">불러오는 중...</div>
-  if (error) return <div className="sp-status sp-error">{error}</div>
+  async function handleLike() {
+    requireAuth(async () => {
+      try {
+        if (liked) {
+          await wishlistDelete({ wishId })
+          setLiked(false); setWishId(null)
+        } else {
+          const data = await wishlistAdd({ productId: product.productId })
+          setLiked(true); setWishId(data.wishId)
+        }
+      } catch (err) { console.error('찜 처리 실패:', err.message) }
+    })
+  }
+
+  const total   = product ? (product.minPrice * qty).toLocaleString() : '0'
+  if (loading)  return <div className="sp-status">불러오는 중...</div>
+  if (error)    return <div className="sp-status sp-error">{error}</div>
   if (!product) return null
 
-  const image = product.imageUrl ?? null
+  const image   = product.imageUrl ?? null
   const soldOut = product.stockQuantity === 0
 
   return (
     <div className="pdp-wrap">
       <CartToast visible={cartToast} onGoCart={() => onNavigate('cart')} />
-
       <Breadcrumb product={product} prevCategory={prevCategory} onNavigate={onNavigate} />
 
       <div className="pdp-content">
@@ -346,25 +328,14 @@ export default function ProductDetailPage({ productId, onNavigate, prevCategory,
         <div className="pdp-info">
           {product.brand && <div className="pdp-brand">{product.brand}</div>}
           <h1 className="pdp-name">{product.name}</h1>
-
           <div className="pdp-price-area">
             <span className="pdp-price">{product.minPrice.toLocaleString()}원</span>
-            {product.maxPrice > product.minPrice && (
-              <span className="pdp-max-price">최고가 {product.maxPrice.toLocaleString()}원</span>
-            )}
+            {product.maxPrice > product.minPrice && <span className="pdp-max-price">최고가 {product.maxPrice.toLocaleString()}원</span>}
           </div>
-
           <div className="pdp-info-box">
-            <div className="pdp-info-row">
-              <span className="pdp-info-label">반품/교환</span>
-              <span className="pdp-info-value">무료 반품 (수령 후 30일 이내)</span>
-            </div>
-            <div className="pdp-info-row">
-              <span className="pdp-info-label">배송비</span>
-              <span className="pdp-info-value pdp-free-ship">무료배송</span>
-            </div>
+            <div className="pdp-info-row"><span className="pdp-info-label">반품/교환</span><span className="pdp-info-value">무료 반품 (수령 후 30일 이내)</span></div>
+            <div className="pdp-info-row"><span className="pdp-info-label">배송비</span><span className="pdp-info-value pdp-free-ship">무료배송</span></div>
           </div>
-
           <div className="pdp-qty-row">
             <span className="pdp-qty-label">수량</span>
             <div className="pdp-qty-ctrl">
@@ -373,24 +344,15 @@ export default function ProductDetailPage({ productId, onNavigate, prevCategory,
               <button className="pdp-qty-btn" onClick={() => setQty(q => q + 1)} disabled={soldOut || qty >= product.stockQuantity}>+</button>
             </div>
           </div>
-
           <div className="pdp-total-row">
             <span className="pdp-total-label">총 상품금액</span>
             <span className="pdp-total-price">{total}원</span>
           </div>
-
-          <button className="pdp-buy-btn" disabled={soldOut} onClick={handleBuyNow}>
-            {soldOut ? '품절' : '바로 구매하기'}
-          </button>
+          {cartError && <div style={{ fontSize: 13, color: '#EF4444', marginBottom: 8 }}>{cartError}</div>}
+          <button className="pdp-buy-btn" disabled={soldOut} onClick={handleBuyNow}>{soldOut ? '품절' : '바로 구매하기'}</button>
           <div className="pdp-sub-btns">
-            <button
-              className="pdp-cart-btn"
-              disabled={soldOut}
-              onClick={handleAddToCartWithToast}
-            >
-              장바구니 담기
-            </button>
-            <button className={`pdp-like-btn${liked ? ' active' : ''}`} onClick={() => setLiked(p => !p)}>
+            <button className="pdp-cart-btn" disabled={soldOut} onClick={handleAddToCartWithToast}>장바구니 담기</button>
+            <button className={`pdp-like-btn${liked ? ' active' : ''}`} onClick={handleLike}>
               <i className={liked ? 'ri-heart-fill' : 'ri-heart-line'} /> 찜하기
             </button>
           </div>
@@ -398,34 +360,15 @@ export default function ProductDetailPage({ productId, onNavigate, prevCategory,
       </div>
 
       <div className="pdp-tabs">
-        {[
-          { key: 'detail', label: '상품 상세' },
-          { key: 'review', label: '리뷰' },
-          { key: 'return', label: '배송/반품/교환' },
-        ].map(tab => (
-          <button
-            key={tab.key}
-            className={`pdp-tab${activeTab === tab.key ? ' active' : ''}`}
-            onClick={() => setActiveTab(tab.key)}
-          >
-            {tab.label}
-          </button>
+        {[{ key: 'detail', label: '상품 상세' }, { key: 'review', label: '리뷰' }, { key: 'return', label: '배송/반품/교환' }].map(tab => (
+          <button key={tab.key} className={`pdp-tab${activeTab === tab.key ? ' active' : ''}`} onClick={() => setActiveTab(tab.key)}>{tab.label}</button>
         ))}
       </div>
 
       <div className="pdp-tab-content">
-        {activeTab === 'detail' && (
-          <p className="pdp-desc">{product.description || '상품 상세 정보가 없습니다.'}</p>
-        )}
-        {activeTab === 'review' && (
-          <ReviewSection productId={productId} userId={userId} />
-        )}
-        {activeTab === 'return' && (
-          <div className="pdp-desc">
-            <p>· 반품/교환: 수령 후 30일 이내 무료</p>
-            <p>· 배송비: 무료배송</p>
-          </div>
-        )}
+        {activeTab === 'detail' && <p className="pdp-desc">{product.description || '상품 상세 정보가 없습니다.'}</p>}
+        {activeTab === 'review' && <ReviewSection productId={productId} userId={userId} />}
+        {activeTab === 'return' && <div className="pdp-desc"><p>· 반품/교환: 수령 후 30일 이내 무료</p><p>· 배송비: 무료배송</p></div>}
       </div>
 
       <RelatedProducts />

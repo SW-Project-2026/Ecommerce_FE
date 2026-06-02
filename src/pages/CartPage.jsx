@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { usePageView } from '../hooks/usePageView'
+import { cartGet, cartDelete, cartUpdateQuantity } from '../api/carts'
 
 const MOCK_COUPONS = [
   { id: 'c1', name: '신규가입 5,000원 할인', discountAmount: 5000 },
@@ -34,45 +35,82 @@ function ProgressBar({ step }) {
 export default function CartPage({ cart, onNavigate, onCartChange, onGoCheckout, auth }) {
   usePageView('장바구니', auth?.userId ?? null)
 
-  const [selected, setSelected] = useState(() => new Set(cart.map(i => i.product.productId)))
-  const [qtys, setQtys] = useState(() =>
-    Object.fromEntries(cart.map(i => [i.product.productId, i.qty]))
-  )
-  const [couponId, setCouponId] = useState('')
+  const [cartItems,  setCartItems]  = useState([])
+  const [loading,    setLoading]    = useState(false)
+  const [error,      setError]      = useState(null)
+  const [selected,   setSelected]   = useState(new Set())
+  const [couponId,   setCouponId]   = useState('')
+  const [updatingId, setUpdatingId] = useState(null)
 
-  const allSelected = cart.length > 0 && cart.every(i => selected.has(i.product.productId))
+  useEffect(() => { fetchCart() }, [])
+
+  async function fetchCart() {
+    setLoading(true)
+    setError(null)
+    try {
+      const data = await cartGet()
+      const list = Array.isArray(data) ? data : []
+      setCartItems(list)
+      setSelected(new Set(list.map(i => i.cartId)))
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const allSelected = cartItems.length > 0 && cartItems.every(i => selected.has(i.cartId))
   const selectedCount = selected.size
 
   function toggleAll() {
     if (allSelected) setSelected(new Set())
-    else setSelected(new Set(cart.map(i => i.product.productId)))
+    else setSelected(new Set(cartItems.map(i => i.cartId)))
   }
 
-  function toggleItem(id) {
+  function toggleItem(cartId) {
     setSelected(prev => {
       const next = new Set(prev)
-      next.has(id) ? next.delete(id) : next.add(id)
+      next.has(cartId) ? next.delete(cartId) : next.add(cartId)
       return next
     })
   }
 
-  function setQty(id, val) {
-    setQtys(prev => ({ ...prev, [id]: Math.max(1, val) }))
+  async function handleQtyChange(cartId, newQty) {
+    if (newQty < 1) return
+    setUpdatingId(cartId)
+    try {
+      const updated = await cartUpdateQuantity({ cartId, quantity: newQty })
+      setCartItems(prev => prev.map(i => i.cartId === cartId ? { ...i, quantity: updated.quantity, subtotal: updated.subtotal } : i))
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setUpdatingId(null)
+    }
   }
 
-  function removeItem(id) {
-    onCartChange(cart.filter(i => i.product.productId !== id))
-    setSelected(prev => { const next = new Set(prev); next.delete(id); return next })
+  async function handleRemoveItem(cartId) {
+    try {
+      await cartDelete({ cartId })
+      setCartItems(prev => prev.filter(i => i.cartId !== cartId))
+      setSelected(prev => { const next = new Set(prev); next.delete(cartId); return next })
+    } catch (err) {
+      setError(err.message)
+    }
   }
 
-  function removeSelected() {
-    onCartChange(cart.filter(i => !selected.has(i.product.productId)))
-    setSelected(new Set())
+  async function handleRemoveSelected() {
+    const targets = [...selected]
+    try {
+      await Promise.all(targets.map(cartId => cartDelete({ cartId })))
+      setCartItems(prev => prev.filter(i => !selected.has(i.cartId)))
+      setSelected(new Set())
+    } catch (err) {
+      setError(err.message)
+    }
   }
 
-  const selectedItems = cart.filter(i => selected.has(i.product.productId))
-  const subtotal = selectedItems.reduce((s, i) => s + i.product.minPrice * qtys[i.product.productId], 0)
-
+  const selectedItems = cartItems.filter(i => selected.has(i.cartId))
+  const subtotal = selectedItems.reduce((s, i) => s + i.unitPrice * i.quantity, 0)
   const appliedCoupon = MOCK_COUPONS.find(c => c.id === couponId) ?? null
   const couponDiscount = appliedCoupon?.discountAmount ?? 0
   const total = Math.max(0, subtotal - couponDiscount)
@@ -80,10 +118,16 @@ export default function CartPage({ cart, onNavigate, onCartChange, onGoCheckout,
   function handleOrder() {
     if (selectedItems.length === 0) return
     const items = selectedItems.map(i => ({
-      product: i.product,
-      qty: qtys[i.product.productId],
+      cartId: i.cartId,  // ── 결제 후 장바구니 삭제를 위해 cartId 포함 ──
+      product: {
+        productId:       i.productId,
+        name:            i.productName,
+        imageUrl:        i.imageUrl,
+        minPrice:        i.unitPrice,
+        productCategory: null,
+      },
+      qty: i.quantity,
     }))
-    // clickPurchaseButton 스니펫은 CheckoutPage 결제하기 버튼으로 이동됨
     onGoCheckout({ items, coupon: appliedCoupon })
   }
 
@@ -97,48 +141,42 @@ export default function CartPage({ cart, onNavigate, onCartChange, onGoCheckout,
             <div className="cart-header">
               <label className="cart-check-all">
                 <input type="checkbox" checked={allSelected} onChange={toggleAll} />
-                전체선택 ({selectedCount}/{cart.length})
+                전체선택 ({selectedCount}/{cartItems.length})
               </label>
-              <button className="cart-del-sel" onClick={removeSelected}>선택삭제</button>
+              <button className="cart-del-sel" onClick={handleRemoveSelected}>선택삭제</button>
             </div>
 
-            {cart.length === 0 && (
+            {loading && <div className="cart-empty">불러오는 중...</div>}
+            {error   && <div className="cart-empty" style={{ color: '#EF4444' }}>{error}</div>}
+            {!loading && !error && cartItems.length === 0 && (
               <div className="cart-empty">장바구니가 비어있어요.</div>
             )}
 
-            {cart.map(item => {
-              const p = item.product
-              const qty = qtys[p.productId]
-              return (
-                <div key={p.productId} className="cart-item">
-                  <input
-                    type="checkbox"
-                    className="cart-item-check"
-                    checked={selected.has(p.productId)}
-                    onChange={() => toggleItem(p.productId)}
-                  />
-                  <div className="cart-item-img">
-                    {p.imageUrl
-                      ? <img src={p.imageUrl} alt={p.name} />
-                      : <div className="pdp-no-image" />}
+            {cartItems.map(item => (
+              <div key={item.cartId} className="cart-item">
+                <input type="checkbox" className="cart-item-check"
+                  checked={selected.has(item.cartId)} onChange={() => toggleItem(item.cartId)} />
+                <div className="cart-item-img">
+                  {item.imageUrl
+                    ? <img src={item.imageUrl} alt={item.productName} />
+                    : <div className="pdp-no-image" />}
+                </div>
+                <div className="cart-item-body">
+                  <div className="cart-item-top">
+                    <span className="cart-item-name">{item.productName}</span>
+                    <button className="cart-item-del" onClick={() => handleRemoveItem(item.cartId)}>삭제</button>
                   </div>
-                  <div className="cart-item-body">
-                    <div className="cart-item-top">
-                      <span className="cart-item-name">{p.name}</span>
-                      <button className="cart-item-del" onClick={() => removeItem(p.productId)}>삭제</button>
+                  <div className="cart-item-bottom">
+                    <div className="cart-qty-ctrl">
+                      <button onClick={() => handleQtyChange(item.cartId, item.quantity - 1)} disabled={item.quantity <= 1 || updatingId === item.cartId}>−</button>
+                      <span>{item.quantity}</span>
+                      <button onClick={() => handleQtyChange(item.cartId, item.quantity + 1)} disabled={updatingId === item.cartId}>+</button>
                     </div>
-                    <div className="cart-item-bottom">
-                      <div className="cart-qty-ctrl">
-                        <button onClick={() => setQty(p.productId, qty - 1)} disabled={qty <= 1}>−</button>
-                        <span>{qty}</span>
-                        <button onClick={() => setQty(p.productId, qty + 1)}>+</button>
-                      </div>
-                      <span className="cart-item-price">{(p.minPrice * qty).toLocaleString()}원</span>
-                    </div>
+                    <span className="cart-item-price">{(item.unitPrice * item.quantity).toLocaleString()}원</span>
                   </div>
                 </div>
-              )
-            })}
+              </div>
+            ))}
           </div>
 
           <div className="cart-related">
@@ -153,9 +191,7 @@ export default function CartPage({ cart, onNavigate, onCartChange, onGoCheckout,
                   </div>
                 ))}
               </div>
-              <button className="pdp-related-arrow">
-                <i className="ri-arrow-right-s-line" />
-              </button>
+              <button className="pdp-related-arrow"><i className="ri-arrow-right-s-line" /></button>
             </div>
           </div>
         </div>
@@ -164,18 +200,11 @@ export default function CartPage({ cart, onNavigate, onCartChange, onGoCheckout,
           <div className="cart-summary">
             <h3 className="cart-summary-title">주문 요약</h3>
             <div className="cart-summary-rows">
-              <div className="cart-summary-row">
-                <span>총 상품 금액</span>
-                <span>{subtotal.toLocaleString()}원</span>
-              </div>
-              <div className="cart-summary-row">
-                <span>배송비</span>
-                <span>+ 0원</span>
-              </div>
+              <div className="cart-summary-row"><span>총 상품 금액</span><span>{subtotal.toLocaleString()}원</span></div>
+              <div className="cart-summary-row"><span>배송비</span><span>+ 0원</span></div>
               {couponDiscount > 0 && (
                 <div className="cart-summary-row" style={{ color: '#FF6B6B' }}>
-                  <span>쿠폰 할인</span>
-                  <span>-{couponDiscount.toLocaleString()}원</span>
+                  <span>쿠폰 할인</span><span>-{couponDiscount.toLocaleString()}원</span>
                 </div>
               )}
             </div>
@@ -183,30 +212,16 @@ export default function CartPage({ cart, onNavigate, onCartChange, onGoCheckout,
               <span>최종 결제 금액</span>
               <span className="cart-total-price">{total.toLocaleString()}원</span>
             </div>
-
             <div className="cart-coupon-box">
-              <select
-                className="cart-coupon-select"
-                value={couponId}
-                onChange={e => setCouponId(e.target.value)}
-              >
+              <select className="cart-coupon-select" value={couponId} onChange={e => setCouponId(e.target.value)}>
                 <option value="">쿠폰 선택</option>
-                {MOCK_COUPONS.map(c => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
+                {MOCK_COUPONS.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
-
-            <button
-              className="cart-order-btn"
-              onClick={handleOrder}
-              disabled={selectedCount === 0}
-            >
+            <button className="cart-order-btn" onClick={handleOrder} disabled={selectedCount === 0}>
               구매하기 ({selectedCount}개)
             </button>
-            <button className="cart-continue-btn" onClick={() => onNavigate('home')}>
-              계속 쇼핑하기
-            </button>
+            <button className="cart-continue-btn" onClick={() => onNavigate('home')}>계속 쇼핑하기</button>
           </div>
         </div>
       </div>

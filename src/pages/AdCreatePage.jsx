@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import "./AdCreatePage.css";
 import { getProduct, getProducts, searchProducts } from "../api/products";
 import { adCreate, adUpdate } from "../api/ads";
-import { withAutoRefresh } from "../utils/withAutoRefresh";
 
 const AD_TARGET_TYPES = ["상품", "카테고리", "키워드"];
 
@@ -132,9 +131,9 @@ export default function AdCreatePage({ onNavigate, ad }) {
       };
 
       if (isEdit) {
-        await withAutoRefresh(() => adUpdate({ adId: ad.adId, ...payload }));
+        await adUpdate({ adId: ad.adId, ...payload });
       } else {
-        await withAutoRefresh(() => adCreate(payload));
+        await adCreate(payload);
       }
       onNavigate("list");
     } catch (err) {

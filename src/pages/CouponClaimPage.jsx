@@ -1,7 +1,33 @@
 import { useState } from "react";
+import { couponClaim } from "../api/coupons";
 
 export default function CouponClaimPage() {
   const [claimed, setClaimed] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [couponData, setCouponData] = useState(null);
+
+  const handleClaim = async () => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
+
+    if (!token) {
+      setError("유효하지 않은 링크입니다.");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await couponClaim({ token });
+      setCouponData(data);
+      setClaimed(true);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (claimed) {
     return (
@@ -87,7 +113,9 @@ export default function CouponClaimPage() {
               marginBottom: 28,
               textAlign: "center",
             }}>
-              3,000원 쿠폰이 내 쿠폰함에 추가되었습니다
+              {couponData?.couponName
+                ? `${couponData.couponName}이 내 쿠폰함에 추가되었습니다`
+                : "쿠폰이 내 쿠폰함에 추가되었습니다"}
             </div>
             <div style={{ width: "100%", height: 1, background: "#F0F1F5", marginBottom: 24 }} />
             <div style={{
@@ -97,7 +125,9 @@ export default function CouponClaimPage() {
               color: "#AAADB9",
               textAlign: "center",
             }}>
-              유효기간 2025.12.31까지 · 1회 사용 가능 · 5만원 이상 주문 시
+              {couponData?.expiredAt
+                ? `유효기간 ${couponData.expiredAt}까지 · 5만원 이상 주문 시`
+                : "유효기간 내 사용 가능 · 5만원 이상 주문 시"}
             </div>
           </div>
         </div>
@@ -234,25 +264,30 @@ export default function CouponClaimPage() {
               borderRadius: "50%",
               background: "#F6F7FA",
             }} />
+            {/* 다운로드 버튼 - API 연동 */}
             <div
-              onClick={() => setClaimed(true)}
+              onClick={handleClaim}
               style={{
                 width: 54,
                 height: 54,
                 borderRadius: "50%",
-                background: "#395DBA",
+                background: loading ? "#7a9bd4" : "#395DBA",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                cursor: "pointer",
+                cursor: loading ? "not-allowed" : "pointer",
                 transition: "background 0.2s",
               }}
-              onMouseEnter={e => e.currentTarget.style.background = "#2d4ea0"}
-              onMouseLeave={e => e.currentTarget.style.background = "#395DBA"}
+              onMouseEnter={e => { if (!loading) e.currentTarget.style.background = "#2d4ea0" }}
+              onMouseLeave={e => { if (!loading) e.currentTarget.style.background = "#395DBA" }}
             >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                <path d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+              {loading ? (
+                <span style={{ color: "#fff", fontSize: 12 }}>...</span>
+              ) : (
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              )}
             </div>
           </div>
 
@@ -302,6 +337,27 @@ export default function CouponClaimPage() {
           </div>
         </div>
       </div>
+
+      {/* 에러 메시지 */}
+      {error && (
+        <div style={{
+          maxWidth: 640,
+          margin: "0 auto 16px",
+          padding: "0 20px",
+        }}>
+          <div style={{
+            background: "#FFF0F0",
+            border: "1px solid #F5B8B8",
+            borderRadius: 12,
+            padding: "12px 16px",
+            fontFamily: "'Inter', sans-serif",
+            fontSize: 13,
+            color: "#B82B2B",
+          }}>
+            {error}
+          </div>
+        </div>
+      )}
 
       {/* 안내 박스 */}
       <div style={{

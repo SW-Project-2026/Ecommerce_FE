@@ -12,9 +12,9 @@ const ITEMS = [
   { name: '호카 클리프턴 9', price: '179,000원' },
 ]
 
-const CARD_STEP = 332 // 292 + 40
+const CARD_STEP = 332
 
-export default function RecommendSection() {
+export default function RecommendSection({ onNavigate, auth }) {
   const [offset, setOffset] = useState(0)
   const maxOffset = (ITEMS.length - 4) * CARD_STEP
 
@@ -35,7 +35,7 @@ export default function RecommendSection() {
       <div className="carousel-clip">
         <div className="products-row" style={{ transform: `translateX(-${offset}px)` }}>
           {ITEMS.map((item, i) => (
-            <ProductCard key={i} thumbHeight={257} name={item.name} price={item.price} />
+            <ProductCard key={i} thumbHeight={257} name={item.name} price={item.price} onNavigate={onNavigate} auth={auth} />
           ))}
         </div>
       </div>

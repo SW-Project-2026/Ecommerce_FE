@@ -12,7 +12,6 @@ import DashboardPage from "./DashboardPage";
 import CustomerDashboardPage from "./CustomerDashboardPage";
 import { campaignList, campaignDetail } from "../api/campaigns";
 import { getMyProfile } from "../api/users";
-import { withAutoRefresh } from "../utils/withAutoRefresh";
 
 const PAGE_SIZE = 10;
 
@@ -45,6 +44,32 @@ const NAV_ITEMS = [
   { label: "이벤트 필드 설정",   key: "이벤트 필드 설정",   depth: 0 },
   { label: "데이터 관리",        key: "데이터 관리",        depth: 0 },
 ];
+
+// ── 날짜 포맷 함수 ──
+function formatDateTime(raw) {
+  if (!raw) return '–'
+  try {
+    const d = new Date(raw)
+    if (isNaN(d.getTime())) return raw
+    const pad = n => String(n).padStart(2, '0')
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
+  } catch {
+    return raw
+  }
+}
+
+// 날짜만 (시작일/종료일)
+function formatDate(raw) {
+  if (!raw) return '–'
+  try {
+    const d = new Date(raw)
+    if (isNaN(d.getTime())) return raw
+    const pad = n => String(n).padStart(2, '0')
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`
+  } catch {
+    return raw
+  }
+}
 
 export default function CampaignListPage() {
   const [activePage,       setActivePage]       = useState(() => sessionStorage.getItem('adminPage') || "캠페인 목록");
@@ -111,14 +136,11 @@ export default function CampaignListPage() {
     setError(null);
     const apiStatus = STATUS_TAB_TO_API[activeTab] ?? undefined;
 
-    withAutoRefresh(
-      () => campaignList({ status: apiStatus }),
-      fetchAdminId
-    )
+    campaignList({ status: apiStatus })
       .then(data => { setCampaignData(Array.isArray(data) ? data : []); setCurrentPage(1); })
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
-  }, [activePage, activeTab, fetchAdminId]);
+  }, [activePage, activeTab]);
 
   useEffect(() => { fetchCampaigns(); }, [activePage, activeTab]);
 
@@ -127,10 +149,7 @@ export default function CampaignListPage() {
     setDetailLoading(true);
     setDetailError(null);
     try {
-      const detail = await withAutoRefresh(
-        () => campaignDetail({ campaignId }),
-        fetchAdminId
-      );
+      const detail = await campaignDetail({ campaignId });
       setSelectedCampaign(detail);
       navigateTo("캠페인 상세", campaignId);
     } catch (err) {
@@ -414,19 +433,27 @@ export default function CampaignListPage() {
             <table className="cl-table">
               <thead>
                 <tr>
-                  <th>No</th><th>선택</th><th>캠페인 ID</th><th>분류1</th><th>분류2</th>
-                  <th>캠페인 명</th><th>상태</th><th>시작일자</th><th>종료일자</th><th>기안자</th><th>기안일자</th>
+                  <th>No</th>
+                  <th>선택</th>
+                  <th>캠페인 명</th>
+                  <th>분류1</th>
+                  <th>분류2</th>
+                  <th>상태</th>
+                  <th>시작일자</th>
+                  <th>종료일자</th>
+                  <th>기안자</th>
+                  <th>기안일자</th>
                 </tr>
               </thead>
               <tbody>
                 {loading && (
-                  <tr><td colSpan={11} className="cl-table-state">불러오는 중...</td></tr>
+                  <tr><td colSpan={10} className="cl-table-state">불러오는 중...</td></tr>
                 )}
                 {!loading && error && (
-                  <tr><td colSpan={11} className="cl-table-state cl-table-error">{error}</td></tr>
+                  <tr><td colSpan={10} className="cl-table-state cl-table-error">{error}</td></tr>
                 )}
                 {!loading && !error && pagedData.length === 0 && (
-                  <tr><td colSpan={11} className="cl-table-state">데이터가 없습니다</td></tr>
+                  <tr><td colSpan={10} className="cl-table-state">데이터가 없습니다</td></tr>
                 )}
                 {!loading && !error && pagedData.map((row, i) => {
                   const globalNo = (currentPage - 1) * PAGE_SIZE + i + 1;
@@ -451,21 +478,18 @@ export default function CampaignListPage() {
                           className="cl-radio"
                         />
                       </td>
-                      <td style={{ color: "#3F76E4", fontFamily: "'Inter', sans-serif", fontWeight: 600 }}>
-                        {row.campaignId}
-                      </td>
+                      <td className="cl-campaign-name">{row.campaignName}</td>
                       <td>{row.campaignGoalType}</td>
                       <td>{row.customerSegment}</td>
-                      <td className="cl-campaign-name">{row.campaignName}</td>
                       <td>
                         <span className={`cl-badge ${badge?.className ?? ""}`}>
                           {badge?.label ?? row.status}
                         </span>
                       </td>
-                      <td>{row.startedAt}</td>
-                      <td>{row.endedAt}</td>
+                      <td>{formatDate(row.startedAt)}</td>
+                      <td>{formatDate(row.endedAt)}</td>
                       <td>{row.createdBy}</td>
-                      <td>{row.createdAt}</td>
+                      <td>{formatDateTime(row.createdAt)}</td>
                     </tr>
                   );
                 })}

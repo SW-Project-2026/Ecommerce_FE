@@ -1,76 +1,61 @@
-import { UnauthorizedError } from '../utils/withAutoRefresh'
+import axios from 'axios'
+import axiosInstance from './axiosInstance'
 
 const BASE = import.meta.env.VITE_API_URL || 'http://localhost:8080'
 
-function authHeaders() {
-  const token = localStorage.getItem('accessToken')
-  return {
-    'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+// ── 로그인 (401 시 로그아웃 방지를 위해 일반 axios 직접 호출) ──
+export async function login({ loginId, password }) {
+  try {
+    const res = await axios.post(
+      `${BASE}/api/users/login`,
+      { loginId, password },
+      { headers: { 'Content-Type': 'application/json' }, withCredentials: true }
+    )
+    return res.data.data
+  } catch (err) {
+    const beMessage = err.response?.data?.message
+    throw new Error(beMessage || err.message)
   }
 }
 
-function check401(res) {
-  if (res.status === 401) throw new UnauthorizedError()
-}
-
-export async function login({ loginId, password }) {
-  const res = await fetch(`${BASE}/api/users/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
-    body: JSON.stringify({ loginId, password }),
-  })
-  const json = await res.json()
-  if (!res.ok) throw new Error(json.message || '로그인에 실패했어요.')
-  return json.data
-}
-
+// ── 회원가입 ──
 export async function signup({ name, loginId, password, passwordConfirm, email, phone, marketingAgreed }) {
-  const res = await fetch(`${BASE}/api/users/signup`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
-    body: JSON.stringify({ name, loginId, password, passwordConfirm, email, phone, marketingAgreed }),
+  const res = await axiosInstance.post('/api/users/signup', {
+    name, loginId, password, passwordConfirm, email, phone, marketingAgreed,
   })
-  const json = await res.json()
-  if (!res.ok) throw new Error(json.message || '회원가입에 실패했어요.')
-  return json.data
+  return res.data.data
 }
 
 // ── 액세스 토큰 재발급 ──
 export async function refreshToken() {
-  const res = await fetch(`${BASE}/api/users/refresh`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
-  })
-  const json = await res.json()
-  if (!res.ok) throw new Error(json.message || '토큰 재발급 실패')
-  return json.data
+  const res = await axiosInstance.post('/api/users/refresh')
+  return res.data.data
 }
 
-// ── 비밀번호 변경 ──
+// ── 비밀번호 변경 (401 시 로그아웃 방지를 위해 일반 axios 직접 호출) ──
 export async function updatePassword({ currentPassword, newPassword, newPasswordConfirm }) {
-  const res = await fetch(`${BASE}/api/users/me/password`, {
-    method: 'PATCH',
-    headers: authHeaders(),
-    body: JSON.stringify({ currentPassword, newPassword, newPasswordConfirm }),
-  })
-  const json = await res.json()
-  check401(res)
-  if (!res.ok) throw new Error(json.message || '비밀번호 변경 실패')
-  return json.data
+  const token = localStorage.getItem('accessToken')
+  try {
+    const res = await axios.patch(
+      `${BASE}/api/users/me/password`,
+      { currentPassword, newPassword, newPasswordConfirm },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        withCredentials: true,
+      }
+    )
+    return res.data.data
+  } catch (err) {
+    const beMessage = err.response?.data?.message
+    throw new Error(beMessage || err.message)
+  }
 }
 
 // ── 회원 탈퇴 ──
 export async function withdraw() {
-  const res = await fetch(`${BASE}/api/users/me`, {
-    method: 'DELETE',
-    headers: authHeaders(),
-  })
-  const json = await res.json()
-  check401(res)
-  if (!res.ok) throw new Error(json.message || '회원 탈퇴 실패')
-  return json.data
+  const res = await axiosInstance.delete('/api/users/me')
+  return res.data.data
 }

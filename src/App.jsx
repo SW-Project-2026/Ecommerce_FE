@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import NavHeader from './components/layout/NavHeader'
 import CategoryBar from './components/layout/CategoryBar'
 import Footer from './components/layout/Footer'
@@ -18,37 +18,23 @@ import OrderCompletePage from './pages/OrderCompletePage'
 import MyPage from './pages/MyPage'
 import { usePageView } from './hooks/usePageView'
 import { getMyProfile } from './api/users'
+import { refreshToken } from './api/auth'
 import './App.css'
 
-// ── JWT payload 디코딩 (만료 체크용) ──
 function isTokenExpired(token) {
   try {
     const payload = JSON.parse(atob(token.split('.')[1]))
-    // exp는 초 단위, Date.now()는 밀리초
     return payload.exp * 1000 < Date.now()
   } catch {
-    return true // 디코딩 실패 시 만료된 것으로 간주
+    return true
   }
 }
 
-// ── 초기 auth 상태: 토큰 만료 여부까지 체크 ──
-function getInitialAuth() {
-  const token = localStorage.getItem('accessToken')
-  const role = localStorage.getItem('role')
-  const userId = localStorage.getItem('userId')
-
-  if (!token) return null
-
-  // 토큰이 만료됐으면 localStorage 비우고 비로그인 상태로
-  if (isTokenExpired(token)) {
-    localStorage.removeItem('accessToken')
-    localStorage.removeItem('role')
-    localStorage.removeItem('userId')
-    sessionStorage.clear()
-    return null
-  }
-
-  return { token, role, userId: userId ?? null }
+function clearAuth() {
+  localStorage.removeItem('accessToken')
+  localStorage.removeItem('role')
+  localStorage.removeItem('userId')
+  sessionStorage.clear()
 }
 
 export default function App() {
@@ -66,8 +52,43 @@ export default function App() {
   const [selectedCoupon, setSelectedCoupon] = useState(null)
   const [mypageTab, setMypageTab] = useState(() => sessionStorage.getItem('mypageTab') || 'home')
 
-  // ── 만료 체크 포함한 초기 auth 상태 ──
-  const [auth, setAuth] = useState(getInitialAuth)
+  const [auth, setAuth] = useState(null)
+  const [authLoading, setAuthLoading] = useState(true)
+
+  useEffect(() => {
+    async function initAuth() {
+      const token = localStorage.getItem('accessToken')
+      const role = localStorage.getItem('role')
+      const userId = localStorage.getItem('userId')
+
+      if (!token) {
+        setAuthLoading(false)
+        return
+      }
+
+      if (!isTokenExpired(token)) {
+        setAuth({ token, role, userId: userId ?? null })
+        setAuthLoading(false)
+        return
+      }
+
+      try {
+        const data = await refreshToken()
+        if (data?.accessToken) {
+          localStorage.setItem('accessToken', data.accessToken)
+          if (data.role) localStorage.setItem('role', data.role)
+          setAuth({ token: data.accessToken, role: data.role ?? role, userId: userId ?? null })
+        }
+      } catch {
+        clearAuth()
+        setAuth(null)
+      } finally {
+        setAuthLoading(false)
+      }
+    }
+
+    initAuth()
+  }, [])
 
   usePageView(page === 'home' ? '홈' : null)
 
@@ -92,10 +113,7 @@ export default function App() {
   }
 
   function handleLogout() {
-    localStorage.removeItem('accessToken')
-    localStorage.removeItem('role')
-    localStorage.removeItem('userId')
-    sessionStorage.clear()
+    clearAuth()
     setAuth(null)
     setPage('home')
   }
@@ -155,6 +173,8 @@ export default function App() {
   const cartCount = cart.reduce((s, i) => s + i.qty, 0)
   const userId = auth?.userId ?? null
 
+  if (authLoading) return null
+
   if (page === 'cart') return (
     <div className="page page-list">
       <NavHeader onNavigate={handleNavigate} cartCount={cartCount} auth={auth} onLogout={handleLogout} userId={userId} />
@@ -209,6 +229,7 @@ export default function App() {
         prevCategory={prevCategory}
         onAddToCart={handleAddToCart}
         userId={userId}
+        auth={auth}
       />
       <Footer />
     </div>
@@ -226,6 +247,7 @@ export default function App() {
         category={category}
         onNavigate={handleNavigate}
         userId={userId}
+        auth={auth}
       />
       <Footer />
     </div>
@@ -236,11 +258,11 @@ export default function App() {
       <NavHeader onNavigate={handleNavigate} cartCount={cartCount} auth={auth} onLogout={handleLogout} userId={userId} />
       <CategoryBar onNavigate={handleNavigate} activeCategory="home" />
       <HeroBanner />
-      <RecommendSection />
+      <RecommendSection onNavigate={handleNavigate} auth={auth} />
       <AdBanner />
-      <RepurchaseSection />
-      <TimeBasedSection />
-      <BestSection />
+      <RepurchaseSection onNavigate={handleNavigate} auth={auth} />
+      <TimeBasedSection onNavigate={handleNavigate} auth={auth} />
+      <BestSection onNavigate={handleNavigate} auth={auth} />
       <Footer />
     </div>
   )

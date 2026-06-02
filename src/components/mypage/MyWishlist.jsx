@@ -1,24 +1,41 @@
-import { useState } from 'react'
-
-const INITIAL_ITEMS = [
-  { emoji: '💻', name: '삼성 갤럭시북4 Pro 360 16인치', price: '1,290,000원' },
-  { emoji: '👟', name: '나이키 에어맥스 270 리액트', price: '149,000원' },
-  { emoji: '🎧', name: '소니 WH-1000XM5 무선 헤드폰', price: '389,000원' },
-  { emoji: '💄', name: '헤라 블랙쿠션 23호 SPF34', price: '59,000원' },
-  { emoji: '☕', name: '네스프레소 버츄오 플러스 커피머신', price: '189,000원' },
-  { emoji: '🏋️', name: '나이키 테크 플리스 집업 후디', price: '129,000원' },
-  { emoji: '📱', name: '삼성 갤럭시 S25 울트라 256GB', price: '1,499,000원' },
-  { emoji: '🎮', name: '소니 플레이스테이션 5 슬림', price: '598,000원' },
-]
+import { useState, useEffect } from 'react'
+import { wishlistGet, wishlistDelete } from '../../api/wishlists'
 
 export default function MyWishlist({ onNavigate }) {
-  const [items, setItems] = useState(INITIAL_ITEMS)
+  const [items,   setItems]   = useState([])
+  const [loading, setLoading] = useState(false)
+  const [error,   setError]   = useState(null)
+  const [cursor,  setCursor]  = useState(null)
+  const [hasNext, setHasNext] = useState(false)
 
-  function handleRemove(idx) {
-    setItems(prev => prev.filter((_, i) => i !== idx))
+  useEffect(() => { fetchWishlist() }, [])
+
+  async function fetchWishlist(nextCursor = null) {
+    setLoading(true)
+    setError(null)
+    try {
+      const data = await wishlistGet({ cursor: nextCursor, size: 20 })
+      const content = data.content ?? []
+      setItems(prev => nextCursor ? [...prev, ...content] : content)
+      setCursor(data.nextCursor ?? null)
+      setHasNext(data.hasNext ?? false)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  if (items.length === 0) return (
+  async function handleRemove(wishId) {
+    try {
+      await wishlistDelete({ wishId })
+      setItems(prev => prev.filter(i => i.wishId !== wishId))
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
+  if (!loading && items.length === 0 && !error) return (
     <div className="myp-section">
       <div className="myp-section-title"><i className="ri-heart-line" />찜한 상품</div>
       <div className="myp-empty">
@@ -38,24 +55,40 @@ export default function MyWishlist({ onNavigate }) {
         </span>
       </div>
 
+      {loading && items.length === 0 && <div style={{ fontSize: 13, color: '#9EA6B4', padding: '16px 0' }}>불러오는 중...</div>}
+      {error && <div style={{ fontSize: 13, color: '#EF4444', padding: '8px 0' }}>{error}</div>}
+
       <div className="myp-wishlist-grid">
-        {items.map((item, i) => (
-          <div className="myp-wishlist-card" key={i} onClick={() => onNavigate('home')}>
+        {items.map(item => (
+          <div className="myp-wishlist-card" key={item.wishId} onClick={() => onNavigate('product', item.productId)}>
             <div className="myp-wishlist-thumb">
-              {item.emoji}
+              {item.imageUrl
+                ? <img src={item.imageUrl} alt={item.productName} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 8 }} />
+                : <div style={{ width: '100%', height: '100%', background: '#F0F0F0', borderRadius: 8 }} />
+              }
               <button
                 className="myp-wishlist-del"
-                onClick={e => { e.stopPropagation(); handleRemove(i) }}
+                onClick={e => { e.stopPropagation(); handleRemove(item.wishId) }}
                 aria-label="찜 해제"
               >
                 <i className="ri-close-line" />
               </button>
             </div>
-            <div className="myp-wishlist-name">{item.name}</div>
-            <div className="myp-wishlist-price">{item.price}</div>
+            <div className="myp-wishlist-name">{item.productName}</div>
+            <div className="myp-wishlist-price">{item.minPrice?.toLocaleString()}원</div>
           </div>
         ))}
       </div>
+
+      {hasNext && (
+        <button
+          onClick={() => fetchWishlist(cursor)}
+          disabled={loading}
+          style={{ marginTop: 16, width: '100%', height: 40, border: '1px solid #E5E7EB', borderRadius: 8, fontSize: 13, color: '#374151', cursor: 'pointer', background: '#fff' }}
+        >
+          {loading ? '불러오는 중...' : '더보기'}
+        </button>
+      )}
     </div>
   )
 }

@@ -1,7 +1,6 @@
 import { useState } from "react";
 import "./CouponCreatePage.css";
 import { couponCreate, couponUpdate } from "../api/coupons";
-import { withAutoRefresh } from "../utils/withAutoRefresh";
 
 const DISCOUNT_TYPE_OPTIONS = [
   { label: "정률 할인 (%)", value: "RATE" },
@@ -57,9 +56,9 @@ export default function CouponCreatePage({ onNavigate, coupon }) {
       };
 
       if (isEdit) {
-        await withAutoRefresh(() => couponUpdate({ couponId: coupon.couponId, ...payload }));
+        await couponUpdate({ couponId: coupon.couponId, ...payload });
       } else {
-        await withAutoRefresh(() => couponCreate(payload));
+        await couponCreate(payload);
       }
       onNavigate("list");
     } catch (err) {
@@ -86,7 +85,6 @@ export default function CouponCreatePage({ onNavigate, coupon }) {
 
       <div className="cc2-content">
         <div className="cc2-left">
-
           <div className="cc2-section">
             <h2 className="cc2-section-title">쿠폰 기본 정보</h2>
             <div className="cc2-divider" />
@@ -154,15 +152,11 @@ export default function CouponCreatePage({ onNavigate, coupon }) {
           {saveError && <div style={{ color: "red", fontSize: 13, marginTop: 8 }}>{saveError}</div>}
         </div>
 
-        {/* 오른쪽: 미리보기 */}
         <div className="cc2-right">
           <div className="cc2-section">
             <h2 className="cc2-section-title">쿠폰 미리보기</h2>
             <div className="cc2-divider" />
-
-            {/* 쿠폰 카드: 좌측 그라디언트 + 우측 흰색 */}
             <div className="cc2-coupon-card">
-              {/* 좌측: 그라디언트 영역 */}
               <div className="cc2-coupon-gradient">
                 <div className="cc2-coupon-body">
                   <p className="cc2-coupon-value">{previewDiscount}</p>
@@ -173,8 +167,6 @@ export default function CouponCreatePage({ onNavigate, coupon }) {
                   <p className="cc2-coupon-validity">{previewDays}</p>
                 </div>
               </div>
-
-              {/* 우측: 흰색 다운로드 영역 */}
               <div className="cc2-coupon-white">
                 <div className="cc2-notch cc2-notch-top" />
                 <div className="cc2-download-circle">
