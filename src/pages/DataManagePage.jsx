@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import "./DataManagePage.css";
-import { getProducts, syncProducts, getSchedule, setSchedule as setScheduleApi, cancelSchedule } from "../api/products";
+import { getProducts, syncProducts, getSchedule, setSchedule as setScheduleApi, cancelSchedule, getSyncStatus } from "../api/products";
 
 const CYCLE_OPTIONS    = ["매일", "매주", "매달"];
 const HOUR_OPTIONS     = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"));
@@ -20,8 +20,8 @@ function formatDate(isoString) {
 }
 
 export default function DataManagePage() {
-  const [collectMode,     setCollectMode]     = useState("manual");
-  const [schedule,        setSchedule_]       = useState({
+  const [collectMode,      setCollectMode]     = useState("manual");
+  const [schedule,         setSchedule_]       = useState({
     cycle:      "매일",
     hour:       "03",
     minute:     "00",
@@ -29,15 +29,15 @@ export default function DataManagePage() {
     dayOfMonth: "1",
   });
 
-  const [totalCount,      setTotalCount]      = useState("로딩 중...");
-  const [lastSynced,      setLastSynced]      = useState("–");
-  const [syncStatus,      setSyncStatus]      = useState("–");
-  const [currentSchedule, setCurrentSchedule] = useState(null);
+  const [totalCount,       setTotalCount]      = useState("로딩 중...");
+  const [lastSynced,       setLastSynced]       = useState("–");
+  const [syncStatus,       setSyncStatus]       = useState("–");
+  const [currentSchedule,  setCurrentSchedule]  = useState(null);
 
-  const [collecting, setCollecting] = useState(false);
-  const [scheduling, setScheduling] = useState(false);
-  const [cancelling, setCancelling] = useState(false);
-  const [notice,     setNotice]     = useState(null);
+  const [collecting,  setCollecting]  = useState(false);
+  const [scheduling,  setScheduling]  = useState(false);
+  const [cancelling,  setCancelling]  = useState(false);
+  const [notice,      setNotice]      = useState(null);
 
   const updateSchedule = (key, val) => setSchedule_(prev => ({ ...prev, [key]: val }));
 
@@ -47,9 +47,24 @@ export default function DataManagePage() {
   }, []);
 
   async function fetchStats() {
+    // 총 상품 수 + 수동 수집 현황 동시 조회
     try {
-      const data = await getProducts({ page: 0, size: 1 });
-      setTotalCount(data.totalElements?.toLocaleString() ?? "0");
+      const [productsData, syncData] = await Promise.allSettled([
+        getProducts({ page: 0, size: 1 }),
+        getSyncStatus(),
+      ]);
+
+      if (productsData.status === 'fulfilled') {
+        setTotalCount(productsData.value.totalElements?.toLocaleString() ?? "0");
+      } else {
+        setTotalCount("조회 실패");
+      }
+
+      if (syncData.status === 'fulfilled' && syncData.value) {
+        const s = syncData.value;
+        setLastSynced(formatDate(s.lastSyncedAt));
+        setSyncStatus(s.syncStatus ?? "–");
+      }
     } catch {
       setTotalCount("조회 실패");
     }
@@ -63,8 +78,6 @@ export default function DataManagePage() {
         return;
       }
       setCurrentSchedule(data);
-      setLastSynced(formatDate(data.lastSyncedAt));
-      setSyncStatus(data.syncStatus === "IDLE" ? "정상" : data.syncStatus ?? "–");
     } catch {
       setCurrentSchedule(null);
     }
@@ -77,10 +90,6 @@ export default function DataManagePage() {
       try {
         const data = await syncProducts();
         setNotice({ type: "success", text: `수집 완료 — ${data.savedCount?.toLocaleString()}개 저장됨` });
-        if (data.lastSyncedAt) {
-          setLastSynced(formatDate(data.lastSyncedAt));
-          setSyncStatus(data.syncStatus ?? "정상");
-        }
         fetchStats();
         fetchSchedule();
       } catch (err) {
