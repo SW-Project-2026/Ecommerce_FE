@@ -18,6 +18,14 @@ export async function adList({ page = 0, size = 100 } = {}) {
   return res.data.data.content
 }
 
+// ── 광고 선택 목록 조회 (캠페인 생성용, cursor 기반) ──
+export async function adSelectList({ cursor, size = 3 } = {}) {
+  const params = { size }
+  if (cursor) params.cursor = cursor
+  const res = await axiosInstance.get('/api/ads/select', { params })
+  return res.data.data  // { content, nextCursor, hasNext }
+}
+
 // ── 광고 단건 조회 ──
 export async function adDetail({ adId }) {
   const res = await axiosInstance.get(`/api/ads/${adId}`)

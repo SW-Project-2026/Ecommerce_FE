@@ -22,6 +22,46 @@ export async function getProduct(productId) {
   return res.data.data
 }
 
+// ── 상품 등록 ──
+export async function createProduct({ name, description, minPrice, maxPrice, stockQuantity, productCategory, imageUrl }) {
+  const res = await axiosInstance.post('/api/products', {
+    name,
+    description,
+    minPrice,
+    maxPrice,
+    stockQuantity,
+    productCategory,
+    imageUrl,
+  })
+  return res.data.data
+}
+
+// ── 상품 수정 ──
+export async function updateProduct({ productId, name, description, minPrice, maxPrice, stockQuantity, productCategory, isActive, imageUrl }) {
+  const res = await axiosInstance.put(`/api/products/${productId}`, {
+    name,
+    description,
+    minPrice,
+    maxPrice,
+    stockQuantity,
+    productCategory,
+    isActive,
+    imageUrl,
+  })
+  return res.data.data
+}
+
+// ── 상품 삭제 ──
+export async function deleteProduct({ productId }) {
+  await axiosInstance.delete(`/api/products/${productId}`)
+}
+
+// ── 수동 수집 현황 조회 ──
+export async function getSyncStatus() {
+  const res = await axiosInstance.get('/api/products/sync/status')
+  return res.data.data  // { savedCount, lastSyncedAt, syncStatus }
+}
+
 // ── 상품 수동 수집 ──
 export async function syncProducts() {
   const res = await axiosInstance.post('/api/products/sync')

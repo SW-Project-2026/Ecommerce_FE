@@ -39,20 +39,23 @@ axiosInstance.interceptors.response.use(
   async error => {
     const originalRequest = error.config
 
+    // BE 응답 메시지 추출
+    const beMessage = error.response?.data?.message
+
     // 403: 권한 없음 → refresh 시도 없이 바로 에러
     if (error.response?.status === 403) {
-      return Promise.reject(new Error('접근 권한이 없습니다.'))
+      return Promise.reject(new Error(beMessage || '접근 권한이 없습니다.'))
     }
 
     // 401이 아니거나 이미 retry한 요청이면 그냥 에러
     if (error.response?.status !== 401 || originalRequest._retry) {
-      return Promise.reject(error)
+      return Promise.reject(new Error(beMessage || error.message))
     }
 
     // refresh API 자체가 401이면 바로 로그아웃
     if (originalRequest.url === '/api/users/refresh') {
       clearAuthAndRedirect()
-      return Promise.reject(error)
+      return Promise.reject(new Error(beMessage || error.message))
     }
 
     // 이미 refresh 중이면 queue에 추가해서 대기
