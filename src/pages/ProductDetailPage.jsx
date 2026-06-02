@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { getProduct } from '../api/products'
-import { viewProductDetail } from '../api/snippets'
+import { viewProductDetail, clickCart, clickWishlist } from '../api/snippets'
 import { cartAdd } from '../api/carts'
 import { wishlistAdd, wishlistDelete, wishlistGet } from '../api/wishlists'
 import './ReviewSection.css'
@@ -224,7 +224,7 @@ export default function ProductDetailPage({ productId, onNavigate, prevCategory,
       .finally(() => setLoading(false))
   }, [productId])
 
-  // ── 로그인 상태일 때 찜 목록에서 현재 상품 찜 여부 확인 ──
+  // 찜 초기 상태 확인
   useEffect(() => {
     if (!auth || !productId) return
     wishlistGet({ size: 100 })
@@ -271,6 +271,14 @@ export default function ProductDetailPage({ productId, onNavigate, prevCategory,
     try {
       await cartAdd({ productId: product.productId, quantity: qty })
       onAddToCart?.(product, qty)
+      // ── 장바구니 담기 스니펫 (로그인 유저만 호출됨) ──
+      clickCart({
+        productName:     product.name,
+        productId:       product.productId,
+        productCategory: product.productCategory ?? null,
+        actionType:      'add',
+        userId:          auth.userId,
+      })
     } catch (err) { setCartError(err.message); throw err }
   }
 
@@ -297,9 +305,25 @@ export default function ProductDetailPage({ productId, onNavigate, prevCategory,
         if (liked) {
           await wishlistDelete({ wishId })
           setLiked(false); setWishId(null)
+          // ── 찜 제거 스니펫 (로그인 유저만 호출됨) ──
+          clickWishlist({
+            productName:     product.name,
+            productId:       product.productId,
+            productCategory: product.productCategory ?? null,
+            actionType:      'remove',
+            userId:          auth.userId,
+          })
         } else {
           const data = await wishlistAdd({ productId: product.productId })
           setLiked(true); setWishId(data.wishId)
+          // ── 찜 추가 스니펫 (로그인 유저만 호출됨) ──
+          clickWishlist({
+            productName:     product.name,
+            productId:       product.productId,
+            productCategory: product.productCategory ?? null,
+            actionType:      'add',
+            userId:          auth.userId,
+          })
         }
       } catch (err) { console.error('찜 처리 실패:', err.message) }
     })

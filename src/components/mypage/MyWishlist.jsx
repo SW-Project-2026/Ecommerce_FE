@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { wishlistGet, wishlistDelete } from '../../api/wishlists'
+import { clickWishlist } from '../../api/snippets'
 
-export default function MyWishlist({ onNavigate }) {
+export default function MyWishlist({ onNavigate, auth }) {
   const [items,   setItems]   = useState([])
   const [loading, setLoading] = useState(false)
   const [error,   setError]   = useState(null)
@@ -26,10 +27,18 @@ export default function MyWishlist({ onNavigate }) {
     }
   }
 
-  async function handleRemove(wishId) {
+  async function handleRemove(item) {
     try {
-      await wishlistDelete({ wishId })
-      setItems(prev => prev.filter(i => i.wishId !== wishId))
+      await wishlistDelete({ wishId: item.wishId })
+      setItems(prev => prev.filter(i => i.wishId !== item.wishId))
+      // ── 찜 해제 스니펫 (마이페이지는 로그인 유저만 접근 가능) ──
+      clickWishlist({
+        productName:     item.productName,
+        productId:       item.productId,
+        productCategory: item.productCategory ?? null,
+        actionType:      'remove',
+        userId:          auth.userId,
+      })
     } catch (err) {
       setError(err.message)
     }
@@ -68,7 +77,7 @@ export default function MyWishlist({ onNavigate }) {
               }
               <button
                 className="myp-wishlist-del"
-                onClick={e => { e.stopPropagation(); handleRemove(item.wishId) }}
+                onClick={e => { e.stopPropagation(); handleRemove(item) }}
                 aria-label="찜 해제"
               >
                 <i className="ri-close-line" />

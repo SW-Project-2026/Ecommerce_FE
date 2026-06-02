@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { searchProducts, getProducts } from '../api/products'
 import { usePageView } from '../hooks/usePageView'
 import { wishlistAdd, wishlistDelete, wishlistGet } from '../api/wishlists'
+import { clickWishlist } from '../api/snippets'
 
 const DISPLAY = 20
 const NAVER_SORT_OPTIONS = [
@@ -11,7 +12,6 @@ const NAVER_SORT_OPTIONS = [
   { value: 'dsc',  label: '가격 높은순' },
 ]
 
-// productId → wishId 맵
 function DbCard({ product, onNavigate, auth, wishMap, setWishMap }) {
   const wishId = wishMap[product.productId] ?? null
   const liked  = wishId !== null
@@ -25,9 +25,23 @@ function DbCard({ product, onNavigate, auth, wishMap, setWishMap }) {
       if (liked) {
         await wishlistDelete({ wishId })
         setWishMap(prev => { const next = { ...prev }; delete next[product.productId]; return next })
+        clickWishlist({
+          productName:     product.name ?? product.title,
+          productId:       product.productId,
+          productCategory: product.productCategory ?? null,
+          actionType:      'remove',
+          userId:          auth.userId,
+        })
       } else {
         const data = await wishlistAdd({ productId: product.productId })
         setWishMap(prev => ({ ...prev, [product.productId]: data.wishId }))
+        clickWishlist({
+          productName:     product.name ?? product.title,
+          productId:       product.productId,
+          productCategory: product.productCategory ?? null,
+          actionType:      'add',
+          userId:          auth.userId,
+        })
       }
     } catch (err) {
       console.error('찜 처리 실패:', err.message)
@@ -85,13 +99,11 @@ export default function SearchPage({ query, category, onNavigate, userId = null,
   const [dbSort,     setDbSort]     = useState('createdAt,desc')
   const [loading,    setLoading]    = useState(false)
   const [error,      setError]      = useState(null)
-  // productId → wishId 맵 (찜 상태 관리)
   const [wishMap,    setWishMap]    = useState({})
 
   const isSearch = !!query
   const isList   = !query && category?.id && category.id !== 'home'
 
-  // 로그인 시 찜 목록 로드 → wishMap 초기화
   useEffect(() => {
     if (!auth) { setWishMap({}); return }
     wishlistGet({ size: 100 })

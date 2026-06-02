@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { usePageView } from '../hooks/usePageView'
 import { cartGet, cartDelete, cartUpdateQuantity } from '../api/carts'
+import { clickCart } from '../api/snippets'
 
 const MOCK_COUPONS = [
   { id: 'c1', name: '신규가입 5,000원 할인', discountAmount: 5000 },
@@ -89,10 +90,19 @@ export default function CartPage({ cart, onNavigate, onCartChange, onGoCheckout,
   }
 
   async function handleRemoveItem(cartId) {
+    const item = cartItems.find(i => i.cartId === cartId)
     try {
       await cartDelete({ cartId })
       setCartItems(prev => prev.filter(i => i.cartId !== cartId))
       setSelected(prev => { const next = new Set(prev); next.delete(cartId); return next })
+      // ── 장바구니 제거 스니펫 ──
+      clickCart({
+        productName:     item?.productName,
+        productId:       item?.productId,
+        productCategory: item?.productCategory ?? null,
+        actionType:      'remove',
+        userId:          auth.userId,
+      })
     } catch (err) {
       setError(err.message)
     }
@@ -100,10 +110,21 @@ export default function CartPage({ cart, onNavigate, onCartChange, onGoCheckout,
 
   async function handleRemoveSelected() {
     const targets = [...selected]
+    const targetItems = cartItems.filter(i => selected.has(i.cartId))
     try {
       await Promise.all(targets.map(cartId => cartDelete({ cartId })))
       setCartItems(prev => prev.filter(i => !selected.has(i.cartId)))
       setSelected(new Set())
+      // ── 선택 삭제 스니펫 (각 항목 별도 전송) ──
+      targetItems.forEach(item => {
+        clickCart({
+          productName:     item.productName,
+          productId:       item.productId,
+          productCategory: item.productCategory ?? null,
+          actionType:      'remove',
+          userId:          auth.userId,
+        })
+      })
     } catch (err) {
       setError(err.message)
     }
@@ -118,7 +139,7 @@ export default function CartPage({ cart, onNavigate, onCartChange, onGoCheckout,
   function handleOrder() {
     if (selectedItems.length === 0) return
     const items = selectedItems.map(i => ({
-      cartId: i.cartId,  // ── 결제 후 장바구니 삭제를 위해 cartId 포함 ──
+      cartId: i.cartId,
       product: {
         productId:       i.productId,
         name:            i.productName,

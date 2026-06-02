@@ -74,4 +74,40 @@ export const pageView = async ({ pageName, dwellTime, userId = null }) => {
   })
 }
 
+// ── 찜 추가/제거 ──
+// actionType: 'add' | 'remove'
+export const clickWishlist = async ({ productName, productId, productCategory = null, actionType, userId = null }) => {
+  await fetch(`${FLUENTD_URL}/kafka.logs`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      event_name:      'wishlist_click',
+      productName:     productName,
+      productId:       productId,
+      productCategory: productCategory,
+      actionType:      actionType,
+      event_timestamp: getKSTTimestamp(),
+      user_id:         userId,
+    })
+  })
+}
+
+// ── 장바구니 추가/제거 ──
+// actionType: 'add' | 'remove'
+export const clickCart = async ({ productName, productId, productCategory = null, actionType, userId = null }) => {
+  await fetch(`${FLUENTD_URL}/kafka.logs`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      event_name:      'cart_click',
+      productName:     productName,
+      productId:       productId,
+      productCategory: productCategory,
+      actionType:      actionType,
+      event_timestamp: getKSTTimestamp(),
+      user_id:         userId,
+    })
+  })
+}
+
 export { INACTIVE_THRESHOLD }

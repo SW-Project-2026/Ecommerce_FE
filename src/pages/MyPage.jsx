@@ -18,7 +18,7 @@ const MENU = [
 
 const USER = { name: '김다온', grade: 'GOLD', coupons: 3 }
 
-export default function MyPage({ onNavigate, userId = null, initialTab = 'home' }) {
+export default function MyPage({ onNavigate, userId = null, initialTab = 'home', auth = null }) {
   usePageView('마이페이지', userId)
 
   const [tab,     setTab]     = useState(() => sessionStorage.getItem('mypageTab') || initialTab)
@@ -77,7 +77,7 @@ export default function MyPage({ onNavigate, userId = null, initialTab = 'home' 
         {tab === 'home'         && <MyHome        onNavigate={handleTabNavigate} />}
         {tab === 'orders'       && <MyOrderList    onNavigate={handleTabNavigate} />}
         {tab === 'order-detail' && <MyOrderDetail  orderId={orderId} onBack={() => handleSetTab('orders')} />}
-        {tab === 'wishlist'     && <MyWishlist      onNavigate={handleTabNavigate} />}
+        {tab === 'wishlist'     && <MyWishlist      onNavigate={handleTabNavigate} auth={auth} />}
         {tab === 'coupons'      && <MyCoupons />}
         {tab === 'profile'      && <MyProfileEdit />}
       </main>
