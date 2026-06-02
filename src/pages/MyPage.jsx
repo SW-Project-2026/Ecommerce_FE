@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import MyHome from '../components/mypage/MyHome'
 import MyOrderList from '../components/mypage/MyOrderList'
 import MyOrderDetail from '../components/mypage/MyOrderDetail'
@@ -6,6 +6,8 @@ import MyWishlist from '../components/mypage/MyWishlist'
 import MyCoupons from '../components/mypage/MyCoupons'
 import MyProfileEdit from '../components/mypage/MyProfileEdit'
 import { usePageView } from '../hooks/usePageView'
+import { getMyProfile } from '../api/users'
+import { userCouponList } from '../api/coupons'
 import './mypage.css'
 
 const MENU = [
@@ -16,13 +18,36 @@ const MENU = [
   { key: 'profile',  label: '내 정보',   icon: 'ri-user-settings-line' },
 ]
 
-const USER = { name: '김다온', grade: 'GOLD', coupons: 3 }
+const GRADE_DISPLAY = {
+  NEW:     '신규',
+  GENERAL: '일반',
+  VIP:     'VIP',
+  DORMANT: '휴면',
+}
 
 export default function MyPage({ onNavigate, userId = null, initialTab = 'home', auth = null }) {
   usePageView('마이페이지', userId)
 
-  const [tab,     setTab]     = useState(() => sessionStorage.getItem('mypageTab') || initialTab)
-  const [orderId, setOrderId] = useState(null)
+  const [tab,        setTab]        = useState(() => sessionStorage.getItem('mypageTab') || initialTab)
+  const [orderId,    setOrderId]    = useState(null)
+  const [userName,   setUserName]   = useState('–')
+  const [userGrade,  setUserGrade]  = useState('–')
+  const [couponCount, setCouponCount] = useState('–')
+
+  useEffect(() => {
+    // 이름, 등급 조회 → getMyProfile
+    getMyProfile()
+      .then(data => {
+        setUserName(data.name ?? '–')
+        setUserGrade(GRADE_DISPLAY[data.grade] ?? data.grade ?? '–')
+      })
+      .catch(() => {})
+
+    // 사용 가능 쿠폰 개수 조회 → userCouponList
+    userCouponList({ status: 'AVAILABLE', size: 100 })
+      .then(data => setCouponCount(data.content?.length ?? 0))
+      .catch(() => {})
+  }, [])
 
   function handleSetTab(key) {
     sessionStorage.setItem('mypageTab', key)
@@ -44,12 +69,12 @@ export default function MyPage({ onNavigate, userId = null, initialTab = 'home',
     <div className="myp-outer">
       <aside className="myp-sidebar">
         <div className="myp-sb-profile">
-          <div className="myp-sb-avatar">{USER.name[0]}</div>
-          <div className="myp-sb-name">{USER.name}님</div>
-          <span className="myp-sb-grade">⭐ {USER.grade}</span>
+          <div className="myp-sb-avatar">{userName[0] ?? '–'}</div>
+          <div className="myp-sb-name">{userName}님</div>
+          <span className="myp-sb-grade">⭐ {userGrade}</span>
           <div className="myp-sb-stats">
             <div>
-              <div className="myp-sb-stat-val">{USER.coupons}장</div>
+              <div className="myp-sb-stat-val">{couponCount}장</div>
               <div className="myp-sb-stat-label">쿠폰</div>
             </div>
           </div>

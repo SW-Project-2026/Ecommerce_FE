@@ -1,24 +1,71 @@
-import { useState } from 'react'
-
-const STAT_CARDS = [
-  { icon: 'ri-coupon-3-line',     color: 'red',    label: '사용 가능 쿠폰', value: '3장',  sub: '곧 만료 1장' },
-  { icon: 'ri-heart-line',        color: 'green',  label: '찜한 상품',      value: '8개',  sub: null },
-  { icon: 'ri-shopping-bag-line', color: 'yellow', label: '이번 달 주문',   value: '2건',  sub: null },
-]
-
-const ORDER_FLOW = [
-  { label: '결제완료',  count: 1 },
-  { label: '배송중',    count: 2 },
-  { label: '배송완료',  count: 5 },
-  { label: '취소·반품', count: 0 },
-]
+import { useState, useEffect } from 'react'
+import { orderList } from '../../api/orders'
+import { wishlistGet } from '../../api/wishlists'
+import { userCouponList } from '../../api/coupons'
 
 export default function MyHome({ onNavigate }) {
+  const [couponCount,  setCouponCount]  = useState('–')
+  const [wishCount,    setWishCount]    = useState('–')
+  const [orderCounts,  setOrderCounts]  = useState({ PENDING: 0, SHIPPING: 0, DELIVERED: 0, CANCELLED: 0 })
+  const [expiringSoon, setExpiringSoon] = useState(0)
+
+  useEffect(() => {
+    // 사용 가능 쿠폰 수 + 곧 만료 쿠폰 수
+    userCouponList({ status: 'AVAILABLE', size: 100 })
+      .then(data => {
+        const list = data.content ?? []
+        setCouponCount(list.length)
+        const soon = list.filter(c => {
+          if (!c.expiredAt) return false
+          const diff = new Date(c.expiredAt) - new Date()
+          return diff > 0 && diff < 1000 * 60 * 60 * 24 * 3
+        }).length
+        setExpiringSoon(soon)
+      })
+      .catch(() => {})
+
+    // 찜한 상품 수
+    wishlistGet({ size: 100 })
+      .then(data => setWishCount(data.content?.length ?? 0))
+      .catch(() => {})
+
+    // 주문 현황 (전체 조회 후 상태별 카운트)
+    orderList({ period: 'all', size: 100 })
+      .then(data => {
+        const list = data.content ?? []
+        const counts = { PENDING: 0, CONFIRMED: 0, SHIPPING: 0, DELIVERED: 0, CANCELLED: 0 }
+        list.forEach(o => { if (counts[o.status] !== undefined) counts[o.status]++ })
+        setOrderCounts({
+          PENDING:   (counts.PENDING ?? 0) + (counts.CONFIRMED ?? 0),
+          SHIPPING:  counts.SHIPPING  ?? 0,
+          DELIVERED: counts.DELIVERED ?? 0,
+          CANCELLED: counts.CANCELLED ?? 0,
+        })
+      })
+      .catch(() => {})
+  }, [])
+
+  const statCards = [
+    {
+      icon: 'ri-coupon-3-line', color: 'red', label: '사용 가능 쿠폰',
+      value: `${couponCount}장`,
+      sub: expiringSoon > 0 ? `곧 만료 ${expiringSoon}장` : null,
+    },
+    { icon: 'ri-heart-line',        color: 'green',  label: '찜한 상품',    value: `${wishCount}개`, sub: null },
+    { icon: 'ri-shopping-bag-line', color: 'yellow', label: '이번 달 주문', value: `${(orderCounts.PENDING + orderCounts.SHIPPING + orderCounts.DELIVERED + orderCounts.CANCELLED)}건`, sub: null },
+  ]
+
+  const orderFlow = [
+    { label: '결제완료',  count: orderCounts.PENDING   },
+    { label: '배송중',    count: orderCounts.SHIPPING  },
+    { label: '배송완료',  count: orderCounts.DELIVERED },
+    { label: '취소·반품', count: orderCounts.CANCELLED },
+  ]
+
   return (
     <>
-      {/* 상단 통계 카드 — 높이(padding) 및 폰트 크기 확대 */}
       <div className="myp-stats-row" style={{ gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
-        {STAT_CARDS.map((s, i) => (
+        {statCards.map((s, i) => (
           <div className="myp-stat-card" key={i} style={{ padding: '32px 24px', minHeight: '140px', boxSizing: 'border-box' }}>
             <div className={`myp-stat-icon myp-stat-icon--${s.color}`} style={{ width: '56px', height: '56px', fontSize: '26px' }}>
               <i className={s.icon} />
@@ -32,10 +79,9 @@ export default function MyHome({ onNavigate }) {
         ))}
       </div>
 
-      {/* 주문 현황 — 위아래 여백(padding)을 대폭 키워 시원하게 배치 */}
       <div className="myp-section" style={{ padding: 0 }}>
         <div className="myp-order-flow">
-          {ORDER_FLOW.map((f, i) => (
+          {orderFlow.map((f, i) => (
             <div className="myp-flow-item" key={i} onClick={() => onNavigate('orders')} style={{ padding: '48px 12px' }}>
               <div className="myp-flow-count" style={{ fontSize: '32px', marginBottom: '6px' }}>{f.count}</div>
               <div className="myp-flow-label" style={{ fontSize: '13px' }}>{f.label}</div>

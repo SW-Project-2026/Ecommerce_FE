@@ -19,6 +19,7 @@ import MyPage from './pages/MyPage'
 import { usePageView } from './hooks/usePageView'
 import { getMyProfile } from './api/users'
 import { refreshToken } from './api/auth'
+import { cartGet } from './api/carts'
 import './App.css'
 
 function isTokenExpired(token) {
@@ -47,6 +48,7 @@ export default function App() {
   const [productId, setProductId] = useState(() => sessionStorage.getItem('productId') || null)
   const [prevCategory, setPrevCategory] = useState(null)
   const [cart, setCart] = useState([])
+  const [cartCount, setCartCount] = useState(0)
   const [orderInfo, setOrderInfo] = useState(null)
   const [checkoutItems, setCheckoutItems] = useState([])
   const [selectedCoupon, setSelectedCoupon] = useState(null)
@@ -90,6 +92,22 @@ export default function App() {
     initAuth()
   }, [])
 
+  // ── 로그인 상태일 때 실제 장바구니 개수 조회 ──
+  useEffect(() => {
+    if (!auth) { setCartCount(0); return }
+    fetchCartCount()
+  }, [auth])
+
+  async function fetchCartCount() {
+    try {
+      const data = await cartGet()
+      const list = Array.isArray(data) ? data : []
+      setCartCount(list.reduce((s, i) => s + (i.quantity ?? 1), 0))
+    } catch {
+      setCartCount(0)
+    }
+  }
+
   usePageView(page === 'home' ? '홈' : null)
 
   async function handleLogin(data) {
@@ -115,6 +133,7 @@ export default function App() {
   function handleLogout() {
     clearAuth()
     setAuth(null)
+    setCartCount(0)
     setPage('home')
   }
 
@@ -130,6 +149,8 @@ export default function App() {
       }
       return [...prev, { product, qty }]
     })
+    // API 장바구니 개수 갱신
+    fetchCartCount()
   }
 
   function handleGoCheckout({ items, coupon }) {
@@ -166,11 +187,14 @@ export default function App() {
       setMypageTab(payload ?? 'home')
       sessionStorage.setItem('mypageTab', payload ?? 'home')
     }
+    // 장바구니 페이지로 돌아올 때 개수 갱신
+    if (target === 'cart' || target === 'home') {
+      fetchCartCount()
+    }
     sessionStorage.setItem('page', target)
     setPage(target)
   }
 
-  const cartCount = cart.reduce((s, i) => s + i.qty, 0)
   const userId = auth?.userId ?? null
 
   if (authLoading) return null
@@ -184,6 +208,7 @@ export default function App() {
         onCartChange={setCart}
         onGoCheckout={handleGoCheckout}
         auth={auth}
+        onCartCountChange={fetchCartCount}
       />
       <Footer />
     </div>
@@ -196,7 +221,7 @@ export default function App() {
         checkoutItems={checkoutItems}
         selectedCoupon={selectedCoupon}
         onNavigate={handleNavigate}
-        onOrderComplete={info => setOrderInfo(info)}
+        onOrderComplete={info => { setOrderInfo(info); fetchCartCount() }}
         auth={auth}
       />
       <Footer />

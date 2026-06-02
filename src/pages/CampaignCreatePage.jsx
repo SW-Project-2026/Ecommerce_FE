@@ -45,7 +45,7 @@ const TARGET_TYPE_DISPLAY   = { PRODUCT: "상품", CATEGORY: "카테고리", KEY
 const ISSUANCE_METHOD_OPTIONS = [
   { label: "자동 지급", value: "AUTO" },
   { label: "다운로드",  value: "DOWNLOAD" },
-  { label: "SMS",       value: "MESSAGING" },
+  { label: "SMS",       value: "SMS" },
   { label: "LMS",       value: "LMS" },
 ];
 
@@ -151,7 +151,7 @@ export default function CampaignCreatePage({ onNavigate }) {
   const [msgContent,     setMsgContent]     = useState("");
   const [msgTitle,       setMsgTitle]       = useState("");
 
-  const isMessaging = issuanceMethod === "MESSAGING";
+  const isMessaging = issuanceMethod === "SMS";
   const isLms       = issuanceMethod === "LMS";
 
   const selectedCouponName = coupons.find(c => c.couponId === selectedCoupon)?.name ?? "쿠폰명";
@@ -227,11 +227,12 @@ export default function CampaignCreatePage({ onNavigate }) {
         filterLogicalOperator: filterLogic,
         couponId:              selectedCoupon ?? null,
         adId:                  selectedAd     ?? null,
-        deduplicationType:     dedupeType,
-        deduplicationDays:     dedupeType === "period" ? parseInt(dedupeDays, 10) : null,
-        issuanceMethod,
-        messagingContent:      (isMessaging || isLms) ? msgContent : null,
-        messagingTitle:        isLms ? msgTitle : null,
+        duplicatePolicy:       dedupeType === "period" ? "CHECK" : null,
+        couponRestrictionDays: dedupeType === "period" ? parseInt(dedupeDays, 10) : null,
+        issueType:             (isMessaging || isLms) ? "MESSAGE" : issuanceMethod,
+        messageType:           isMessaging ? "SMS" : isLms ? "LMS" : null,
+        messageSubject:        isLms ? msgTitle : null,
+        messageContent:        (isMessaging || isLms) ? msgContent : null,
         filters:               apiFilters,
       });
 
