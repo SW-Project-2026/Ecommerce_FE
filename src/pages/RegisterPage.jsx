@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { signup } from '../api/auth'
 import { usePageView } from '../hooks/usePageView'
+import { userLogin } from '../api/snippets'
 import './auth.css'
 
 export default function RegisterPage({ onNavigate, onLogin }) {
@@ -49,6 +50,7 @@ export default function RegisterPage({ onNavigate, onLogin }) {
       const phone = form.phone.replace(/-/g, '')
       const data = await signup({ ...form, phone, marketingAgreed: agreements.marketing })
       onLogin(data)
+      userLogin({ userId: form.loginId })
       onNavigate('home')
     } catch (err) {
       setError(err.message)

@@ -71,6 +71,10 @@ function formatDate(raw) {
   }
 }
 
+function removeCookie(name) {
+  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/`
+}
+
 export default function CampaignListPage() {
   const [activePage,       setActivePage]       = useState(() => sessionStorage.getItem('adminPage') || "캠페인 목록");
   const [selectedCampaign, setSelectedCampaign] = useState(null);
@@ -109,7 +113,7 @@ export default function CampaignListPage() {
   useEffect(() => { fetchAdminId(); }, [])
 
   const handleLogout = () => {
-    localStorage.removeItem('accessToken')
+    removeCookie('accessToken')
     localStorage.removeItem('role')
     localStorage.removeItem('userId')
     sessionStorage.removeItem('adminPage')

@@ -111,7 +111,7 @@ export default function CheckoutPage({ checkoutItems, selectedCoupon, onNavigate
       }
 
       // 2. 주문 생성 → POST /api/orders
-      await orderCreate({
+      const orderResult = await orderCreate({
         addressId:    selectedAddrId,
         userCouponId: selectedCoupon?.userCouponId ?? null,
         items:        checkoutItems.map(i => ({
@@ -127,6 +127,7 @@ export default function CheckoutPage({ checkoutItems, selectedCoupon, onNavigate
       }
 
       onOrderComplete({
+        orderId:   orderResult?.orderId ?? null,
         items:     checkoutItems,
         qtys:      Object.fromEntries(checkoutItems.map(i => [i.product.productId, i.qty])),
         total,
@@ -255,7 +256,7 @@ export default function CheckoutPage({ checkoutItems, selectedCoupon, onNavigate
                 <span>적용 쿠폰</span>
                 {selectedCoupon ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <span className="co-coupon-applied">🎫 {selectedCoupon.name}</span>
+                    <span className="co-coupon-applied">🎫 {selectedCoupon.couponName}</span>
                     <span className="co-coupon-discount">-{couponDiscount.toLocaleString()}원</span>
                   </div>
                 ) : (

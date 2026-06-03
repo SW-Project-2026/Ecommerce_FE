@@ -32,8 +32,9 @@ export default function OrderCompletePage({ orderInfo, onNavigate, userId = null
     year: 'numeric', month: 'long', day: 'numeric', weekday: 'short'
   })
   const timeStr = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
-  const orderNo = `DA-${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}${String(Math.floor(Math.random()*9999)).padStart(4,'0')}`
-  const total = orderInfo?.total ?? 0
+  const total    = orderInfo?.total    ?? 0
+  const orderId  = orderInfo?.orderId  ?? null
+  const payMethod = orderInfo?.payMethod ?? '카카오페이'
 
   return (
     <div className="checkout-page">
@@ -51,7 +52,7 @@ export default function OrderCompletePage({ orderInfo, onNavigate, userId = null
           <div className="oc-info-rows">
             <div className="oc-info-row">
               <span className="oc-info-label">주문 번호</span>
-              <span className="oc-info-value">{orderNo}</span>
+              <span className="oc-info-value">{orderId ?? '–'}</span>
             </div>
             <div className="oc-info-row">
               <span className="oc-info-label">주문 일시</span>
@@ -59,7 +60,7 @@ export default function OrderCompletePage({ orderInfo, onNavigate, userId = null
             </div>
             <div className="oc-info-row">
               <span className="oc-info-label">결제 방법</span>
-              <span className="oc-info-value">카카오페이</span>
+              <span className="oc-info-value">{payMethod}</span>
             </div>
             <div className="oc-info-row">
               <span className="oc-info-label">결제 금액</span>

@@ -2,6 +2,22 @@ import axios from 'axios'
 
 const BASE = import.meta.env.VITE_API_URL || 'http://localhost:8080'
 
+function setCookie(name, value, days = 7) {
+  const expires = new Date(Date.now() + days * 864e5).toUTCString()
+  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Strict`
+}
+
+function getCookie(name) {
+  return document.cookie.split('; ').reduce((acc, part) => {
+    const [k, v] = part.split('=')
+    return k === name ? decodeURIComponent(v) : acc
+  }, null)
+}
+
+function removeCookie(name) {
+  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/`
+}
+
 // ── axios 인스턴스 생성 ──
 const axiosInstance = axios.create({
   baseURL: BASE,
@@ -12,7 +28,7 @@ const axiosInstance = axios.create({
 // ── 요청 interceptor: accessToken 자동 첨부 ──
 axiosInstance.interceptors.request.use(
   config => {
-    const token = localStorage.getItem('accessToken')
+    const token = getCookie('accessToken')
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -77,7 +93,7 @@ axiosInstance.interceptors.response.use(
       const newRole  = res.data?.data?.role
 
       if (newToken) {
-        localStorage.setItem('accessToken', newToken)
+        setCookie('accessToken', newToken)
         if (newRole) localStorage.setItem('role', newRole)
         axiosInstance.defaults.headers.Authorization = `Bearer ${newToken}`
         originalRequest.headers.Authorization = `Bearer ${newToken}`
@@ -96,7 +112,7 @@ axiosInstance.interceptors.response.use(
 )
 
 function clearAuthAndRedirect() {
-  localStorage.removeItem('accessToken')
+  removeCookie('accessToken')
   localStorage.removeItem('role')
   localStorage.removeItem('userId')
   sessionStorage.clear()

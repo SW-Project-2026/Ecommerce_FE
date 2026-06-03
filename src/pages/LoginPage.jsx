@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { login } from '../api/auth'
 import { usePageView } from '../hooks/usePageView'
+import { userLogin } from '../api/snippets'
 import './auth.css'
 
 export default function LoginPage({ onNavigate, onLogin }) {
@@ -24,6 +25,7 @@ export default function LoginPage({ onNavigate, onLogin }) {
       const data = await login({ loginId, password })
       onLogin(data)
       if (data.role !== 'ADMIN') {
+        userLogin({ userId: loginId })
         onNavigate('home')
       }
     } catch (err) {

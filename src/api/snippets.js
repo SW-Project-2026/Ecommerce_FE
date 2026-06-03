@@ -9,6 +9,15 @@ function getKSTTimestamp() {
   return kst.toISOString().replace('Z', '+09:00')
 }
 
+function getOrCreateUUID() {
+  let uuid = localStorage.getItem('client_uuid')
+  if (!uuid) {
+    uuid = crypto.randomUUID()
+    localStorage.setItem('client_uuid', uuid)
+  }
+  return uuid
+}
+
 export const clickSearchButton = async (query, userId = null) => {
   if (!query.trim()) return
 
@@ -21,7 +30,8 @@ export const clickSearchButton = async (query, userId = null) => {
       body: JSON.stringify({
         event_name:      'search_button_click',
         searchKeyword:   query,
-        user_id:         userId,
+        user_login_id:   userId,
+        client_uuid:     getOrCreateUUID(),
         event_timestamp: getKSTTimestamp()
       })
     })
@@ -38,7 +48,8 @@ export const clickPurchaseButton = async ({ approvedAmount, productName, product
       productName:     productName,
       productId:       productId,
       productCategory: productCategory,
-      user_id:         userId,
+      user_login_id:   userId,
+      client_uuid:     getOrCreateUUID(),
       event_timestamp: getKSTTimestamp()
     })
   })
@@ -54,7 +65,8 @@ export const viewProductDetail = async ({ productName, productId, dwellTime, pro
       productId:       productId,
       dwellTime:       dwellTime,
       productCategory: productCategory,
-      user_id:         userId,
+      user_login_id:   userId,
+      client_uuid:     getOrCreateUUID(),
       event_timestamp: getKSTTimestamp()
     })
   })
@@ -68,8 +80,75 @@ export const pageView = async ({ pageName, dwellTime, userId = null }) => {
       event_name:      'page_view',
       pageName:        pageName,
       dwellTime:       dwellTime,
-      user_id:         userId,
+      user_login_id:   userId,
+      client_uuid:     getOrCreateUUID(),
       event_timestamp: getKSTTimestamp()
+    })
+  })
+}
+
+// ── 찜 추가/제거 ──
+// actionType: 'add' | 'remove'
+export const clickWishlist = async ({ productName, productId, productCategory = null, actionType, userId = null }) => {
+  await fetch(`${FLUENTD_URL}/kafka.logs`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      event_name:      'wishlist_click',
+      productName:     productName,
+      productId:       productId,
+      productCategory: productCategory,
+      actionType:      actionType,
+      user_login_id:   userId,
+      client_uuid:     getOrCreateUUID(),
+      event_timestamp: getKSTTimestamp(),
+    })
+  })
+}
+
+// ── 장바구니 추가/제거 ──
+// actionType: 'add' | 'remove'
+export const clickCart = async ({ productName, productId, productCategory = null, actionType, userId = null }) => {
+  await fetch(`${FLUENTD_URL}/kafka.logs`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      event_name:      'cart_click',
+      productName:     productName,
+      productId:       productId,
+      productCategory: productCategory,
+      actionType:      actionType,
+      user_login_id:   userId,
+      client_uuid:     getOrCreateUUID(),
+      event_timestamp: getKSTTimestamp(),
+    })
+  })
+}
+
+// ── 로그인 ──
+export const userLogin = async ({ userId }) => {
+  await fetch(`${FLUENTD_URL}/kafka.logs`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      event_name:      'login',
+      user_login_id:   userId,
+      client_uuid:     getOrCreateUUID(),
+      event_timestamp: getKSTTimestamp(),
+    })
+  })
+}
+
+// ── 로그아웃 ──
+export const userLogout = async ({ userId }) => {
+  await fetch(`${FLUENTD_URL}/kafka.logs`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      event_name:      'logout',
+      user_login_id:   userId,
+      client_uuid:     getOrCreateUUID(),
+      event_timestamp: getKSTTimestamp(),
     })
   })
 }

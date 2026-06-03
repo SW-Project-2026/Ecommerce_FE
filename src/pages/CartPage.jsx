@@ -1,12 +1,8 @@
 import { useState, useEffect } from 'react'
 import { usePageView } from '../hooks/usePageView'
 import { cartGet, cartDelete, cartUpdateQuantity } from '../api/carts'
-
-const MOCK_COUPONS = [
-  { id: 'c1', name: '신규가입 5,000원 할인', discountAmount: 5000 },
-  { id: 'c2', name: '여름 시즌 3,000원 할인', discountAmount: 3000 },
-  { id: 'c3', name: '첫 구매 10% 할인 (최대 10,000원)', discountAmount: 10000 },
-]
+import { clickCart } from '../api/snippets'
+import { userCouponList } from '../api/coupons'
 
 function ProgressBar({ step }) {
   const steps = ['장바구니', '주문/결제', '주문 완료']
@@ -41,8 +37,17 @@ export default function CartPage({ cart, onNavigate, onCartChange, onGoCheckout,
   const [selected,   setSelected]   = useState(new Set())
   const [couponId,   setCouponId]   = useState('')
   const [updatingId, setUpdatingId] = useState(null)
+  const [coupons,    setCoupons]    = useState([])
 
   useEffect(() => { fetchCart() }, [])
+
+  // ── 사용 가능 쿠폰 목록 조회 → userCouponList ──
+  useEffect(() => {
+    if (!auth) return
+    userCouponList({ status: 'AVAILABLE', size: 100 })
+      .then(data => setCoupons(data.content ?? []))
+      .catch(() => {})
+  }, [auth])
 
   async function fetchCart() {
     setLoading(true)
@@ -89,10 +94,18 @@ export default function CartPage({ cart, onNavigate, onCartChange, onGoCheckout,
   }
 
   async function handleRemoveItem(cartId) {
+    const item = cartItems.find(i => i.cartId === cartId)
     try {
       await cartDelete({ cartId })
       setCartItems(prev => prev.filter(i => i.cartId !== cartId))
       setSelected(prev => { const next = new Set(prev); next.delete(cartId); return next })
+      clickCart({
+        productName:     item?.productName,
+        productId:       item?.productId,
+        productCategory: item?.productCategory ?? null,
+        actionType:      'remove',
+        userId:          auth.userId,
+      })
     } catch (err) {
       setError(err.message)
     }
@@ -100,25 +113,39 @@ export default function CartPage({ cart, onNavigate, onCartChange, onGoCheckout,
 
   async function handleRemoveSelected() {
     const targets = [...selected]
+    const targetItems = cartItems.filter(i => selected.has(i.cartId))
     try {
       await Promise.all(targets.map(cartId => cartDelete({ cartId })))
       setCartItems(prev => prev.filter(i => !selected.has(i.cartId)))
       setSelected(new Set())
+      targetItems.forEach(item => {
+        clickCart({
+          productName:     item.productName,
+          productId:       item.productId,
+          productCategory: item.productCategory ?? null,
+          actionType:      'remove',
+          userId:          auth.userId,
+        })
+      })
     } catch (err) {
       setError(err.message)
     }
   }
 
-  const selectedItems = cartItems.filter(i => selected.has(i.cartId))
-  const subtotal = selectedItems.reduce((s, i) => s + i.unitPrice * i.quantity, 0)
-  const appliedCoupon = MOCK_COUPONS.find(c => c.id === couponId) ?? null
-  const couponDiscount = appliedCoupon?.discountAmount ?? 0
+  const selectedItems  = cartItems.filter(i => selected.has(i.cartId))
+  const subtotal       = selectedItems.reduce((s, i) => s + i.unitPrice * i.quantity, 0)
+  const appliedCoupon  = coupons.find(c => String(c.userCouponId) === couponId) ?? null
+  const couponDiscount = appliedCoupon
+    ? appliedCoupon.discountType === 'RATE'
+      ? Math.min(Math.floor(subtotal * appliedCoupon.discountAmount / 100), appliedCoupon.maxDiscountAmount ?? Infinity)
+      : (appliedCoupon.discountAmount ?? 0)
+    : 0
   const total = Math.max(0, subtotal - couponDiscount)
 
   function handleOrder() {
     if (selectedItems.length === 0) return
     const items = selectedItems.map(i => ({
-      cartId: i.cartId,  // ── 결제 후 장바구니 삭제를 위해 cartId 포함 ──
+      cartId: i.cartId,
       product: {
         productId:       i.productId,
         name:            i.productName,
@@ -215,7 +242,11 @@ export default function CartPage({ cart, onNavigate, onCartChange, onGoCheckout,
             <div className="cart-coupon-box">
               <select className="cart-coupon-select" value={couponId} onChange={e => setCouponId(e.target.value)}>
                 <option value="">쿠폰 선택</option>
-                {MOCK_COUPONS.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                {coupons.map(c => (
+                  <option key={c.userCouponId} value={String(c.userCouponId)}>
+                    {c.couponName} ({c.discountType === 'RATE' ? `${c.discountAmount}%` : `${c.discountAmount?.toLocaleString()}원`} 할인)
+                  </option>
+                ))}
               </select>
             </div>
             <button className="cart-order-btn" onClick={handleOrder} disabled={selectedCount === 0}>

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { clickSearchButton } from '../../api/snippets'
+import { clickSearchButton, userLogout } from '../../api/snippets'
 
 export default function NavHeader({ onNavigate, cartCount = 0, auth, onLogout, userId = null }) {
   const [query, setQuery] = useState('')
@@ -73,7 +73,7 @@ export default function NavHeader({ onNavigate, cartCount = 0, auth, onLogout, u
         /* userId님 + 로그아웃을 flex로 묶어서 login-btn CSS 위치(left:1242)에 배치 */
         <div style={{
           position: 'absolute',
-          left: 1100,
+          left: 1250,
           top: 17,
           display: 'flex',
           alignItems: 'center',
@@ -93,7 +93,7 @@ export default function NavHeader({ onNavigate, cartCount = 0, auth, onLogout, u
             </span>
           )}
           <div
-            onClick={onLogout}
+            onClick={() => { userLogout({ userId }); onLogout(); }}
             style={{
               width: 68, height: 30,
               background: 'rgba(235,235,235,0.7)',

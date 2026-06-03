@@ -1,6 +1,23 @@
 import { useEffect, useRef, useState } from 'react'
 import { getProduct } from '../api/products'
-import { viewProductDetail } from '../api/snippets'
+import { viewProductDetail, clickCart, clickWishlist } from '../api/snippets'
+
+const FLUENTD_URL = import.meta.env.VITE_FLUENTD_URL || 'http://localhost:9880'
+
+function getKSTTimestamp() {
+  const now = new Date()
+  const kst = new Date(now.getTime() + 9 * 60 * 60 * 1000)
+  return kst.toISOString().replace('Z', '+09:00')
+}
+
+function getOrCreateUUID() {
+  let uuid = localStorage.getItem('client_uuid')
+  if (!uuid) {
+    uuid = crypto.randomUUID()
+    localStorage.setItem('client_uuid', uuid)
+  }
+  return uuid
+}
 import { cartAdd } from '../api/carts'
 import { wishlistAdd, wishlistDelete, wishlistGet } from '../api/wishlists'
 import './ReviewSection.css'
@@ -209,6 +226,8 @@ export default function ProductDetailPage({ productId, onNavigate, prevCategory,
   const activeDwellRef   = useRef(0)
   const activeStartRef   = useRef(null)
   const inactiveTimerRef = useRef(null)
+  const productRef       = useRef(null)
+  const userIdRef        = useRef(userId)
 
   function requireAuth(callback) {
     if (!auth) { onNavigate('login'); return }
@@ -224,7 +243,7 @@ export default function ProductDetailPage({ productId, onNavigate, prevCategory,
       .finally(() => setLoading(false))
   }, [productId])
 
-  // ── 로그인 상태일 때 찜 목록에서 현재 상품 찜 여부 확인 ──
+  // 찜 초기 상태 확인
   useEffect(() => {
     if (!auth || !productId) return
     wishlistGet({ size: 100 })
@@ -235,6 +254,12 @@ export default function ProductDetailPage({ productId, onNavigate, prevCategory,
       })
       .catch(() => {})
   }, [auth, productId])
+
+  // userId ref 업데이트
+  useEffect(() => { userIdRef.current = userId }, [userId])
+
+  // product ref 업데이트
+  useEffect(() => { productRef.current = product }, [product])
 
   // 체류 시간 측정
   useEffect(() => {
@@ -251,13 +276,38 @@ export default function ProductDetailPage({ productId, onNavigate, prevCategory,
       if (inactiveTimerRef.current) clearTimeout(inactiveTimerRef.current)
       inactiveTimerRef.current = setTimeout(stopActive, INACTIVE_THRESHOLD)
     }
+
+    // ── 브라우저/탭 닫힐 때 sendBeacon으로 로그 전송 ──
+    const handleBeforeUnload = () => {
+      stopActive()
+      const dwellTime = Math.floor(activeDwellRef.current / 1000)
+      const p = productRef.current
+      if (dwellTime > 0 && p) {
+        navigator.sendBeacon(
+          `${FLUENTD_URL}/kafka.logs`,
+          JSON.stringify({
+            event_name:      'product_detail_view',
+            productName:     p.name,
+            productId:       String(productId),
+            dwellTime:       dwellTime,
+            productCategory: p.productCategory ?? null,
+            user_login_id:   userIdRef.current,
+            client_uuid:     getOrCreateUUID(),
+            event_timestamp: getKSTTimestamp(),
+          })
+        )
+      }
+    }
+
     const events = ['mousemove', 'click', 'scroll', 'keydown']
     events.forEach(e => window.addEventListener(e, handleActivity))
+    window.addEventListener('beforeunload', handleBeforeUnload)
     startActive()
     return () => {
       stopActive()
       if (inactiveTimerRef.current) clearTimeout(inactiveTimerRef.current)
       events.forEach(e => window.removeEventListener(e, handleActivity))
+      window.removeEventListener('beforeunload', handleBeforeUnload)
       const dwellTime = Math.floor(activeDwellRef.current / 1000)
       if (dwellTime > 0) {
         viewProductDetail({ productName: product.name, productId: String(productId), dwellTime, productCategory: product.productCategory ?? null, userId })
@@ -271,6 +321,14 @@ export default function ProductDetailPage({ productId, onNavigate, prevCategory,
     try {
       await cartAdd({ productId: product.productId, quantity: qty })
       onAddToCart?.(product, qty)
+      // ── 장바구니 담기 스니펫 (로그인 유저만 호출됨) ──
+      clickCart({
+        productName:     product.name,
+        productId:       product.productId,
+        productCategory: product.productCategory ?? null,
+        actionType:      'add',
+        userId:          auth.userId,
+      })
     } catch (err) { setCartError(err.message); throw err }
   }
 
@@ -297,9 +355,25 @@ export default function ProductDetailPage({ productId, onNavigate, prevCategory,
         if (liked) {
           await wishlistDelete({ wishId })
           setLiked(false); setWishId(null)
+          // ── 찜 제거 스니펫 (로그인 유저만 호출됨) ──
+          clickWishlist({
+            productName:     product.name,
+            productId:       product.productId,
+            productCategory: product.productCategory ?? null,
+            actionType:      'remove',
+            userId:          auth.userId,
+          })
         } else {
           const data = await wishlistAdd({ productId: product.productId })
           setLiked(true); setWishId(data.wishId)
+          // ── 찜 추가 스니펫 (로그인 유저만 호출됨) ──
+          clickWishlist({
+            productName:     product.name,
+            productId:       product.productId,
+            productCategory: product.productCategory ?? null,
+            actionType:      'add',
+            userId:          auth.userId,
+          })
         }
       } catch (err) { console.error('찜 처리 실패:', err.message) }
     })

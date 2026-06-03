@@ -4,15 +4,15 @@ import { orderDetail, orderCancel } from '../../api/orders'
 const STATUS_MAP = {
   PENDING:   { label: '결제완료', cls: 'myp-status--pending',  canCancel: true  },
   CONFIRMED: { label: '결제완료', cls: 'myp-status--pending',  canCancel: true  },
-  SHIPPING:  { label: '배송중',   cls: 'myp-status--shipping', canCancel: false },
+  SHIPPING:  { label: '배송중',   cls: 'myp-status--shipping', canCancel: true  },
   DELIVERED: { label: '배송완료', cls: 'myp-status--complete', canCancel: false },
   CANCELLED: { label: '취소/반품', cls: 'myp-status--cancel',  canCancel: false },
 }
 
 export default function MyOrderDetail({ orderId, onBack }) {
-  const [order,     setOrder]     = useState(null)
-  const [loading,   setLoading]   = useState(false)
-  const [error,     setError]     = useState(null)
+  const [order,      setOrder]      = useState(null)
+  const [loading,    setLoading]    = useState(false)
+  const [error,      setError]      = useState(null)
   const [cancelling, setCancelling] = useState(false)
   const [cancelError, setCancelError] = useState(null)
   const [cancelled,  setCancelled]  = useState(false)
@@ -42,7 +42,7 @@ export default function MyOrderDetail({ orderId, onBack }) {
     try {
       await orderCancel({ orderId })
       setCancelled(true)
-      fetchDetail() // 취소 후 상태 갱신
+      fetchDetail()
     } catch (err) {
       setCancelError(err.message)
     } finally {
@@ -54,7 +54,6 @@ export default function MyOrderDetail({ orderId, onBack }) {
 
   return (
     <div className="myp-section">
-      {/* 헤더 */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
         <button onClick={onBack} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#374151', padding: 0 }}>
           <i className="ri-arrow-left-line" />
@@ -70,7 +69,6 @@ export default function MyOrderDetail({ orderId, onBack }) {
 
       {order && (
         <>
-          {/* 주문 번호 / 날짜 / 상태 */}
           <div style={{ background: '#F9FAFB', borderRadius: 12, padding: '16px 20px', marginBottom: 16 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
               <span style={{ fontSize: 13, color: '#6B7280' }}>주문번호</span>
@@ -86,7 +84,6 @@ export default function MyOrderDetail({ orderId, onBack }) {
             </div>
           </div>
 
-          {/* 주문 상품 목록 */}
           <div style={{ marginBottom: 16 }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 12 }}>주문 상품 ({(order.items ?? []).length}개)</div>
             {(order.items ?? []).map(item => (
@@ -105,7 +102,6 @@ export default function MyOrderDetail({ orderId, onBack }) {
             ))}
           </div>
 
-          {/* 배송지 */}
           {order.address && (
             <div style={{ background: '#F9FAFB', borderRadius: 12, padding: '16px 20px', marginBottom: 16 }}>
               <div style={{ fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 10 }}>배송지</div>
@@ -116,7 +112,6 @@ export default function MyOrderDetail({ orderId, onBack }) {
             </div>
           )}
 
-          {/* 결제 금액 */}
           <div style={{ background: '#F9FAFB', borderRadius: 12, padding: '16px 20px', marginBottom: 20 }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 10 }}>결제 금액</div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
@@ -139,7 +134,6 @@ export default function MyOrderDetail({ orderId, onBack }) {
             </div>
           </div>
 
-          {/* 주문 취소 버튼 (PENDING/CONFIRMED 상태만) */}
           {statusInfo.canCancel && !cancelled && (
             <div>
               {cancelError && <div style={{ fontSize: 12, color: '#EF4444', marginBottom: 8 }}>{cancelError}</div>}
