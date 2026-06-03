@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { clickSearchButton } from '../../api/snippets'
+import { clickSearchButton, userLogout } from '../../api/snippets'
 
 export default function NavHeader({ onNavigate, cartCount = 0, auth, onLogout, userId = null }) {
   const [query, setQuery] = useState('')
@@ -93,7 +93,7 @@ export default function NavHeader({ onNavigate, cartCount = 0, auth, onLogout, u
             </span>
           )}
           <div
-            onClick={onLogout}
+            onClick={() => { userLogout({ userId }); onLogout(); }}
             style={{
               width: 68, height: 30,
               background: 'rgba(235,235,235,0.7)',

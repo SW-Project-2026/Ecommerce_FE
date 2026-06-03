@@ -8,6 +8,7 @@ import MyProfileEdit from '../components/mypage/MyProfileEdit'
 import { usePageView } from '../hooks/usePageView'
 import { getMyProfile } from '../api/users'
 import { userCouponList } from '../api/coupons'
+import { userLogout } from '../api/snippets'
 import './mypage.css'
 
 const MENU = [
@@ -25,7 +26,7 @@ const GRADE_DISPLAY = {
   DORMANT: '휴면',
 }
 
-export default function MyPage({ onNavigate, userId = null, initialTab = 'home', auth = null }) {
+export default function MyPage({ onNavigate, onLogout, userId = null, initialTab = 'home', auth = null }) {
   usePageView('마이페이지', userId)
 
   const [tab,        setTab]        = useState(() => sessionStorage.getItem('mypageTab') || initialTab)
@@ -91,7 +92,7 @@ export default function MyPage({ onNavigate, userId = null, initialTab = 'home',
               {m.label}
             </div>
           ))}
-          <div className="myp-sb-menu-item myp-sb-logout" onClick={() => onNavigate('home')}>
+          <div className="myp-sb-menu-item myp-sb-logout" onClick={() => { userLogout({ userId }); onLogout(); }}>
             <i className="ri-logout-box-r-line" />
             로그아웃
           </div>

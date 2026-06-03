@@ -231,7 +231,7 @@ export default function App() {
   if (page === 'mypage') return (
     <div className="page page-list">
       <NavHeader onNavigate={handleNavigate} cartCount={cartCount} auth={auth} onLogout={handleLogout} userId={userId} />
-      <MyPage onNavigate={handleNavigate} auth={auth} userId={userId} initialTab={mypageTab} />
+      <MyPage onNavigate={handleNavigate} onLogout={handleLogout} auth={auth} userId={userId} initialTab={mypageTab} />
       <Footer />
     </div>
   )
