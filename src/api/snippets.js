@@ -9,6 +9,15 @@ function getKSTTimestamp() {
   return kst.toISOString().replace('Z', '+09:00')
 }
 
+function getOrCreateUUID() {
+  let uuid = localStorage.getItem('client_uuid')
+  if (!uuid) {
+    uuid = crypto.randomUUID()
+    localStorage.setItem('client_uuid', uuid)
+  }
+  return uuid
+}
+
 export const clickSearchButton = async (query, userId = null) => {
   if (!query.trim()) return
 
@@ -22,6 +31,7 @@ export const clickSearchButton = async (query, userId = null) => {
         event_name:      'search_button_click',
         searchKeyword:   query,
         user_login_id:   userId,
+        client_uuid:     getOrCreateUUID(),
         event_timestamp: getKSTTimestamp()
       })
     })
@@ -39,6 +49,7 @@ export const clickPurchaseButton = async ({ approvedAmount, productName, product
       productId:       productId,
       productCategory: productCategory,
       user_login_id:   userId,
+      client_uuid:     getOrCreateUUID(),
       event_timestamp: getKSTTimestamp()
     })
   })
@@ -55,6 +66,7 @@ export const viewProductDetail = async ({ productName, productId, dwellTime, pro
       dwellTime:       dwellTime,
       productCategory: productCategory,
       user_login_id:   userId,
+      client_uuid:     getOrCreateUUID(),
       event_timestamp: getKSTTimestamp()
     })
   })
@@ -69,6 +81,7 @@ export const pageView = async ({ pageName, dwellTime, userId = null }) => {
       pageName:        pageName,
       dwellTime:       dwellTime,
       user_login_id:   userId,
+      client_uuid:     getOrCreateUUID(),
       event_timestamp: getKSTTimestamp()
     })
   })
@@ -86,8 +99,9 @@ export const clickWishlist = async ({ productName, productId, productCategory = 
       productId:       productId,
       productCategory: productCategory,
       actionType:      actionType,
-      event_timestamp: getKSTTimestamp(),
       user_login_id:   userId,
+      client_uuid:     getOrCreateUUID(),
+      event_timestamp: getKSTTimestamp(),
     })
   })
 }
@@ -104,8 +118,9 @@ export const clickCart = async ({ productName, productId, productCategory = null
       productId:       productId,
       productCategory: productCategory,
       actionType:      actionType,
-      event_timestamp: getKSTTimestamp(),
       user_login_id:   userId,
+      client_uuid:     getOrCreateUUID(),
+      event_timestamp: getKSTTimestamp(),
     })
   })
 }
@@ -118,6 +133,7 @@ export const userLogin = async ({ userId }) => {
     body: JSON.stringify({
       event_name:      'login',
       user_login_id:   userId,
+      client_uuid:     getOrCreateUUID(),
       event_timestamp: getKSTTimestamp(),
     })
   })
@@ -131,6 +147,7 @@ export const userLogout = async ({ userId }) => {
     body: JSON.stringify({
       event_name:      'logout',
       user_login_id:   userId,
+      client_uuid:     getOrCreateUUID(),
       event_timestamp: getKSTTimestamp(),
     })
   })
