@@ -31,8 +31,24 @@ function isTokenExpired(token) {
   }
 }
 
+function setCookie(name, value, days = 7) {
+  const expires = new Date(Date.now() + days * 864e5).toUTCString()
+  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Strict`
+}
+
+function getCookie(name) {
+  return document.cookie.split('; ').reduce((acc, part) => {
+    const [k, v] = part.split('=')
+    return k === name ? decodeURIComponent(v) : acc
+  }, null)
+}
+
+function removeCookie(name) {
+  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/`
+}
+
 function clearAuth() {
-  localStorage.removeItem('accessToken')
+  removeCookie('accessToken')
   localStorage.removeItem('role')
   localStorage.removeItem('userId')
   sessionStorage.clear()
@@ -59,7 +75,7 @@ export default function App() {
 
   useEffect(() => {
     async function initAuth() {
-      const token = localStorage.getItem('accessToken')
+      const token = getCookie('accessToken')
       const role = localStorage.getItem('role')
       const userId = localStorage.getItem('userId')
 
@@ -77,8 +93,14 @@ export default function App() {
       try {
         const data = await refreshToken()
         if (data?.accessToken) {
-          localStorage.setItem('accessToken', data.accessToken)
+          setCookie('accessToken', data.accessToken)
           if (data.role) localStorage.setItem('role', data.role)
+          // ADMIN이면 관리자 페이지로 자동 진입
+          if ((data.role ?? role) === 'ADMIN') {
+            window.location.href = '/#admin'
+            window.location.reload()
+            return
+          }
           setAuth({ token: data.accessToken, role: data.role ?? role, userId: userId ?? null })
         }
       } catch {
@@ -111,7 +133,7 @@ export default function App() {
   usePageView(page === 'home' ? '홈' : null)
 
   async function handleLogin(data) {
-    localStorage.setItem('accessToken', data.accessToken)
+    setCookie('accessToken', data.accessToken)
     localStorage.setItem('role', data.role)
     setAuth({ token: data.accessToken, role: data.role, userId: null })
 
