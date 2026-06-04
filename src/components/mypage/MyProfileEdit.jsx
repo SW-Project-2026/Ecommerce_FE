@@ -4,7 +4,7 @@ import {
   addressDelete, addressSetDefault,
 } from '../../api/addresses'
 import { getMyProfile, updateProfile } from '../../api/users'
-import { updatePassword, withdraw } from '../../api/auth'
+import { updatePassword } from '../../api/auth'
 
 const EMPTY_FORM = { road: '', detail: '' }
 
@@ -110,7 +110,7 @@ function MyAddressSection() {
   )
 }
 
-export default function MyProfileEdit({ initialSection = null }) {
+export default function MyProfileEdit({ initialSection = null, onNavigate }) {
   const addrRef = useRef(null)
 
   useEffect(() => {
@@ -126,9 +126,6 @@ export default function MyProfileEdit({ initialSection = null }) {
   const [saving,         setSaving]         = useState(false)
   const [pwError,        setPwError]        = useState(null)
   const [pwSaved,        setPwSaved]        = useState(false)
-
-  const [withdrawing,   setWithdrawing]   = useState(false)
-  const [withdrawError, setWithdrawError] = useState(null)
 
   useEffect(() => {
     setProfileLoading(true)
@@ -155,10 +152,8 @@ export default function MyProfileEdit({ initialSection = null }) {
     setSaving(true); setProfileError(null); setPwError(null); setPwSaved(false)
 
     try {
-      // 기본 정보 저장
       await updateProfile({ name: form.name, phone: form.phone, email: form.email })
 
-      // 비밀번호 입력했을 때만 변경 시도
       if (form.currentPw || form.newPw || form.confirmPw) {
         if (!form.currentPw) { setPwError('현재 비밀번호를 입력해주세요.'); return }
         if (!form.newPw)     { setPwError('새 비밀번호를 입력해주세요.'); return }
@@ -180,17 +175,6 @@ export default function MyProfileEdit({ initialSection = null }) {
     } finally {
       setSaving(false)
     }
-  }
-
-  async function handleWithdraw() {
-    if (!window.confirm('정말 탈퇴하시겠습니까? 모든 데이터가 삭제됩니다.')) return
-    setWithdrawing(true); setWithdrawError(null)
-    try {
-      await withdraw()
-      localStorage.clear(); sessionStorage.clear()
-      window.location.href = '/'
-    } catch (err) { setWithdrawError(err.message) }
-    finally { setWithdrawing(false) }
   }
 
   return (
@@ -259,9 +243,8 @@ export default function MyProfileEdit({ initialSection = null }) {
         <p style={{ fontSize: 13, color: '#666', marginBottom: 16 }}>
           회원 탈퇴 시 모든 주문 내역과 포인트, 쿠폰이 삭제되며 복구가 불가능합니다.
         </p>
-        {withdrawError && <p style={{ fontSize: 13, color: '#EF4444', marginBottom: 8 }}>{withdrawError}</p>}
-        <button className="myp-delete-btn" onClick={handleWithdraw} disabled={withdrawing}>
-          {withdrawing ? '처리 중...' : '회원 탈퇴'}
+        <button className="myp-delete-btn" onClick={() => onNavigate('withdraw')}>
+          회원 탈퇴
         </button>
       </div>
     </>

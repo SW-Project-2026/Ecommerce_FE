@@ -1,0 +1,316 @@
+/* ══════════ WITHDRAW PAGE ══════════ */
+.wd-page {
+  width: 1440px;
+  min-height: 836px; /* 900px - 64px nav */
+  background: #F2F3F7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 0;
+  box-sizing: border-box;
+  font-family: 'Inter', sans-serif;
+}
+
+.wd-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+/* ── 타이틀 ── */
+.wd-title {
+  font-weight: 700;
+  font-size: 26px;
+  line-height: 31px;
+  color: #141628;
+  margin: 0 0 8px;
+  text-align: center;
+}
+
+.wd-subtitle {
+  font-size: 14px;
+  color: #9699AA;
+  margin: 0 0 24px;
+  text-align: center;
+}
+
+/* ── 카드 ── */
+.wd-card {
+  width: 560px;
+  background: #FFFFFF;
+  box-shadow: 0px 4px 24px rgba(0, 0, 0, 0.07);
+  border-radius: 16px;
+  padding: 32px;
+  box-sizing: border-box;
+}
+
+/* ── 경고 박스 ── */
+.wd-warn-box {
+  background: #FFF7F7;
+  border: 1px solid #FECACA;
+  border-radius: 12px;
+  padding: 18px 20px;
+  margin-bottom: 24px;
+}
+
+.wd-warn-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: #B91C1C;
+  margin: 0 0 12px;
+}
+
+.wd-warn-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wd-warn-list li {
+  font-size: 13px;
+  color: #783232;
+  padding-left: 16px;
+  position: relative;
+  line-height: 16px;
+}
+
+.wd-warn-list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 5px;
+  height: 5px;
+  background: #EF4444;
+  border-radius: 50%;
+}
+
+/* ── 구분선 ── */
+.wd-divider {
+  width: 100%;
+  height: 1px;
+  background: #EEEFF5;
+  margin: 24px 0;
+}
+
+/* ── 섹션 ── */
+.wd-section {
+  margin-bottom: 16px;
+}
+
+.wd-section-title {
+  font-weight: 600;
+  font-size: 16px;
+  color: #141628;
+  margin: 0 0 6px;
+}
+
+.wd-section-desc {
+  font-size: 13px;
+  color: #9699AA;
+  margin: 0 0 14px;
+  line-height: 16px;
+}
+
+/* ── 비밀번호 입력 ── */
+.wd-input-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.wd-input {
+  width: 100%;
+  height: 48px;
+  background: #F8F9FC;
+  border: 1px solid #D2D5E4;
+  border-radius: 10px;
+  padding: 0 44px 0 16px;
+  font-size: 14px;
+  font-family: 'Inter', sans-serif;
+  color: #141628;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.wd-input::placeholder {
+  color: #BEC1D2;
+}
+
+.wd-input:focus {
+  border-color: #4F6EF7;
+  background: #fff;
+}
+
+.wd-pw-toggle {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  color: #CACDDD;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s;
+}
+
+.wd-pw-toggle:hover {
+  color: #9699AA;
+}
+
+/* ── 동의 체크박스 ── */
+.wd-agree-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  background: #F8F9FC;
+  border: 1px solid #D2D5E4;
+  border-radius: 10px;
+  padding: 15px 16px;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.wd-checkbox {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: 1.5px solid #B4B7C8;
+  background: #FFFFFF;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #fff;
+  transition: background 0.15s, border-color 0.15s;
+  cursor: pointer;
+}
+
+.wd-checkbox--checked {
+  background: #DC2626;
+  border-color: #DC2626;
+}
+
+.wd-agree-text {
+  font-size: 13px;
+  color: #505369;
+  line-height: 16px;
+  user-select: none;
+}
+
+/* ── 에러 ── */
+.wd-error {
+  font-size: 12px;
+  color: #DC2626;
+  margin: 10px 0 0;
+}
+
+/* ── 버튼 ── */
+.wd-btn-row {
+  display: flex;
+  gap: 24px;
+}
+
+.wd-btn-cancel,
+.wd-btn-confirm {
+  flex: 1;
+  height: 50px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 500;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+  border: none;
+}
+
+.wd-btn-cancel {
+  background: #FFFFFF;
+  border: 1px solid #D2D5E4;
+  color: #505369;
+  font-weight: 500;
+}
+
+.wd-btn-cancel:hover {
+  background: #F8F9FC;
+}
+
+.wd-btn-confirm {
+  background: #DC2626;
+  color: #FFFFFF;
+  font-weight: 700;
+}
+
+.wd-btn-confirm:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.wd-btn-confirm:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ── 탈퇴 완료 카드 ── */
+.wd-card--done {
+  height: 340px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: 48px 32px;
+}
+
+.wd-done-icon {
+  width: 72px;
+  height: 72px;
+  background: #F3F4F8;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  margin-bottom: 24px;
+  animation: wd-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes wd-pop {
+  from { transform: scale(0.6); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
+.wd-done-title {
+  font-weight: 700;
+  font-size: 22px;
+  color: #141628;
+  margin: 0 0 12px;
+  text-align: center;
+  animation: wd-fade-up 0.35s 0.1s both;
+}
+
+.wd-done-desc {
+  font-size: 14px;
+  color: #8C8FA5;
+  line-height: 22px;
+  text-align: center;
+  margin: 0;
+  animation: wd-fade-up 0.35s 0.2s both;
+}
+
+@keyframes wd-fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
