@@ -105,7 +105,7 @@ export default function MyPage({ onNavigate, onLogout, userId = null, initialTab
         {tab === 'order-detail' && <MyOrderDetail  orderId={orderId} onBack={() => handleSetTab('orders')} />}
         {tab === 'wishlist'     && <MyWishlist      onNavigate={handleTabNavigate} auth={auth} />}
         {tab === 'coupons'      && <MyCoupons />}
-        {tab === 'profile'      && <MyProfileEdit />}
+        {tab === 'profile'      && <MyProfileEdit onNavigate={handleTabNavigate} />}
       </main>
     </div>
   )

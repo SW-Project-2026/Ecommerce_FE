@@ -16,31 +16,16 @@ import CartPage from './pages/CartPage'
 import CheckoutPage from './pages/CheckoutPage'
 import OrderCompletePage from './pages/OrderCompletePage'
 import MyPage from './pages/MyPage'
+import WithdrawPage from './pages/WithdrawPage'
 import { usePageView } from './hooks/usePageView'
 import { getMyProfile } from './api/users'
 import { refreshToken } from './api/auth'
 import { cartGet } from './api/carts'
 import './App.css'
 
-function isTokenExpired(token) {
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]))
-    return payload.exp * 1000 < Date.now()
-  } catch {
-    return true
-  }
-}
-
 function setCookie(name, value, days = 7) {
   const expires = new Date(Date.now() + days * 864e5).toUTCString()
   document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Strict`
-}
-
-function getCookie(name) {
-  return document.cookie.split('; ').reduce((acc, part) => {
-    const [k, v] = part.split('=')
-    return k === name ? decodeURIComponent(v) : acc
-  }, null)
 }
 
 function removeCookie(name) {
@@ -75,34 +60,27 @@ export default function App() {
 
   useEffect(() => {
     async function initAuth() {
-      const token = getCookie('accessToken')
-      const role = localStorage.getItem('role')
+      const role   = localStorage.getItem('role')
       const userId = localStorage.getItem('userId')
 
-      if (!token) {
+      // role이 없으면 로그인 안 된 상태
+      if (!role) {
         setAuthLoading(false)
         return
       }
 
-      if (!isTokenExpired(token)) {
-        setAuth({ token, role, userId: userId ?? null })
-        setAuthLoading(false)
-        return
-      }
-
+      // accessToken은 HttpOnly 쿠키라 JS에서 읽기 불가
+      // refresh 요청으로 세션 유효 여부 확인
       try {
         const data = await refreshToken()
-        if (data?.accessToken) {
-          setCookie('accessToken', data.accessToken)
-          if (data.role) localStorage.setItem('role', data.role)
-          // ADMIN이면 관리자 페이지로 자동 진입
-          if ((data.role ?? role) === 'ADMIN') {
-            window.location.href = '/#admin'
-            window.location.reload()
-            return
-          }
-          setAuth({ token: data.accessToken, role: data.role ?? role, userId: userId ?? null })
+        if (data?.role) localStorage.setItem('role', data.role)
+        const resolvedRole = data?.role ?? role
+        if (resolvedRole === 'ADMIN') {
+          window.location.href = '/#admin'
+          window.location.reload()
+          return
         }
+        setAuth({ role: resolvedRole, userId: userId ?? null })
       } catch {
         clearAuth()
         setAuth(null)
@@ -135,13 +113,13 @@ export default function App() {
   async function handleLogin(data) {
     setCookie('accessToken', data.accessToken)
     localStorage.setItem('role', data.role)
-    setAuth({ token: data.accessToken, role: data.role, userId: null })
+    setAuth({ role: data.role, userId: null })
 
     try {
       const profile = await getMyProfile()
       const userId = profile.loginId ?? null
       if (userId) localStorage.setItem('userId', userId)
-      setAuth({ token: data.accessToken, role: data.role, userId })
+      setAuth({ role: data.role, userId })
     } catch {
       // userId 없이 진행
     }
@@ -171,7 +149,6 @@ export default function App() {
       }
       return [...prev, { product, qty }]
     })
-    // API 장바구니 개수 갱신
     fetchCartCount()
   }
 
@@ -209,7 +186,6 @@ export default function App() {
       setMypageTab(payload ?? 'home')
       sessionStorage.setItem('mypageTab', payload ?? 'home')
     }
-    // 장바구니 페이지로 돌아올 때 개수 갱신
     if (target === 'cart' || target === 'home') {
       fetchCartCount()
     }
@@ -284,6 +260,13 @@ export default function App() {
 
   if (page === 'login') return <LoginPage onNavigate={handleNavigate} onLogin={handleLogin} />
   if (page === 'register') return <RegisterPage onNavigate={handleNavigate} onLogin={handleLogin} />
+  if (page === 'withdraw') return (
+    <div className="page page-list">
+      <NavHeader onNavigate={handleNavigate} cartCount={cartCount} auth={auth} onLogout={handleLogout} userId={userId} />
+      <WithdrawPage onNavigate={handleNavigate} onLogout={handleLogout} />
+      <Footer />
+    </div>
+  )
 
   if (page === 'search' || page === 'list') return (
     <div className="page page-list">

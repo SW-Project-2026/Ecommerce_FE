@@ -181,7 +181,7 @@ export default function CouponClaimPage() {
       {/* Hero 배너 */}
       <div style={{
         width: "100%",
-        height: 280,
+        height: 220,
         background: "linear-gradient(99.28deg, #456E82 11.44%, #1C2E5C 84.03%)",
         display: "flex",
         flexDirection: "column",
@@ -222,13 +222,13 @@ export default function CouponClaimPage() {
       <div style={{
         display: "flex",
         justifyContent: "center",
-        marginTop: -80,
+        marginTop: 20,
         marginBottom: 40,
         padding: "0 20px",
       }}>
         <div style={{
-          width: 555,
-          height: 277,
+          width: 480,
+          height: 200,
           display: "flex",
           borderRadius: 16,
           overflow: "hidden",
@@ -310,17 +310,17 @@ export default function CouponClaimPage() {
           }}>
             <div style={{
               fontFamily: "'Inter', sans-serif",
-              fontSize: 80,
+              fontSize: 60,
               fontWeight: 700,
               color: "#FFFFFF",
               lineHeight: 1,
               letterSpacing: "-2px",
             }}>
-              3,000<span style={{ fontSize: 32, fontWeight: 500 }}>원</span>
+              3,000<span style={{ fontSize: 24, fontWeight: 500 }}>원</span>
             </div>
             <div style={{
               fontFamily: "'Noto Sans KR', sans-serif",
-              fontSize: 18,
+              fontSize: 15,
               fontWeight: 500,
               color: "rgba(255,255,255,0.85)",
             }}>
