@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import "./CampaignDetailPage.css";
 import { campaignDelete, campaignUpdate, campaignStatusUpdate, getCampaignSmsStatus, retryCampaignSms } from "../api/campaigns";
 import { eventList } from "../api/events";
@@ -151,6 +151,7 @@ const TIME_OPTIONS = Array.from({ length: 24 }, (_, h) =>
 function SendStatusSection({ campaignId, messageType, messageContent }) {
   const [logs,           setLogs]           = useState([]);
   const [loading,        setLoading]        = useState(false);
+  const [loadingMore,    setLoadingMore]     = useState(false);
   const [selected,       setSelected]       = useState(new Set());
   const [filterDate,     setFilterDate]     = useState("");
   const [filterTime,     setFilterTime]     = useState("");
@@ -160,24 +161,40 @@ function SendStatusSection({ campaignId, messageType, messageContent }) {
   const [failCount,      setFailCount]      = useState(0);
   const [resending,      setResending]      = useState(false);
   const [error,          setError]          = useState(null);
+  const [nextCursor,     setNextCursor]     = useState(null);
+  const [hasNext,        setHasNext]        = useState(false);
+  const tableRef = useRef(null);
 
-  const fetchStatus = async (date, time) => {
-    setLoading(true);
+  const fetchStatus = async (date, time, cursor = null) => {
+    if (cursor) setLoadingMore(true);
+    else setLoading(true);
     setError(null);
     try {
-      const data = await getCampaignSmsStatus({ campaignId, date: date || undefined, time: time || undefined });
-      setLogs(data?.targets?.content ?? []);
-      setTotalCount(data?.todaySentCount + data?.todayFailedCount ?? 0);
+      const data = await getCampaignSmsStatus({ campaignId, date: date || undefined, time: time || undefined, cursor: cursor || undefined });
+      const newLogs = data?.targets?.content ?? [];
+      setLogs(prev => cursor ? [...prev, ...newLogs] : newLogs);
+      setNextCursor(data?.targets?.nextCursor ?? null);
+      setHasNext(data?.targets?.hasNext ?? false);
       setSuccessCount(data?.todaySentCount ?? 0);
       setFailCount(data?.todayFailedCount ?? 0);
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
   useEffect(() => { fetchStatus("", ""); }, []);
+
+  // ── 스크롤 끝 감지 → 다음 페이지 로드 ──
+  const handleScroll = () => {
+    const el = tableRef.current;
+    if (!el || loadingMore || !hasNext) return;
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 10) {
+      fetchStatus(filterDate, filterTime, nextCursor);
+    }
+  };
 
   const toggleSelect = (loginId) => {
     setSelected(prev => {
@@ -187,11 +204,19 @@ function SendStatusSection({ campaignId, messageType, messageContent }) {
     });
   };
 
-  const handleSearch = () => { fetchStatus(filterDate, filterTime); };
+  const handleSearch = () => {
+    setLogs([]);
+    setNextCursor(null);
+    setHasNext(false);
+    fetchStatus(filterDate, filterTime);
+  };
 
   const handleReset = () => {
     setFilterDate("");
     setFilterTime("");
+    setLogs([]);
+    setNextCursor(null);
+    setHasNext(false);
     fetchStatus("", "");
   };
 
@@ -201,6 +226,8 @@ function SendStatusSection({ campaignId, messageType, messageContent }) {
     try {
       await retryCampaignSms({ campaignId, messageType: messageType ?? "SMS", content: messageContent ?? "" });
       setSelected(new Set());
+      setLogs([]);
+      setNextCursor(null);
       fetchStatus(filterDate, filterTime);
     } catch (err) {
       setError(err.message);
@@ -237,7 +264,7 @@ function SendStatusSection({ campaignId, messageType, messageContent }) {
         </div>
       </div>
       {error && <div style={{ fontSize: 12, color: "#B82B2B", marginBottom: 8 }}>{error}</div>}
-      <div className="cdp-send-table">
+      <div className="cdp-send-table" ref={tableRef} onScroll={handleScroll}>
         {loading ? (
           <div style={{ padding: 24, textAlign: "center", fontSize: 12, color: "#9EA6B5" }}>불러오는 중...</div>
         ) : logs.length === 0 ? (
@@ -254,6 +281,9 @@ function SendStatusSection({ campaignId, messageType, messageContent }) {
             <span className="cdp-send-date">{log.sentAt?.substring(0, 16).replace("T", " ")}</span>
           </div>
         ))}
+        {loadingMore && (
+          <div style={{ padding: 12, textAlign: "center", fontSize: 12, color: "#9EA6B5" }}>불러오는 중...</div>
+        )}
       </div>
       <div className="cdp-send-footer">
         <button className="cdp-btn-resend" onClick={handleResend} disabled={selected.size === 0 || resending}>
