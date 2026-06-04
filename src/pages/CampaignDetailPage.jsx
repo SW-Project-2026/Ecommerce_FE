@@ -153,7 +153,8 @@ function SendStatusSection({ campaignId, messageType, messageContent }) {
   const [loading,        setLoading]        = useState(false);
   const [loadingMore,    setLoadingMore]     = useState(false);
   const [selected,       setSelected]       = useState(new Set());
-  const [filterDate,     setFilterDate]     = useState("");
+  const todayStr = new Date().toISOString().split("T")[0];
+  const [filterDate,     setFilterDate]     = useState(todayStr);
   const [filterTime,     setFilterTime]     = useState("");
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [totalCount,     setTotalCount]     = useState(0);
@@ -185,7 +186,7 @@ function SendStatusSection({ campaignId, messageType, messageContent }) {
     }
   };
 
-  useEffect(() => { fetchStatus("", ""); }, []);
+  useEffect(() => { fetchStatus(todayStr, ""); }, []);
 
   // ── 스크롤 끝 감지 → 다음 페이지 로드 ──
   const handleScroll = () => {
@@ -212,12 +213,12 @@ function SendStatusSection({ campaignId, messageType, messageContent }) {
   };
 
   const handleReset = () => {
-    setFilterDate("");
+    setFilterDate(todayStr);
     setFilterTime("");
     setLogs([]);
     setNextCursor(null);
     setHasNext(false);
-    fetchStatus("", "");
+    fetchStatus(todayStr, "");
   };
 
   const handleResend = async () => {
