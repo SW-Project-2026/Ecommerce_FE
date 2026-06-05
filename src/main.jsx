@@ -16,8 +16,8 @@ const role         = localStorage.getItem('role')
 const token        = getCookie('accessToken')
 const hasCouponToken = new URLSearchParams(window.location.search).has('token')
 
-// /#admin 해시이거나, role이 ADMIN이면 관리자 페이지 진입
-const isAdmin = isAdminHash || (token && role === 'ADMIN')
+// role이 ADMIN이고 /#admin 해시일 때만 관리자 페이지 진입
+const isAdmin = isAdminHash && role === 'ADMIN'
 
 if (isAdmin && !isAdminHash) {
   window.location.hash = '#admin'
