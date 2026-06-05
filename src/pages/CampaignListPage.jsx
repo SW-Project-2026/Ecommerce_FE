@@ -8,6 +8,7 @@ import DataManagePage from "./DataManagePage";
 import EventFieldPage from "./EventFieldPage";
 import AdManagePage from "./AdManagePage";
 import AdCreatePage from "./AdCreatePage";
+import AdDetailPage from "./AdDetailPage";
 import DashboardPage from "./DashboardPage";
 import CustomerDashboardPage from "./CustomerDashboardPage";
 import { campaignList, campaignDetail } from "../api/campaigns";
@@ -71,10 +72,6 @@ function formatDate(raw) {
   }
 }
 
-function removeCookie(name) {
-  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/`
-}
-
 export default function CampaignListPage() {
   const [activePage,       setActivePage]       = useState(() => sessionStorage.getItem('adminPage') || "캠페인 목록");
   const [selectedCampaign, setSelectedCampaign] = useState(null);
@@ -113,7 +110,6 @@ export default function CampaignListPage() {
   useEffect(() => { fetchAdminId(); }, [])
 
   const handleLogout = () => {
-    removeCookie('accessToken')
     localStorage.removeItem('role')
     localStorage.removeItem('userId')
     sessionStorage.removeItem('adminPage')
@@ -349,6 +345,27 @@ export default function CampaignListPage() {
             if (page === "create") {
               setEditAd(data ?? null);
               navigateTo("광고 등록");
+            } else if (page === "detail") {
+              setEditAd(data ?? null);
+              navigateTo("광고 상세");
+            } else {
+              navigateTo(page);
+            }
+          }}
+        />
+      </Layout>
+    );
+  }
+
+  if (activePage === "광고 상세") {
+    return (
+      <Layout>
+        <AdDetailPage
+          adId={editAd?.adId}
+          onNavigate={(page) => {
+            if (page === "list") {
+              setEditAd(null);
+              navigateTo("광고 목록");
             } else {
               navigateTo(page);
             }
@@ -490,10 +507,10 @@ export default function CampaignListPage() {
                           {badge?.label ?? row.status}
                         </span>
                       </td>
-                      <td>{formatDate(row.startedAt)}</td>
-                      <td>{formatDate(row.endedAt)}</td>
+                      <td className="cl-td-date">{formatDate(row.startedAt)}</td>
+                      <td className="cl-td-date">{formatDate(row.endedAt)}</td>
                       <td>{row.createdBy}</td>
-                      <td>{formatDateTime(row.createdAt)}</td>
+                      <td className="cl-td-date">{formatDateTime(row.createdAt)}</td>
                     </tr>
                   );
                 })}

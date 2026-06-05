@@ -93,9 +93,9 @@ export default function CouponListPage({ onNavigate }) {
                       <td className="cp-td-name">{c.name}</td>
                       <td className="cp-td-code">{c.code}</td>
                       <td>{DISCOUNT_TYPE_DISPLAY[c.discountType] ?? c.discountType}</td>
-                      <td>{c.discountType === "RATE" ? `${c.discountAmount}%` : `${c.discountAmount?.toLocaleString()}원`}</td>
-                      <td>{c.expiredAt}일</td>
-                      <td>{c.issueLimit === null ? "무제한" : `${c.issueLimit?.toLocaleString()}건`}</td>
+                      <td className="cp-td-right">{c.discountType === "RATE" ? `${c.discountAmount}%` : `${c.discountAmount?.toLocaleString()}원`}</td>
+                      <td className="cp-td-right">{c.expiredAt}일</td>
+                      <td className="cp-td-right">{c.issueLimit === null ? "무제한" : `${c.issueLimit?.toLocaleString()}건`}</td>
                       <td>
                         <div className="cp-action-btns">
                           <button className="cp-btn-edit" onClick={() => onNavigate("create", c)}>수정</button>

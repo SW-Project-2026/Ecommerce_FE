@@ -150,8 +150,8 @@ export default function AdManagePage({ onNavigate }) {
                   return (
                     <tr key={ad.adId}>
                       <td>{i + 1}</td>
-                      <td className="ad-td-name">{ad.adName}</td>
-                      <td>{ad.createdAt?.substring(0, 19).replace("T", " ")}</td>
+                      <td className="ad-td-name" style={{ cursor: "pointer", color: "#4F6EF7" }} onClick={() => onNavigate?.("detail", ad)}>{ad.adName}</td>
+                      <td className="ad-td-date">{ad.createdAt?.substring(0, 19).replace("T", " ")}</td>
                       <td>
                         <span style={{
                           display: "inline-flex",

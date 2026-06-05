@@ -162,11 +162,19 @@
 .cp-td-name {
   font-weight: 700 !important;
   color: #111111 !important;
+  text-align: left !important;
+  padding-left: 16px !important;
 }
 
 .cp-td-code {
   color: #3F76E4 !important;
   font-family: 'Inter', sans-serif !important;
+}
+
+/* 할인금액, 유효기간, 발급수량 오른쪽 정렬 */
+.cp-td-right {
+  text-align: right !important;
+  padding-right: 16px !important;
 }
 
 /* ── ACTION BUTTONS ── */

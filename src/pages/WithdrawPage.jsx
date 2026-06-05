@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { usePageView } from '../hooks/usePageView'
 import './WithdrawPage.css'
 
 export default function WithdrawPage({ onNavigate, onLogout }) {
@@ -8,6 +9,8 @@ export default function WithdrawPage({ onNavigate, onLogout }) {
   const [loading,  setLoading]  = useState(false)
   const [error,    setError]    = useState('')
   const [done,     setDone]     = useState(false)
+
+  usePageView('회원탈퇴')
 
   async function handleWithdraw() {
     if (!password.trim()) { setError('비밀번호를 입력해 주세요.'); return }

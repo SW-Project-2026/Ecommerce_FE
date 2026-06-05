@@ -18,8 +18,13 @@ function getOrCreateUUID() {
   return uuid
 }
 
+// 관리자 계정이면 로그 수집 안 함
+function isAdmin() {
+  return localStorage.getItem('role') === 'ADMIN'
+}
+
 export const clickSearchButton = async (query, userId = null) => {
-  if (!query.trim()) return
+  if (!query.trim() || isAdmin()) return
 
   if (timer) clearTimeout(timer)
 
@@ -39,6 +44,7 @@ export const clickSearchButton = async (query, userId = null) => {
 }
 
 export const clickPurchaseButton = async ({ approvedAmount, productName, productId, productCategory = null, userId = null }) => {
+  if (isAdmin()) return
   await fetch(`${FLUENTD_URL}/kafka.logs`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -56,6 +62,7 @@ export const clickPurchaseButton = async ({ approvedAmount, productName, product
 }
 
 export const viewProductDetail = async ({ productName, productId, dwellTime, productCategory = null, userId = null }) => {
+  if (isAdmin()) return
   await fetch(`${FLUENTD_URL}/kafka.logs`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -73,6 +80,7 @@ export const viewProductDetail = async ({ productName, productId, dwellTime, pro
 }
 
 export const pageView = async ({ pageName, dwellTime, userId = null }) => {
+  if (isAdmin()) return
   await fetch(`${FLUENTD_URL}/kafka.logs`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -90,6 +98,7 @@ export const pageView = async ({ pageName, dwellTime, userId = null }) => {
 // ── 찜 추가/제거 ──
 // actionType: 'add' | 'remove'
 export const clickWishlist = async ({ productName, productId, productCategory = null, actionType, userId = null }) => {
+  if (isAdmin()) return
   await fetch(`${FLUENTD_URL}/kafka.logs`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -109,6 +118,7 @@ export const clickWishlist = async ({ productName, productId, productCategory = 
 // ── 장바구니 추가/제거 ──
 // actionType: 'add' | 'remove'
 export const clickCart = async ({ productName, productId, productCategory = null, actionType, userId = null }) => {
+  if (isAdmin()) return
   await fetch(`${FLUENTD_URL}/kafka.logs`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -127,6 +137,7 @@ export const clickCart = async ({ productName, productId, productCategory = null
 
 // ── 로그인 ──
 export const userLogin = async ({ userId }) => {
+  if (isAdmin()) return
   await fetch(`${FLUENTD_URL}/kafka.logs`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -141,6 +152,7 @@ export const userLogin = async ({ userId }) => {
 
 // ── 로그아웃 ──
 export const userLogout = async ({ userId }) => {
+  if (isAdmin()) return
   await fetch(`${FLUENTD_URL}/kafka.logs`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
