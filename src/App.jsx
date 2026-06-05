@@ -189,6 +189,7 @@ export default function App() {
     if (target === 'cart' || target === 'home') {
       fetchCartCount()
     }
+    window.scrollTo(0, 0)
     sessionStorage.setItem('page', target)
     setPage(target)
   }
@@ -229,7 +230,7 @@ export default function App() {
   if (page === 'mypage') return (
     <div className="page page-list">
       <NavHeader onNavigate={handleNavigate} cartCount={cartCount} auth={auth} onLogout={handleLogout} userId={userId} />
-      <MyPage onNavigate={handleNavigate} onLogout={handleLogout} auth={auth} userId={userId} initialTab={mypageTab} />
+      <MyPage key={mypageTab} onNavigate={handleNavigate} onLogout={handleLogout} auth={auth} userId={userId} initialTab={mypageTab} />
       <Footer />
     </div>
   )

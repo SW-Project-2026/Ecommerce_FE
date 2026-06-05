@@ -17,6 +17,12 @@ a { text-decoration: none; }
   overflow: visible;
   min-height: 100vh;
 }
+.page-list .footer {
+  position: static;
+  width: 100%;
+  height: auto;
+  padding: 40px 60px;
+}
 .page-list .category-bar {
   z-index: 9;
 }
