@@ -22,12 +22,12 @@ export function usePageView(pageName, userId = null) {
   const activeDwellRef   = useRef(0)
   const activeStartRef   = useRef(null)
   const inactiveTimerRef = useRef(null)
-  const userIdRef        = useRef(userId)
+  const userIdRef        = useRef(userId ?? localStorage.getItem('userId'))
   const pageNameRef      = useRef(pageName)
 
   // userId, pageName이 바뀔 때마다 ref 업데이트
   useEffect(() => {
-    userIdRef.current = userId
+    userIdRef.current = userId ?? localStorage.getItem('userId')
   }, [userId])
 
   useEffect(() => {

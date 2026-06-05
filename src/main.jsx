@@ -23,6 +23,11 @@ if (isAdmin && !isAdminHash) {
   window.location.hash = '#admin'
 }
 
+// 관리자가 아닌데 /#admin 접근 시 hash 제거
+if (isAdminHash && !isAdmin) {
+  window.location.hash = ''
+}
+
 let root
 if (hasCouponToken) {
   root = <CouponClaimPage />
