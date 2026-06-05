@@ -120,6 +120,13 @@
 .ad-td-name {
   font-weight: 700 !important;
   color: #111111 !important;
+  text-align: left !important;
+  padding-left: 16px !important;
+}
+
+.ad-td-date {
+  text-align: right !important;
+  padding-right: 16px !important;
 }
 
 /* ── ACTION BUTTONS ── */
