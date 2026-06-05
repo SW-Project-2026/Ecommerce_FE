@@ -21,6 +21,7 @@ import { usePageView } from './hooks/usePageView'
 import { getMyProfile } from './api/users'
 import { refreshToken } from './api/auth'
 import { cartGet } from './api/carts'
+import { userLogin as snippetUserLogin } from './api/snippets'
 import './App.css'
 
 function setCookie(name, value, days = 7) {
@@ -36,6 +37,7 @@ function clearAuth() {
   removeCookie('accessToken')
   localStorage.removeItem('role')
   localStorage.removeItem('userId')
+  localStorage.removeItem('userSeqId')
   sessionStorage.clear()
 }
 
@@ -81,6 +83,12 @@ export default function App() {
           return
         }
         setAuth({ role: resolvedRole, userId: userId ?? null })
+        // userSeqId가 없으면 프로필에서 보완
+        if (!localStorage.getItem('userSeqId')) {
+          getMyProfile().then(profile => {
+            if (profile?.id) localStorage.setItem('userSeqId', String(profile.id))
+          }).catch(() => {})
+        }
       } catch {
         clearAuth()
         setAuth(null)
@@ -118,8 +126,13 @@ export default function App() {
     try {
       const profile = await getMyProfile()
       const userId = profile.loginId ?? null
+      const userSeqId = profile.id ?? null
       if (userId) localStorage.setItem('userId', userId)
+      if (userSeqId) localStorage.setItem('userSeqId', String(userSeqId))
       setAuth({ role: data.role, userId })
+      if (data.role !== 'ADMIN') {
+        snippetUserLogin({ userId })
+      }
     } catch {
       // userId 없이 진행
     }

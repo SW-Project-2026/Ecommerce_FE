@@ -18,6 +18,11 @@ function getOrCreateUUID() {
   return uuid
 }
 
+function getUserSeqId() {
+  const raw = localStorage.getItem('userSeqId')
+  return raw ? Number(raw) : null
+}
+
 export function usePageView(pageName, userId = null) {
   const activeDwellRef   = useRef(0)
   const activeStartRef   = useRef(null)
@@ -69,6 +74,7 @@ export function usePageView(pageName, userId = null) {
             event_name:      'page_view',
             pageName:        pageNameRef.current,
             dwellTime:       dwellTime,
+            user_id:         getUserSeqId(),
             user_login_id:   userIdRef.current,
             client_uuid:     getOrCreateUUID(),
             event_timestamp: getKSTTimestamp(),
