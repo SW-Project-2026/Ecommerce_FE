@@ -264,7 +264,7 @@ export default function App() {
   if (page === 'withdraw') return (
     <div className="page page-list">
       <NavHeader onNavigate={handleNavigate} cartCount={cartCount} auth={auth} onLogout={handleLogout} userId={userId} />
-      <WithdrawPage onNavigate={handleNavigate} onLogout={handleLogout} />
+      <WithdrawPage onNavigate={handleNavigate} onLogout={handleLogout} userId={userId} />
       <Footer />
     </div>
   )
