@@ -358,7 +358,34 @@ export default function CampaignCreatePage({ onNavigate }) {
                     </select>
                   </div>
                   <div className="cc-fc cc-fh-val">
-                    <input className="cc-input cc-input-sm" placeholder="값 입력" value={f.value} onChange={e => updateFilter(f.id, "value", e.target.value)} disabled={!f.operator} />
+                    {f.field === "productCategory" ? (
+                      <select className="cc-select cc-select-sm" value={f.value} onChange={e => updateFilter(f.id, "value", e.target.value)} disabled={!f.operator}>
+                        <option value="">선택</option>
+                        <option value="디지털/가전">디지털/가전</option>
+                        <option value="패션의류">패션의류</option>
+                        <option value="패션잡화">패션잡화</option>
+                        <option value="화장품/미용">화장품/미용</option>
+                        <option value="식품">식품</option>
+                        <option value="생활/건강">생활/건강</option>
+                        <option value="스포츠/레저">스포츠/레저</option>
+                        <option value="가구/인테리어">가구/인테리어</option>
+                      </select>
+                    ) : f.field === "pageName" ? (
+                      <select className="cc-select cc-select-sm" value={f.value} onChange={e => updateFilter(f.id, "value", e.target.value)} disabled={!f.operator}>
+                        <option value="">선택</option>
+                        <option value="홈">홈</option>
+                        <option value="로그인">로그인</option>
+                        <option value="회원가입">회원가입</option>
+                        <option value="상품목록">상품목록</option>
+                        <option value="장바구니">장바구니</option>
+                        <option value="주문결제">주문결제</option>
+                        <option value="주문완료">주문완료</option>
+                        <option value="마이페이지">마이페이지</option>
+                        <option value="회원탈퇴">회원탈퇴</option>
+                      </select>
+                    ) : (
+                      <input className="cc-input cc-input-sm" placeholder="값 입력" value={f.value} onChange={e => updateFilter(f.id, "value", e.target.value)} disabled={!f.operator} />
+                    )}
                   </div>
                   <div className="cc-fc cc-fh-period">
                     <span className="cc-period-prefix">최근</span>
