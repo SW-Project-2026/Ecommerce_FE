@@ -22,6 +22,21 @@ a { text-decoration: none; }
   width: 100%;
   height: auto;
   padding: 40px 60px;
+  display: flex;
+  align-items: center;
+  gap: 40px;
+}
+.page-list .footer .footer-logo {
+  position: static;
+}
+.page-list .footer .footer-links {
+  position: static;
+  display: flex;
+  gap: 40px;
+}
+.page-list .footer .footer-copyright {
+  position: static;
+  margin-left: auto;
 }
 .page-list .category-bar {
   z-index: 9;
@@ -1334,7 +1349,6 @@ a { text-decoration: none; }
 .cart-continue-btn:hover { border-color: #1C2E5C; color: #1C2E5C; }
 
 /* 다른 고객 상품 */
-
 .cart-related-title {
   font-size: 16px; font-weight: 700;
   color: #111827;
