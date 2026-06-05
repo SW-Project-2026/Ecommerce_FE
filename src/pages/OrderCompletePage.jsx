@@ -77,7 +77,7 @@ export default function OrderCompletePage({ orderInfo, onNavigate, userId = null
 
         <div className="oc-btns">
           <button className="oc-btn-outline" onClick={() => onNavigate('home')}>계속 쇼핑하기</button>
-          <button className="oc-btn-primary" onClick={() => onNavigate('mypage')}>주문 내역 확인</button>
+          <button className="oc-btn-primary" onClick={() => onNavigate('mypage', 'orders')}>주문 내역 확인</button>
         </div>
       </div>
     </div>
