@@ -128,10 +128,10 @@
   white-space: nowrap;
 }
 
-.cd-badge-vip   { background: rgba(255,149,187,0.3); border: 1px solid rgba(255,43,121,0.4); color: #FF2B79; }
-.cd-badge-freq  { background: rgba(79,110,247,0.3);  border: 1px solid rgba(32,73,255,0.4);  color: #2049FF; }
-.cd-badge-churn { background: rgba(24,184,122,0.3);  border: 1px solid rgba(24,184,122,0.3); color: #005A37; }
-.cd-badge-churn-high { background: rgba(255,100,100,0.2); border: 1px solid rgba(255,43,43,0.3); color: #BF402B; }
+.cd-badge-grade      { background: rgba(255,149,187,0.3); border: 1px solid rgba(255,43,121,0.4);  color: #FF2B79; }
+.cd-badge-freq       { background: rgba(79,110,247,0.3);  border: 1px solid rgba(32,73,255,0.4);   color: #2049FF; }
+.cd-badge-churn      { background: rgba(24,184,122,0.3);  border: 1px solid rgba(24,184,122,0.3);  color: #005A37; }
+.cd-badge-churn-high { background: rgba(255,100,100,0.2); border: 1px solid rgba(255,43,43,0.3);   color: #BF402B; }
 
 .cd-profile-stats {
   display: flex;

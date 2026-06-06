@@ -184,7 +184,7 @@ export default function CustomerDashboardPage({ userId, onBack }) {
               <p className="cd-profile-name">{info.name ?? "–"}</p>
               <p className="cd-profile-tier">{info.grade} · 가입 {info.joinDate ?? "–"}</p>
               <div className="cd-profile-badges">
-                {info.grade === "VIP" && <span className="cd-badge cd-badge-vip">VIP</span>}
+                {info.grade && <span className="cd-badge cd-badge-grade">{info.grade}</span>}
                 {info.tags?.purchaseFrequency && (
                   <span className="cd-badge cd-badge-freq">구매빈도 {info.tags.purchaseFrequency}</span>
                 )}
