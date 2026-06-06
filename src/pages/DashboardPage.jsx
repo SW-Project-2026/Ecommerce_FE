@@ -68,13 +68,13 @@ export default function DashboardPage({ onNavigateToCustomer }) {
     { name: "클릭",   value: summary.ctr?.clicks ?? 0 },
     { name: "노출",   value: (summary.ctr?.impressions ?? 0) - (summary.ctr?.clicks ?? 0) },
   ] : [];
-  const ctrRate = summary ? `${((summary.ctr?.rate ?? 0) * 100).toFixed(1)}%` : "–";
+  const ctrRate = summary ? `${(summary.ctr?.rate ?? 0).toFixed(1)}%` : "–";
 
   const couponData = summary ? [
     { name: "사용",   value: summary.couponUsage?.used ?? 0 },
     { name: "미사용", value: (summary.couponUsage?.sent ?? 0) - (summary.couponUsage?.used ?? 0) },
   ] : [];
-  const couponRate = summary ? `${((summary.couponUsage?.rate ?? 0) * 100).toFixed(1)}%` : "–";
+  const couponRate = summary ? `${(summary.couponUsage?.rate ?? 0).toFixed(1)}%` : "–";
 
   const maxJoin = Math.max(...monthlyData.map(d => d.join), 1);
   const renderBar = (props) => {
@@ -250,8 +250,8 @@ export default function DashboardPage({ onNavigateToCustomer }) {
                         ? <span className="db-churn-high">높음</span>
                         : <span className="db-td-muted">{c.churnRisk}</span>}
                     </td>
-                    <td>{typeof c.ctr === "number" ? `${(c.ctr * 100).toFixed(2)}%` : c.ctr}</td>
-                    <td>{typeof c.couponUsageRate === "number" ? `${(c.couponUsageRate * 100).toFixed(1)}%` : c.couponUsageRate}</td>
+                    <td>{typeof c.ctr === "number" ? `${c.ctr.toFixed(2)}%` : c.ctr}</td>
+                    <td>{typeof c.couponUsageRate === "number" ? `${c.couponUsageRate.toFixed(1)}%` : c.couponUsageRate}</td>
                     <td><button className="db-view-btn" onClick={() => onNavigateToCustomer?.(c.userId)}>보기 →</button></td>
                   </tr>
                 ))}

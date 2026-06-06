@@ -130,12 +130,12 @@ export default function CustomerDashboardPage({ userId, onBack }) {
 
   // 도넛 데이터
   const ctrData    = [{ name: "클릭", value: ctr.clicks ?? 0 }, { name: "노출", value: (ctr.impressions ?? 0) - (ctr.clicks ?? 0) }];
-  const couponData = [{ name: "사용", value: coupon.used ?? 0 }, { name: "미사용", value: (coupon.sent ?? 0) - (coupon.used ?? 0) }];
+  const couponData = [{ name: "사용", value: coupon.used ?? 0 }, { name: "미사용", value: coupon.unused ?? 0 }];
   const adData     = [{ name: "구매", value: adConv.purchases ?? 0 }, { name: "노출", value: (adConv.adImpressions ?? 0) - (adConv.purchases ?? 0) }];
 
-  const ctrRate    = ctr.rate    != null ? `${(ctr.rate * 100).toFixed(1)}%`         : "–";
-  const couponRate = coupon.rate != null ? `${(coupon.rate * 100).toFixed(1)}%`      : "–";
-  const adRate     = adConv.rate != null ? `${(adConv.rate * 100).toFixed(2)}%`      : "–";
+  const ctrRate    = ctr.rate    != null ? `${ctr.rate.toFixed(1)}%`    : "–";
+  const couponRate = coupon.rate != null ? `${coupon.rate.toFixed(1)}%` : "–";
+  const adRate     = adConv.rate != null ? `${adConv.rate.toFixed(2)}%` : "–";
 
   const DONUT_STATS = [
     {
@@ -151,7 +151,7 @@ export default function CustomerDashboardPage({ userId, onBack }) {
       data: couponData, colors: ["#18B87A", "#D7DFF0"],
       legends: [
         { color: "#18B87A", text: `사용 ${coupon.used ?? 0}장` },
-        { color: "#D7DFF0", text: `미사용 ${(coupon.sent ?? 0) - (coupon.used ?? 0)}장` },
+        { color: "#D7DFF0", text: `미사용 ${coupon.unused ?? 0}장` },
       ],
     },
     {
@@ -189,8 +189,8 @@ export default function CustomerDashboardPage({ userId, onBack }) {
                   <span className="cd-badge cd-badge-freq">구매빈도 {info.tags.purchaseFrequency}</span>
                 )}
                 {info.tags?.churnRisk && (
-                  <span className={`cd-badge ${info.tags.churnRisk === "HIGH" ? "cd-badge-churn-high" : "cd-badge-churn"}`}>
-                    이탈위험 {info.tags.churnRisk === "HIGH" ? "높음" : "낮음"}
+                  <span className={`cd-badge ${info.tags.churnRisk === "HIGH" || info.tags.churnRisk === "높음" ? "cd-badge-churn-high" : "cd-badge-churn"}`}>
+                    이탈위험 {info.tags.churnRisk === "HIGH" || info.tags.churnRisk === "높음" ? "높음" : "낮음"}
                   </span>
                 )}
               </div>
@@ -199,7 +199,7 @@ export default function CustomerDashboardPage({ userId, onBack }) {
           <div className="cd-profile-stats">
             <div className="cd-profile-stat-row">
               <span className="cd-profile-stat-label">최근 접속</span>
-              <span className="cd-profile-stat-value">{info.lastLogin ?? "–"}</span>
+              <span className="cd-profile-stat-value">{info.lastLogin || "–"}</span>
             </div>
             <div className="cd-profile-stat-row">
               <span className="cd-profile-stat-label">최근 구매일</span>
