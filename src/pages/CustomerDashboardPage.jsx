@@ -1,117 +1,177 @@
+import { useState, useEffect, useRef, useCallback } from "react";
+import { PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
 import "./CustomerDashboardPage.css";
+import { getCustomerDetail, getCustomerOrders, getCustomerCart } from "../api/dashboard";
 
-const CUSTOMER = {
-  id: "jj1234",
-  name: "김지원",
-  tier: "VIP 회원 · 가입 2023-04-22",
-  lastAccess: "오늘 오전 9:14",
-  lastPurchase: "14일 전",
-  withdrawVisit: "없음",
-};
-
-const DONUT_STATS = [
-  {
-    label: "광고 노출 대비 클릭률",
-    sub: "CTR",
-    value: "5.1%",
-    pct: 5.1,
-    color: "#4F6EF7",
-    trackColor: "#D7DFF0",
-    legends: [
-      { color: "#4F6EF7", text: "클릭 259회" },
-      { color: "#D7DFF0", text: "노출 4,040회" },
-    ],
-  },
-  {
-    label: "쿠폰 수신 대비 사용률",
-    sub: "",
-    value: "66.7%",
-    pct: 66.7,
-    color: "#8CA0FA",
-    trackColor: "#D7DFF0",
-    legends: [
-      { color: "#18B87A", text: "사용 2장" },
-      { color: "#D7DFF0", text: "미사용 1장" },
-    ],
-  },
-  {
-    label: "광고 → 구매 전환율",
-    sub: "",
-    value: "2.94%",
-    pct: 2.94,
-    color: "#4F6EF7",
-    trackColor: "#D7DFF0",
-    legends: [
-      { color: "#4F6EF7", text: "구매 20회" },
-      { color: "#E3EDF4", text: "광고 668건 노출" },
-    ],
-  },
-];
-
-const KEYWORDS = ["축구화", "축구공", "스포츠의류", "헬스보충제"];
-
-const TIME_BARS = [
-  { label: "00-03", pct: 9,   color: "#DCE2FD" },
-  { label: "03-06", pct: 7,   color: "#DCE2FD" },
-  { label: "06-09", pct: 100, color: "#FF6B6B" },
-  { label: "09-12", pct: 67,  color: "#8CA0FA" },
-  { label: "12-15", pct: 51,  color: "#B0BDFB" },
-  { label: "15-18", pct: 27,  color: "#DCE2FD" },
-  { label: "18-21", pct: 46,  color: "#B0BDFB" },
-  { label: "21-24", pct: 22,  color: "rgba(79,110,247,0.2)" },
-];
-
-const CART_ITEMS = [
-  { name: "Nike 축구화 F30",      cat: "스포츠 · 축구용품", price: "189,000원" },
-  { name: "어댑터 단백질 파우더",  cat: "헬스 · 보충제",     price: "54,000원"  },
-  { name: "무릎 보호대",           cat: "스포츠 · 보호용품", price: "28,000원"  },
-  { name: "스포츠 양말 (5켤레)",   cat: "스포츠 · 의류",     price: "12,000원"  },
-];
-
-const RECENT_ORDERS = [
-  { name: "Nike 축구화 F30",      cat: "스포츠 · 축구용품", price: "189,000원" },
-  { name: "어댑터 단백질 파우더",  cat: "헬스 · 보충제",     price: "54,000원"  },
-  { name: "무릎 보호대",           cat: "스포츠 · 보호용품", price: "28,000원"  },
-  { name: "스포츠 양말 (5켤레)",   cat: "스포츠 · 의류",     price: "12,000원"  },
-];
-
-const Y_LABELS = ["100", "80", "60", "40", "20", "0"];
-
-function DonutChart({ pct, color, trackColor, value }) {
-  const r = 54;
-  const circ = 2 * Math.PI * r;
-  const dash = (pct / 100) * circ;
-  const gap  = circ - dash;
+function DonutLabel({ cx, cy, value }) {
   return (
-    <div className="cd-donut-wrap">
-      <svg viewBox="0 0 140 140" width="140" height="140">
-        <circle cx="70" cy="70" r={r} fill="none" stroke={trackColor} strokeWidth="16" />
-        <circle
-          cx="70" cy="70" r={r}
-          fill="none"
-          stroke={color}
-          strokeWidth="16"
-          strokeDasharray={`${dash} ${gap}`}
-          strokeLinecap="round"
-          transform="rotate(-90 70 70)"
-        />
-      </svg>
-      <div className="cd-donut-label">{value}</div>
-    </div>
+    <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central"
+      style={{ fontFamily: "'DM Sans','Inter',sans-serif", fontWeight: 700, fontSize: 18, fill: "#212023" }}>
+      {value}
+    </text>
   );
 }
 
-export default function CustomerDashboardPage() {
-  const initial = CUSTOMER.name[0];
+// 시간대 바 색상
+function getTimeColor(count, max) {
+  if (count === max) return "#FF6B6B";
+  const ratio = count / max;
+  if (ratio > 0.6) return "#8CA0FA";
+  if (ratio > 0.4) return "#B0BDFB";
+  return "#DCE2FD";
+}
+
+export default function CustomerDashboardPage({ userId, onBack }) {
+  const [detail,       setDetail]       = useState(null);
+  const [orders,       setOrders]       = useState([]);
+  const [cart,         setCart]         = useState([]);
+  const [orderCursor,  setOrderCursor]  = useState(null);
+  const [cartCursor,   setCartCursor]   = useState(null);
+  const [orderHasNext, setOrderHasNext] = useState(false);
+  const [cartHasNext,  setCartHasNext]  = useState(false);
+  const [loading,      setLoading]      = useState(true);
+
+  const orderRef = useRef(null);
+  const cartRef  = useRef(null);
+
+  // 상세 조회
+  useEffect(() => {
+    if (!userId) return;
+    setLoading(true);
+    getCustomerDetail({ userId })
+      .then(data => setDetail(data))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [userId]);
+
+  // 구매이력 초기 조회
+  useEffect(() => {
+    if (!userId) return;
+    getCustomerOrders({ userId, size: 4 })
+      .then(data => {
+        setOrders(data.content ?? []);
+        setOrderCursor(data.nextCursor);
+        setOrderHasNext(data.hasNext);
+      })
+      .catch(() => {});
+  }, [userId]);
+
+  // 장바구니 초기 조회
+  useEffect(() => {
+    if (!userId) return;
+    getCustomerCart({ userId, size: 4 })
+      .then(data => {
+        setCart(data.content ?? []);
+        setCartCursor(data.nextCursor);
+        setCartHasNext(data.hasNext);
+      })
+      .catch(() => {});
+  }, [userId]);
+
+  // 구매이력 무한스크롤
+  const loadMoreOrders = useCallback(() => {
+    if (!orderHasNext || !orderCursor) return;
+    getCustomerOrders({ userId, cursor: orderCursor, size: 4 })
+      .then(data => {
+        setOrders(prev => [...prev, ...(data.content ?? [])]);
+        setOrderCursor(data.nextCursor);
+        setOrderHasNext(data.hasNext);
+      })
+      .catch(() => {});
+  }, [userId, orderCursor, orderHasNext]);
+
+  // 장바구니 무한스크롤
+  const loadMoreCart = useCallback(() => {
+    if (!cartHasNext || !cartCursor) return;
+    getCustomerCart({ userId, cursor: cartCursor, size: 4 })
+      .then(data => {
+        setCart(prev => [...prev, ...(data.content ?? [])]);
+        setCartCursor(data.nextCursor);
+        setCartHasNext(data.hasNext);
+      })
+      .catch(() => {});
+  }, [userId, cartCursor, cartHasNext]);
+
+  // 스크롤 감지
+  useEffect(() => {
+    const el = orderRef.current;
+    if (!el) return;
+    const onScroll = () => {
+      if (el.scrollTop + el.clientHeight >= el.scrollHeight - 10) loadMoreOrders();
+    };
+    el.addEventListener("scroll", onScroll);
+    return () => el.removeEventListener("scroll", onScroll);
+  }, [loadMoreOrders]);
+
+  useEffect(() => {
+    const el = cartRef.current;
+    if (!el) return;
+    const onScroll = () => {
+      if (el.scrollTop + el.clientHeight >= el.scrollHeight - 10) loadMoreCart();
+    };
+    el.addEventListener("scroll", onScroll);
+    return () => el.removeEventListener("scroll", onScroll);
+  }, [loadMoreCart]);
+
+  if (loading) return (
+    <div className="cd-main">
+      <div style={{ padding: 40, textAlign: "center", color: "#9BAAC0", fontSize: 13 }}>불러오는 중...</div>
+    </div>
+  );
+
+  const info        = detail?.customerInfo ?? {};
+  const ctr         = detail?.ctr ?? {};
+  const coupon      = detail?.couponUsage ?? {};
+  const adConv      = detail?.adConversion ?? {};
+  const keywords    = detail?.interestedCategories ?? [];
+  const timeSlots   = detail?.accessTimeSlots ?? [];
+
+  const maxCount = Math.max(...timeSlots.map(t => t.count), 1);
+
+  // 도넛 데이터
+  const ctrData    = [{ name: "클릭", value: ctr.clicks ?? 0 }, { name: "노출", value: (ctr.impressions ?? 0) - (ctr.clicks ?? 0) }];
+  const couponData = [{ name: "사용", value: coupon.used ?? 0 }, { name: "미사용", value: (coupon.sent ?? 0) - (coupon.used ?? 0) }];
+  const adData     = [{ name: "구매", value: adConv.purchases ?? 0 }, { name: "노출", value: (adConv.adImpressions ?? 0) - (adConv.purchases ?? 0) }];
+
+  const ctrRate    = ctr.rate    != null ? `${(ctr.rate * 100).toFixed(1)}%`         : "–";
+  const couponRate = coupon.rate != null ? `${(coupon.rate * 100).toFixed(1)}%`      : "–";
+  const adRate     = adConv.rate != null ? `${(adConv.rate * 100).toFixed(2)}%`      : "–";
+
+  const DONUT_STATS = [
+    {
+      label: "광고 노출 대비 클릭률", sub: "CTR", value: ctrRate,
+      data: ctrData, colors: ["#4F6EF7", "#D7DFF0"],
+      legends: [
+        { color: "#4F6EF7", text: `클릭 ${(ctr.clicks ?? 0).toLocaleString()}회` },
+        { color: "#D7DFF0", text: `노출 ${(ctr.impressions ?? 0).toLocaleString()}회` },
+      ],
+    },
+    {
+      label: "쿠폰 수신 대비 사용률", sub: "", value: couponRate,
+      data: couponData, colors: ["#18B87A", "#D7DFF0"],
+      legends: [
+        { color: "#18B87A", text: `사용 ${coupon.used ?? 0}장` },
+        { color: "#D7DFF0", text: `미사용 ${(coupon.sent ?? 0) - (coupon.used ?? 0)}장` },
+      ],
+    },
+    {
+      label: "광고 → 구매 전환율", sub: "", value: adRate,
+      data: adData, colors: ["#4F6EF7", "#E3EDF4"],
+      legends: [
+        { color: "#4F6EF7", text: `구매 ${adConv.purchases ?? 0}회` },
+        { color: "#E3EDF4", text: `광고 ${(adConv.adImpressions ?? 0).toLocaleString()}건 노출` },
+      ],
+    },
+  ];
+
   return (
     <div className="cd-main">
-      {/* 페이지 헤더 */}
       <div className="cd-page-header">
         <div>
           <h1 className="cd-page-title">개인 고객 대시보드</h1>
-          <p className="cd-page-sub">고객 ID: {CUSTOMER.id} · {CUSTOMER.name}</p>
+          <p className="cd-page-sub">고객 ID: {userId} · {info.name ?? "–"}</p>
         </div>
-        <button className="cd-back-btn">← 고객 목록</button>
+        <button className="cd-back-btn" onClick={onBack}>← 고객 목록</button>
       </div>
 
       <div className="cd-content">
@@ -120,34 +180,39 @@ export default function CustomerDashboardPage() {
         <div className="cd-profile-card">
           <div className="cd-profile-deco" />
           <div className="cd-profile-top">
-            <div className="cd-avatar">{initial}</div>
             <div className="cd-profile-info">
-              <p className="cd-profile-name">{CUSTOMER.name}</p>
-              <p className="cd-profile-tier">{CUSTOMER.tier}</p>
+              <p className="cd-profile-name">{info.name ?? "–"}</p>
+              <p className="cd-profile-tier">{info.grade} · 가입 {info.joinDate ?? "–"}</p>
               <div className="cd-profile-badges">
-                <span className="cd-badge cd-badge-vip">VIP</span>
-                <span className="cd-badge cd-badge-freq">구매빈도 HIGH</span>
-                <span className="cd-badge cd-badge-churn">이탈위험 낮음</span>
+                {info.grade === "VIP" && <span className="cd-badge cd-badge-vip">VIP</span>}
+                {info.tags?.purchaseFrequency && (
+                  <span className="cd-badge cd-badge-freq">구매빈도 {info.tags.purchaseFrequency}</span>
+                )}
+                {info.tags?.churnRisk && (
+                  <span className={`cd-badge ${info.tags.churnRisk === "HIGH" ? "cd-badge-churn-high" : "cd-badge-churn"}`}>
+                    이탈위험 {info.tags.churnRisk === "HIGH" ? "높음" : "낮음"}
+                  </span>
+                )}
               </div>
             </div>
           </div>
           <div className="cd-profile-stats">
             <div className="cd-profile-stat-row">
               <span className="cd-profile-stat-label">최근 접속</span>
-              <span className="cd-profile-stat-value">{CUSTOMER.lastAccess}</span>
+              <span className="cd-profile-stat-value">{info.lastLogin ?? "–"}</span>
             </div>
             <div className="cd-profile-stat-row">
               <span className="cd-profile-stat-label">최근 구매일</span>
-              <span className="cd-profile-stat-value">{CUSTOMER.lastPurchase}</span>
+              <span className="cd-profile-stat-value">{info.lastPurchaseDaysAgo != null ? `${info.lastPurchaseDaysAgo}일 전` : "–"}</span>
             </div>
             <div className="cd-profile-stat-row">
               <span className="cd-profile-stat-label">탈퇴 페이지 방문</span>
-              <span className="cd-profile-stat-value">{CUSTOMER.withdrawVisit}</span>
+              <span className="cd-profile-stat-value">{info.churnPageVisited ? "있음" : "없음"}</span>
             </div>
           </div>
         </div>
 
-        {/* 도넛 차트 3개 */}
+        {/* 도넛 3개 */}
         <div className="cd-donut-row">
           {DONUT_STATS.map((s, i) => (
             <div key={i} className="cd-donut-card">
@@ -155,14 +220,27 @@ export default function CustomerDashboardPage() {
                 <span className="cd-donut-card-title">{s.label}</span>
                 {s.sub && <span className="cd-donut-card-sub">{s.sub}</span>}
               </div>
-              <DonutChart pct={s.pct} color={s.color} trackColor={s.trackColor} value={s.value} />
-              <div className="cd-donut-legends">
-                {s.legends.map((l, j) => (
-                  <div key={j} className="cd-donut-legend">
-                    <span className="cd-donut-legend-dot" style={{ background: l.color }} />
-                    <span className="cd-donut-legend-text">{l.text}</span>
-                  </div>
-                ))}
+              <div className="cd-donut-body">
+                <div className="cd-donut-legends">
+                  {s.legends.map((l, j) => (
+                    <div key={j} className="cd-donut-legend">
+                      <span className="cd-donut-legend-dot" style={{ background: l.color }} />
+                      <span className="cd-donut-legend-text">{l.text}</span>
+                    </div>
+                  ))}
+                </div>
+                <PieChart width={140} height={140}>
+                  <Pie
+                    data={s.data}
+                    cx={70} cy={70} innerRadius={42} outerRadius={60}
+                    startAngle={90} endAngle={-270}
+                    dataKey="value" strokeWidth={0}
+                  >
+                    {s.colors.map((c, k) => <Cell key={k} fill={c} />)}
+                  </Pie>
+                  <Tooltip formatter={(v, n) => [`${v.toLocaleString()}`, n]} />
+                  {DonutLabel({ cx: 70, cy: 70, value: s.value })}
+                </PieChart>
               </div>
             </div>
           ))}
@@ -172,41 +250,31 @@ export default function CustomerDashboardPage() {
         <div className="cd-mid-row">
           <div className="cd-card cd-keyword-card">
             <p className="cd-card-title">관심 키워드 / 카테고리</p>
-            <p className="cd-card-sub">검색 및 페이지 체류 시간 기반</p>
+            <p className="cd-card-sub">사용자 검색 기반</p>
             <div className="cd-keyword-wrap">
-              {KEYWORDS.map((k, i) => (
-                <span key={i} className="cd-keyword-chip">{k}</span>
-              ))}
+              {keywords.length > 0
+                ? keywords.map((k, i) => <span key={i} className="cd-keyword-chip">{k}</span>)
+                : <span style={{ fontSize: 12, color: "#9BAAC0" }}>데이터 없음</span>}
             </div>
           </div>
 
           <div className="cd-card cd-timeslot-card">
             <p className="cd-card-title">주 접속 시간대</p>
             <p className="cd-card-sub">최근 30일 기반</p>
-            <div className="cd-chart-wrap">
-              <div className="cd-chart-y">
-                {Y_LABELS.map((l, i) => (
-                  <span key={i} className="cd-chart-y-label">{l}</span>
-                ))}
-              </div>
-              <div style={{ flex: 1, position: "relative", height: "100%" }}>
-                <div className="cd-chart-grid">
-                  {Y_LABELS.map((_, i) => (
-                    <div key={i} className="cd-chart-grid-line" />
+            <ResponsiveContainer width="100%" height={160}>
+              <BarChart data={timeSlots.map(t => ({ ...t, fill: getTimeColor(t.count, maxCount) }))}
+                margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#E3E8F4" vertical={false} />
+                <XAxis dataKey="timeSlot" tick={{ fontSize: 9, fill: "#9BAAC0" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 9, fill: "#9BAAC0" }} axisLine={false} tickLine={false} />
+                <Tooltip />
+                <Bar dataKey="count" radius={[3, 3, 0, 0]}>
+                  {timeSlots.map((t, i) => (
+                    <Cell key={i} fill={getTimeColor(t.count, maxCount)} />
                   ))}
-                </div>
-                <div className="cd-chart-bars">
-                  {TIME_BARS.map((b, i) => (
-                    <div key={i} className="cd-bar-col">
-                      <div className="cd-bar-track">
-                        <div className="cd-bar-fill" style={{ height: `${b.pct}%`, background: b.color }} />
-                      </div>
-                      <span className="cd-bar-label">{b.label}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </div>
 
@@ -215,28 +283,36 @@ export default function CustomerDashboardPage() {
           <div className="cd-card">
             <p className="cd-card-title">현재 장바구니</p>
             <div className="cd-card-divider" />
-            {CART_ITEMS.map((item, i) => (
-              <div key={i} className="cd-list-item">
-                <div>
-                  <p className="cd-list-name">{item.name}</p>
-                  <p className="cd-list-cat">{item.cat}</p>
-                </div>
-                <span className="cd-list-price">{item.price}</span>
-              </div>
-            ))}
+            <div ref={cartRef} className="cd-scroll-list">
+              {cart.length === 0
+                ? <p style={{ fontSize: 12, color: "#9BAAC0", textAlign: "center", padding: 16 }}>데이터 없음</p>
+                : cart.map((item, i) => (
+                  <div key={i} className="cd-list-item">
+                    <div>
+                      <p className="cd-list-name">{item.productName}</p>
+                      <p className="cd-list-cat">{item.category}</p>
+                    </div>
+                    <span className="cd-list-price">{item.price?.toLocaleString()}원</span>
+                  </div>
+                ))}
+            </div>
           </div>
           <div className="cd-card">
             <p className="cd-card-title">최근 구매 이력</p>
             <div className="cd-card-divider" />
-            {RECENT_ORDERS.map((item, i) => (
-              <div key={i} className="cd-list-item">
-                <div>
-                  <p className="cd-list-name">{item.name}</p>
-                  <p className="cd-list-cat">{item.cat}</p>
-                </div>
-                <span className="cd-list-price">{item.price}</span>
-              </div>
-            ))}
+            <div ref={orderRef} className="cd-scroll-list">
+              {orders.length === 0
+                ? <p style={{ fontSize: 12, color: "#9BAAC0", textAlign: "center", padding: 16 }}>데이터 없음</p>
+                : orders.map((item, i) => (
+                  <div key={i} className="cd-list-item">
+                    <div>
+                      <p className="cd-list-name">{item.productName}</p>
+                      <p className="cd-list-cat">{item.category}</p>
+                    </div>
+                    <span className="cd-list-price">{item.price?.toLocaleString()}원</span>
+                  </div>
+                ))}
+            </div>
           </div>
         </div>
 

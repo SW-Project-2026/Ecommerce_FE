@@ -86,8 +86,9 @@ export default function CampaignListPage() {
   const [currentPage,      setCurrentPage]      = useState(1);
   const [adminId,          setAdminId]          = useState("admin");
 
-  const [editCoupon, setEditCoupon] = useState(null);
-  const [editAd,     setEditAd]     = useState(null);
+  const [editCoupon,      setEditCoupon]      = useState(null);
+  const [editAd,          setEditAd]          = useState(null);
+  const [selectedUserId,  setSelectedUserId]  = useState(null);
 
   const [campaignData, setCampaignData] = useState([]);
   const [loading,      setLoading]      = useState(false);
@@ -330,11 +331,27 @@ export default function CampaignListPage() {
   }
 
   if (activePage === "개인 고객 대시보드") {
-    return <Layout><CustomerDashboardPage /></Layout>;
+    return (
+      <Layout>
+        <CustomerDashboardPage
+          userId={selectedUserId}
+          onBack={() => navigateTo("전체 고객 대시보드")}
+        />
+      </Layout>
+    );
   }
 
   if (activePage === "전체 고객 대시보드") {
-    return <Layout><DashboardPage /></Layout>;
+    return (
+      <Layout>
+        <DashboardPage
+          onNavigateToCustomer={(userId) => {
+            setSelectedUserId(userId);
+            navigateTo("개인 고객 대시보드");
+          }}
+        />
+      </Layout>
+    );
   }
 
   if (activePage === "광고 목록" || activePage === "광고 관리") {
