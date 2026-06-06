@@ -31,8 +31,7 @@ const STATUS_BADGE = {
 };
 
 const NAV_ITEMS = [
-  { label: "전체 고객 대시보드", key: "전체 고객 대시보드", depth: 0 },
-  { label: "개인 고객 대시보드", key: "개인 고객 대시보드", depth: 0 },
+  { label: "대시보드",            key: "대시보드",            depth: 0 },
   { label: "캠페인 관리",        key: "캠페인 관리",        depth: 0, hasChild: true, group: "campaign" },
   { label: "캠페인 목록",        key: "캠페인 목록",        depth: 1, group: "campaign" },
   { label: "캠페인 생성",        key: "캠페인 생성",        depth: 1, group: "campaign" },
@@ -335,13 +334,13 @@ export default function CampaignListPage() {
       <Layout>
         <CustomerDashboardPage
           userId={selectedUserId}
-          onBack={() => navigateTo("전체 고객 대시보드")}
+          onBack={() => navigateTo("대시보드")}
         />
       </Layout>
     );
   }
 
-  if (activePage === "전체 고객 대시보드") {
+  if (activePage === "대시보드") {
     return (
       <Layout>
         <DashboardPage
