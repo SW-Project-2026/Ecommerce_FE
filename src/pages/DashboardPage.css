@@ -17,6 +17,7 @@
   border-bottom: 1px solid #E0E4E8;
   display: flex;
   align-items: center;
+  gap: 16px;
   padding: 0 32px;
   flex-shrink: 0;
 }
@@ -27,6 +28,12 @@
   font-size: 18px;
   color: #212121;
   margin: 0;
+}
+
+.db-total-customers {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: #8892AA;
 }
 
 /* ══════════ CONTENT ══════════ */
@@ -74,24 +81,19 @@
   color: #9BAAC0;
 }
 
+/* 도넛 가운데, legend 오른쪽 아래 */
 .db-donut-body {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 20px;
 }
 
 .db-donut-legends {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-}
-
-.db-donut-sub-label {
-  font-family: 'Inter', sans-serif;
-  font-size: 11px;
-  color: #9BAAC0;
-  margin: 0 0 4px 0;
+  gap: 8px;
+  padding-bottom: 10px;
 }
 
 .db-donut-legend {
@@ -237,9 +239,7 @@
   border-radius: 0;
 }
 
-.db-table-wrap {
-  overflow-x: auto;
-}
+.db-table-wrap { overflow-x: auto; }
 
 .db-table {
   width: 100%;

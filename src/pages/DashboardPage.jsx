@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import {
   PieChart, Pie, Cell, Tooltip,
-  ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Legend, ResponsiveContainer,
+  ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer,
 } from "recharts";
 import "./DashboardPage.css";
 import { getDashboardSummary, getMonthlyStats, getCustomerList } from "../api/dashboard";
@@ -16,7 +16,6 @@ const FILTER_API_MAP = {
   "신규": "NEW",
 };
 
-// ── 커스텀 도넛 라벨 ──
 function DonutLabel({ cx, cy, value }) {
   return (
     <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central"
@@ -36,7 +35,6 @@ export default function DashboardPage({ onNavigateToCustomer }) {
   const [currentPage,  setCurrentPage]  = useState(1);
   const [loading,      setLoading]      = useState(true);
 
-  // 요약 + 월별 통계
   useEffect(() => {
     Promise.all([getDashboardSummary(), getMonthlyStats()])
       .then(([sum, monthly]) => {
@@ -53,7 +51,6 @@ export default function DashboardPage({ onNavigateToCustomer }) {
       .finally(() => setLoading(false));
   }, []);
 
-  // 고객 목록
   useEffect(() => {
     const filter = FILTER_API_MAP[activeFilter];
     getCustomerList({ page: currentPage - 1, size: 10, search: search || undefined, filter })
@@ -67,32 +64,31 @@ export default function DashboardPage({ onNavigateToCustomer }) {
       .catch(() => {});
   }, [search, activeFilter, currentPage]);
 
-  // CTR 도넛 데이터
   const ctrData = summary ? [
-    { name: "클릭", value: summary.ctr?.clicks ?? 0 },
-    { name: "노출", value: (summary.ctr?.impressions ?? 0) - (summary.ctr?.clicks ?? 0) },
+    { name: "클릭",   value: summary.ctr?.clicks ?? 0 },
+    { name: "노출",   value: (summary.ctr?.impressions ?? 0) - (summary.ctr?.clicks ?? 0) },
   ] : [];
   const ctrRate = summary ? `${((summary.ctr?.rate ?? 0) * 100).toFixed(1)}%` : "–";
 
-  // 쿠폰 도넛 데이터
   const couponData = summary ? [
-    { name: "사용", value: summary.couponUsage?.used ?? 0 },
+    { name: "사용",   value: summary.couponUsage?.used ?? 0 },
     { name: "미사용", value: (summary.couponUsage?.sent ?? 0) - (summary.couponUsage?.used ?? 0) },
   ] : [];
   const couponRate = summary ? `${((summary.couponUsage?.rate ?? 0) * 100).toFixed(1)}%` : "–";
 
-  // 월별 차트: 최대값 막대 색상 구분
   const maxJoin = Math.max(...monthlyData.map(d => d.join), 1);
   const renderBar = (props) => {
     const { x, y, width, height, value } = props;
-    const isMax = value === maxJoin;
-    return <rect x={x} y={y} width={width} height={height} fill={isMax ? "#3B477B" : "rgba(82,97,164,0.38)"} rx={3} />;
+    return <rect x={x} y={y} width={width} height={height} fill={value === maxJoin ? "#3B477B" : "rgba(82,97,164,0.38)"} rx={3} />;
   };
 
   return (
     <div className="db-main">
       <div className="db-page-header">
         <h1 className="db-page-title">전체 고객 대시보드</h1>
+        {summary && (
+          <span className="db-total-customers">총 고객 수 {summary.totalCustomers?.toLocaleString()}명</span>
+        )}
       </div>
 
       <div className="db-content">
@@ -106,19 +102,6 @@ export default function DashboardPage({ onNavigateToCustomer }) {
               <span className="db-donut-card-sub">CTR</span>
             </div>
             <div className="db-donut-body">
-              <div className="db-donut-legends">
-                {summary && (
-                  <p className="db-donut-sub-label">총 고객 수 {summary.totalCustomers?.toLocaleString()}명</p>
-                )}
-                <div className="db-donut-legend">
-                  <span className="db-donut-legend-dot" style={{ background: "#4F6EF7" }} />
-                  <span className="db-donut-legend-text">클릭 {summary?.ctr?.clicks?.toLocaleString() ?? "–"}회</span>
-                </div>
-                <div className="db-donut-legend">
-                  <span className="db-donut-legend-dot" style={{ background: "#D7DFF0" }} />
-                  <span className="db-donut-legend-text">노출 {summary?.ctr?.impressions?.toLocaleString() ?? "–"}회</span>
-                </div>
-              </div>
               <PieChart width={210} height={210}>
                 <Pie
                   data={ctrData.length ? ctrData : [{ name: "없음", value: 1 }]}
@@ -132,6 +115,16 @@ export default function DashboardPage({ onNavigateToCustomer }) {
                 <Tooltip formatter={(v, n) => [`${v.toLocaleString()}회`, n]} />
                 {DonutLabel({ cx: 105, cy: 105, value: ctrRate })}
               </PieChart>
+              <div className="db-donut-legends">
+                <div className="db-donut-legend">
+                  <span className="db-donut-legend-dot" style={{ background: "#4F6EF7" }} />
+                  <span className="db-donut-legend-text">클릭 {summary?.ctr?.clicks?.toLocaleString() ?? "–"}회</span>
+                </div>
+                <div className="db-donut-legend">
+                  <span className="db-donut-legend-dot" style={{ background: "#D7DFF0" }} />
+                  <span className="db-donut-legend-text">노출 {summary?.ctr?.impressions?.toLocaleString() ?? "–"}회</span>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -141,16 +134,6 @@ export default function DashboardPage({ onNavigateToCustomer }) {
               <span className="db-donut-card-title">쿠폰 사용률</span>
             </div>
             <div className="db-donut-body">
-              <div className="db-donut-legends">
-                <div className="db-donut-legend">
-                  <span className="db-donut-legend-dot" style={{ background: "#3F6B90" }} />
-                  <span className="db-donut-legend-text">사용 {summary?.couponUsage?.used?.toLocaleString() ?? "–"}회</span>
-                </div>
-                <div className="db-donut-legend">
-                  <span className="db-donut-legend-dot" style={{ background: "#D7DFF0" }} />
-                  <span className="db-donut-legend-text">발송 {summary?.couponUsage?.sent?.toLocaleString() ?? "–"}회</span>
-                </div>
-              </div>
               <PieChart width={210} height={210}>
                 <Pie
                   data={couponData.length ? couponData : [{ name: "없음", value: 1 }]}
@@ -164,6 +147,16 @@ export default function DashboardPage({ onNavigateToCustomer }) {
                 <Tooltip formatter={(v, n) => [`${v.toLocaleString()}회`, n]} />
                 {DonutLabel({ cx: 105, cy: 105, value: couponRate })}
               </PieChart>
+              <div className="db-donut-legends">
+                <div className="db-donut-legend">
+                  <span className="db-donut-legend-dot" style={{ background: "#3F6B90" }} />
+                  <span className="db-donut-legend-text">사용 {summary?.couponUsage?.used?.toLocaleString() ?? "–"}회</span>
+                </div>
+                <div className="db-donut-legend">
+                  <span className="db-donut-legend-dot" style={{ background: "#D7DFF0" }} />
+                  <span className="db-donut-legend-text">발송 {summary?.couponUsage?.sent?.toLocaleString() ?? "–"}회</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
