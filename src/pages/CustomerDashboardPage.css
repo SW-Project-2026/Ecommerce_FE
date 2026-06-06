@@ -91,21 +91,6 @@
   flex: 1;
 }
 
-.cd-avatar {
-  width: 56px;
-  height: 56px;
-  background: #FF6B6B;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: 'Inter', sans-serif;
-  font-weight: 700;
-  font-size: 22px;
-  color: #FFFFFF;
-  flex-shrink: 0;
-}
-
 .cd-profile-info {
   display: flex;
   flex-direction: column;
@@ -146,6 +131,7 @@
 .cd-badge-vip   { background: rgba(255,149,187,0.3); border: 1px solid rgba(255,43,121,0.4); color: #FF2B79; }
 .cd-badge-freq  { background: rgba(79,110,247,0.3);  border: 1px solid rgba(32,73,255,0.4);  color: #2049FF; }
 .cd-badge-churn { background: rgba(24,184,122,0.3);  border: 1px solid rgba(24,184,122,0.3); color: #005A37; }
+.cd-badge-churn-high { background: rgba(255,100,100,0.2); border: 1px solid rgba(255,43,43,0.3); color: #BF402B; }
 
 .cd-profile-stats {
   display: flex;
@@ -181,7 +167,6 @@
   box-shadow: 0 1px 4px rgba(0,0,0,0.04);
   display: flex;
   flex-direction: column;
-  align-items: center;
 }
 
 .cd-donut-card-header {
@@ -205,12 +190,20 @@
   color: #9BAAC0;
 }
 
+/* 도넛 바디: legend 왼쪽, 차트 오른쪽 */
+.cd-donut-body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 1;
+}
+
 .cd-donut-wrap {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 12px;
+  flex-shrink: 0;
 }
 
 .cd-donut-label {
@@ -222,10 +215,9 @@
 }
 
 .cd-donut-legends {
-  width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .cd-donut-legend {
@@ -305,88 +297,10 @@
   color: #5A6A8A;
 }
 
-/* ══════════ 주 접속 시간대 ══════════ */
-.cd-timeslot-card { display: flex; flex-direction: column; }
-
-.cd-chart-wrap {
-  display: flex;
-  gap: 0;
-  align-items: flex-end;
-  margin-top: 12px;
-  height: 180px;
-}
-
-.cd-chart-y {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  height: 150px;
-  margin-bottom: 22px;
-  margin-right: 8px;
-  align-items: flex-end;
-}
-
-.cd-chart-y-label {
-  font-family: 'Inter', sans-serif;
-  font-size: 10px;
-  color: #9BAAC0;
-  line-height: 1;
-}
-
-.cd-chart-bars {
-  flex: 1;
-  display: flex;
-  gap: 8px;
-  align-items: flex-end;
-  height: 100%;
-  position: relative;
-}
-
-.cd-chart-grid {
-  position: absolute;
-  left: 0; right: 0;
-  height: 150px;
-  bottom: 22px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  pointer-events: none;
-}
-
-.cd-chart-grid-line {
-  width: 100%;
-  height: 1px;
-  background: #E3E8F4;
-}
-
-.cd-bar-col {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  height: 100%;
-  justify-content: flex-end;
-}
-
-.cd-bar-track {
-  width: 100%;
-  height: 150px;
-  display: flex;
-  align-items: flex-end;
-}
-
-.cd-bar-fill {
-  width: 100%;
-  border-radius: 4px 4px 0 0;
-}
-
-.cd-bar-label {
-  font-family: 'Inter', sans-serif;
-  font-size: 9px;
-  color: #9BAAC0;
-  text-align: center;
-  white-space: nowrap;
+/* ══════════ 장바구니 / 최근 구매 이력 스크롤 ══════════ */
+.cd-scroll-list {
+  max-height: 220px;
+  overflow-y: auto;
 }
 
 /* ══════════ 2열 그리드 ══════════ */

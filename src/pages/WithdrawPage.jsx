@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { usePageView } from '../hooks/usePageView'
+import { withdraw } from '../api/auth'
 import './WithdrawPage.css'
 
 export default function WithdrawPage({ onNavigate, onLogout, userId = null }) {
@@ -17,9 +18,15 @@ export default function WithdrawPage({ onNavigate, onLogout, userId = null }) {
     if (!agreed)          { setError('탈퇴 동의에 체크해 주세요.'); return }
     setError('')
     setLoading(true)
-    // TODO: 탈퇴 API 연동
-    setLoading(false)
-    setDone(true)
+    try {
+      await withdraw({ password })
+      setDone(true)
+      onLogout()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
   }
 
   if (done) {
