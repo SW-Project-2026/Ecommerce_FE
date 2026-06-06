@@ -55,7 +55,9 @@ export async function updatePassword({ currentPassword, newPassword, newPassword
 }
 
 // ── 회원 탈퇴 ──
-export async function withdraw() {
-  const res = await axiosInstance.delete('/api/users/me')
+export async function withdraw({ password }) {
+  const res = await axiosInstance.delete('/api/users/me', {
+    data: { password },
+  })
   return res.data.data
 }
