@@ -18,6 +18,7 @@ import OrderCompletePage from './pages/OrderCompletePage'
 import MyPage from './pages/MyPage'
 import WithdrawPage from './pages/WithdrawPage'
 import CouponPopup from './components/CouponPopup'
+import CouponClaimPage from './pages/CouponClaimPage'
 import { usePageView } from './hooks/usePageView'
 import { getMyProfile } from './api/users'
 import { refreshToken } from './api/auth'
@@ -45,7 +46,10 @@ function clearAuth() {
 }
 
 export default function App() {
-  const [page, setPage] = useState(() => sessionStorage.getItem('page') || 'home')
+  const [page, setPage] = useState(() => {
+    if (window.location.pathname === '/coupon/claim') return 'coupon-claim'
+    return sessionStorage.getItem('page') || 'home'
+  })
   const [searchQuery, setSearchQuery] = useState(() => sessionStorage.getItem('searchQuery') || '')
   const [category, setCategory] = useState(() => {
     try { return JSON.parse(sessionStorage.getItem('category')) || { id: 'all', label: '전체' } }
@@ -288,6 +292,8 @@ export default function App() {
           onDismiss={() => setCouponPopup(null)}
         />
       )}
+
+      {page === 'coupon-claim' && <CouponClaimPage />}
 
       {page === 'cart' && (
         <div className="page page-list">
