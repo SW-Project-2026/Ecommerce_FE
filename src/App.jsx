@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import NavHeader from './components/layout/NavHeader'
 import CategoryBar from './components/layout/CategoryBar'
 import Footer from './components/layout/Footer'
@@ -17,12 +17,15 @@ import CheckoutPage from './pages/CheckoutPage'
 import OrderCompletePage from './pages/OrderCompletePage'
 import MyPage from './pages/MyPage'
 import WithdrawPage from './pages/WithdrawPage'
+import CouponPopup from './components/CouponPopup'
 import { usePageView } from './hooks/usePageView'
 import { getMyProfile } from './api/users'
 import { refreshToken } from './api/auth'
 import { cartGet } from './api/carts'
 import { userLogin as snippetUserLogin } from './api/snippets'
 import './App.css'
+
+const FLUENTD_URL = import.meta.env.VITE_FLUENTD_URL || 'https://fluentd.daon.site'
 
 function setCookie(name, value, days = 7) {
   const expires = new Date(Date.now() + days * 864e5).toUTCString()
@@ -56,23 +59,25 @@ export default function App() {
   const [checkoutItems, setCheckoutItems] = useState([])
   const [selectedCoupon, setSelectedCoupon] = useState(null)
   const [mypageTab, setMypageTab] = useState(() => sessionStorage.getItem('mypageTab') || 'home')
-
   const [auth, setAuth] = useState(null)
   const [authLoading, setAuthLoading] = useState(true)
+
+  // 쿠폰 팝업 state
+  const [couponPopup, setCouponPopup] = useState(null) // { couponId, campaignId, adId }
+
+  // SSE 연결 ref
+  const sseRef = useRef(null)
 
   useEffect(() => {
     async function initAuth() {
       const role   = localStorage.getItem('role')
       const userId = localStorage.getItem('userId')
 
-      // role이 없으면 로그인 안 된 상태
       if (!role) {
         setAuthLoading(false)
         return
       }
 
-      // accessToken은 HttpOnly 쿠키라 JS에서 읽기 불가
-      // refresh 요청으로 세션 유효 여부 확인
       try {
         const data = await refreshToken()
         if (data?.role) localStorage.setItem('role', data.role)
@@ -83,7 +88,6 @@ export default function App() {
           return
         }
         setAuth({ role: resolvedRole, userId: userId ?? null })
-        // userSeqId가 없으면 프로필에서 보완
         if (!localStorage.getItem('userSeqId')) {
           getMyProfile().then(profile => {
             if (profile?.id) localStorage.setItem('userSeqId', String(profile.id))
@@ -100,7 +104,69 @@ export default function App() {
     initAuth()
   }, [])
 
-  // ── 로그인 상태일 때 실제 장바구니 개수 조회 ──
+  // ── SSE 연결: 로그인 상태일 때 ──
+  useEffect(() => {
+    const userSeqId = localStorage.getItem('userSeqId')
+    if (!auth || !userSeqId) {
+      if (sseRef.current) {
+        sseRef.current.close()
+        sseRef.current = null
+      }
+      return
+    }
+
+    // pending 알림 조회
+    fetch(`${FLUENTD_URL}/api/notifications/pending?userId=${userSeqId}`)
+      .then(res => res.json())
+      .then(list => {
+        if (Array.isArray(list) && list.length > 0) {
+          const first = list[0]
+          setCouponPopup({
+            couponId:   first.couponId   ?? null,
+            adId:       first.adId       ?? null,
+            campaignId: first.campaignId ?? null,
+          })
+          // 확인 후 삭제
+          fetch(`${FLUENTD_URL}/api/notifications/pending?userId=${userSeqId}`, { method: 'DELETE' })
+            .catch(() => {})
+        }
+      })
+      .catch(() => {})
+
+    // 기존 연결 종료
+    if (sseRef.current) {
+      sseRef.current.close()
+    }
+
+    const es = new EventSource(`${FLUENTD_URL}/api/notifications/stream?userId=${userSeqId}`)
+
+    es.addEventListener('campaign', (e) => {
+      try {
+        const data = JSON.parse(e.data)
+        setCouponPopup({
+          couponId:   data.couponId   ?? null,
+          adId:       data.adId       ?? null,
+          campaignId: data.campaignId ?? null,
+        })
+      } catch (err) {
+        console.error('SSE 이벤트 파싱 오류', err)
+      }
+    })
+
+    es.onerror = () => {
+      es.close()
+      sseRef.current = null
+    }
+
+    sseRef.current = es
+
+    return () => {
+      es.close()
+      sseRef.current = null
+    }
+  }, [auth])
+
+  // ── 로그인 상태일 때 장바구니 개수 조회 ──
   useEffect(() => {
     if (!auth) { setCartCount(0); return }
     fetchCartCount()
@@ -148,6 +214,7 @@ export default function App() {
     setAuth(null)
     setCartCount(0)
     setPage('home')
+    setCouponPopup(null)
   }
 
   function handleAddToCart(product, qty = 1) {
@@ -211,103 +278,91 @@ export default function App() {
 
   if (authLoading) return null
 
-  if (page === 'cart') return (
-    <div className="page page-list">
-      <NavHeader onNavigate={handleNavigate} cartCount={cartCount} auth={auth} onLogout={handleLogout} userId={userId} />
-      <CartPage
-        cart={cart}
-        onNavigate={handleNavigate}
-        onCartChange={setCart}
-        onGoCheckout={handleGoCheckout}
-        auth={auth}
-        onCartCountChange={fetchCartCount}
-      />
-      <Footer />
-    </div>
-  )
-
-  if (page === 'checkout') return (
-    <div className="page page-list">
-      <NavHeader onNavigate={handleNavigate} cartCount={cartCount} auth={auth} onLogout={handleLogout} userId={userId} />
-      <CheckoutPage
-        checkoutItems={checkoutItems}
-        selectedCoupon={selectedCoupon}
-        onNavigate={handleNavigate}
-        onOrderComplete={info => { setOrderInfo(info); fetchCartCount() }}
-        auth={auth}
-      />
-      <Footer />
-    </div>
-  )
-
-  if (page === 'mypage') return (
-    <div className="page page-list">
-      <NavHeader onNavigate={handleNavigate} cartCount={cartCount} auth={auth} onLogout={handleLogout} userId={userId} />
-      <MyPage key={mypageTab} onNavigate={handleNavigate} onLogout={handleLogout} auth={auth} userId={userId} initialTab={mypageTab} />
-      <Footer />
-    </div>
-  )
-
-  if (page === 'order-complete') return (
-    <div className="page page-list">
-      <NavHeader onNavigate={handleNavigate} cartCount={0} auth={auth} onLogout={handleLogout} userId={userId} />
-      <OrderCompletePage orderInfo={orderInfo} onNavigate={handleNavigate} userId={userId} />
-      <Footer />
-    </div>
-  )
-
-  if (page === 'product') return (
-    <div className="page page-list">
-      <NavHeader onNavigate={handleNavigate} cartCount={cartCount} auth={auth} onLogout={handleLogout} userId={userId} />
-      <CategoryBar onNavigate={handleNavigate} activeCategory={category.id} />
-      <ProductDetailPage
-        productId={productId}
-        onNavigate={handleNavigate}
-        prevCategory={prevCategory}
-        onAddToCart={handleAddToCart}
-        userId={userId}
-        auth={auth}
-      />
-      <Footer />
-    </div>
-  )
-
-  if (page === 'login') return <LoginPage onNavigate={handleNavigate} onLogin={handleLogin} />
-  if (page === 'register') return <RegisterPage onNavigate={handleNavigate} onLogin={handleLogin} />
-  if (page === 'withdraw') return (
-    <div className="page page-list">
-      <NavHeader onNavigate={handleNavigate} cartCount={cartCount} auth={auth} onLogout={handleLogout} userId={userId} />
-      <WithdrawPage onNavigate={handleNavigate} onLogout={handleLogout} userId={userId} />
-      <Footer />
-    </div>
-  )
-
-  if (page === 'search' || page === 'list') return (
-    <div className="page page-list">
-      <NavHeader onNavigate={handleNavigate} cartCount={cartCount} auth={auth} onLogout={handleLogout} userId={userId} />
-      <CategoryBar onNavigate={handleNavigate} activeCategory={category.id} />
-      <ProductListPage
-        query={searchQuery}
-        category={category}
-        onNavigate={handleNavigate}
-        userId={userId}
-        auth={auth}
-      />
-      <Footer />
-    </div>
-  )
-
   return (
-    <div className="page">
-      <NavHeader onNavigate={handleNavigate} cartCount={cartCount} auth={auth} onLogout={handleLogout} userId={userId} />
-      <CategoryBar onNavigate={handleNavigate} activeCategory="home" />
-      <HeroBanner />
-      <RecommendSection onNavigate={handleNavigate} auth={auth} />
-      <AdBanner />
-      <RepurchaseSection onNavigate={handleNavigate} auth={auth} />
-      <TimeBasedSection onNavigate={handleNavigate} auth={auth} />
-      <BestSection onNavigate={handleNavigate} auth={auth} />
-      <Footer />
-    </div>
+    <>
+      {/* 쿠폰 팝업 — couponId 있을 때만 표시 */}
+      {couponPopup?.couponId && (
+        <CouponPopup
+          coupon={{ couponId: couponPopup.couponId }}
+          onClose={() => setCouponPopup(null)}
+          onDismiss={() => setCouponPopup(null)}
+        />
+      )}
+
+      {page === 'cart' && (
+        <div className="page page-list">
+          <NavHeader onNavigate={handleNavigate} cartCount={cartCount} auth={auth} onLogout={handleLogout} userId={userId} />
+          <CartPage cart={cart} onNavigate={handleNavigate} onCartChange={setCart} onGoCheckout={handleGoCheckout} auth={auth} onCartCountChange={fetchCartCount} />
+          <Footer />
+        </div>
+      )}
+
+      {page === 'checkout' && (
+        <div className="page page-list">
+          <NavHeader onNavigate={handleNavigate} cartCount={cartCount} auth={auth} onLogout={handleLogout} userId={userId} />
+          <CheckoutPage checkoutItems={checkoutItems} selectedCoupon={selectedCoupon} onNavigate={handleNavigate} onOrderComplete={info => { setOrderInfo(info); fetchCartCount() }} auth={auth} />
+          <Footer />
+        </div>
+      )}
+
+      {page === 'mypage' && (
+        <div className="page page-list">
+          <NavHeader onNavigate={handleNavigate} cartCount={cartCount} auth={auth} onLogout={handleLogout} userId={userId} />
+          <MyPage key={mypageTab} onNavigate={handleNavigate} onLogout={handleLogout} auth={auth} userId={userId} initialTab={mypageTab} />
+          <Footer />
+        </div>
+      )}
+
+      {page === 'order-complete' && (
+        <div className="page page-list">
+          <NavHeader onNavigate={handleNavigate} cartCount={0} auth={auth} onLogout={handleLogout} userId={userId} />
+          <OrderCompletePage orderInfo={orderInfo} onNavigate={handleNavigate} userId={userId} />
+          <Footer />
+        </div>
+      )}
+
+      {page === 'product' && (
+        <div className="page page-list">
+          <NavHeader onNavigate={handleNavigate} cartCount={cartCount} auth={auth} onLogout={handleLogout} userId={userId} />
+          <CategoryBar onNavigate={handleNavigate} activeCategory={category.id} />
+          <ProductDetailPage productId={productId} onNavigate={handleNavigate} prevCategory={prevCategory} onAddToCart={handleAddToCart} userId={userId} auth={auth} />
+          <Footer />
+        </div>
+      )}
+
+      {page === 'login' && <LoginPage onNavigate={handleNavigate} onLogin={handleLogin} />}
+      {page === 'register' && <RegisterPage onNavigate={handleNavigate} onLogin={handleLogin} />}
+
+      {page === 'withdraw' && (
+        <div className="page page-list">
+          <NavHeader onNavigate={handleNavigate} cartCount={cartCount} auth={auth} onLogout={handleLogout} userId={userId} />
+          <WithdrawPage onNavigate={handleNavigate} onLogout={handleLogout} userId={userId} />
+          <Footer />
+        </div>
+      )}
+
+      {(page === 'search' || page === 'list') && (
+        <div className="page page-list">
+          <NavHeader onNavigate={handleNavigate} cartCount={cartCount} auth={auth} onLogout={handleLogout} userId={userId} />
+          <CategoryBar onNavigate={handleNavigate} activeCategory={category.id} />
+          <ProductListPage query={searchQuery} category={category} onNavigate={handleNavigate} userId={userId} auth={auth} />
+          <Footer />
+        </div>
+      )}
+
+      {page === 'home' && (
+        <div className="page">
+          <NavHeader onNavigate={handleNavigate} cartCount={cartCount} auth={auth} onLogout={handleLogout} userId={userId} />
+          <CategoryBar onNavigate={handleNavigate} activeCategory="home" />
+          <HeroBanner />
+          <RecommendSection onNavigate={handleNavigate} auth={auth} />
+          <AdBanner />
+          <RepurchaseSection onNavigate={handleNavigate} auth={auth} />
+          <TimeBasedSection onNavigate={handleNavigate} auth={auth} />
+          <BestSection onNavigate={handleNavigate} auth={auth} />
+          <Footer />
+        </div>
+      )}
+    </>
   )
 }
