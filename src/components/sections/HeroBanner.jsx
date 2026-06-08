@@ -37,24 +37,44 @@ const AI_SLIDES = [
   },
 ]
 
-const EVENT_SLIDES = [
+const DEFAULT_EVENT_SLIDES = [
   { title: <>추천 이벤트<br />및 쿠폰</>,    bg: 'rgba(212,212,212,0.95)', color: '#8B8B8B' },
-  { title: <>신규 가입<br />쿠폰 5,000원</>, bg: 'rgba(255,107,107,0.18)', color: '#FF6B6B' },
-  { title: <>오늘의<br />플래시 세일</>,     bg: 'rgba(79,110,247,0.18)',  color: '#4F6EF7' },
-  { title: <>친구 추천<br />적립금 혜택</>,  bg: 'rgba(72,199,142,0.18)',  color: '#2E9B6E' },
+]
+
+const EVENT_COLORS = [
+  { bg: 'rgba(255,107,107,0.18)', color: '#FF6B6B' },
+  { bg: 'rgba(79,110,247,0.18)',  color: '#4F6EF7' },
+  { bg: 'rgba(72,199,142,0.18)',  color: '#2E9B6E' },
+  { bg: 'rgba(255,200,100,0.18)', color: '#E8A000' },
 ]
 
 const AI_INTERVAL    = 3500
 const EVENT_INTERVAL = 4000
 
-export default function HeroBanner() {
+export default function HeroBanner({ promotions = [], userName = '' }) {
   const [activeSlide, setActiveSlide] = useState(0)
   const [activeEvent, setActiveEvent] = useState(0)
   const [pauseAI,    setPauseAI]    = useState(false)
   const [pauseEvent, setPauseEvent] = useState(false)
 
-  const aiLen    = AI_SLIDES.length
-  const eventLen = EVENT_SLIDES.length
+  // promotions 데이터로 이벤트 슬라이드 생성
+  const eventSlides = promotions.length > 0
+    ? promotions.map((p, i) => ({
+        title: <>{p.couponName}<br />{p.discountAmount?.toLocaleString()}원 할인</>,
+        bg:    EVENT_COLORS[i % EVENT_COLORS.length].bg,
+        color: EVENT_COLORS[i % EVENT_COLORS.length].color,
+        hasReceived: p.hasReceived,
+      }))
+    : DEFAULT_EVENT_SLIDES
+
+  const aiSlides = AI_SLIDES.map(s =>
+    s.type === 'ai' && userName
+      ? { ...s, greeting: `안녕하세요, ${userName}님 👋` }
+      : s
+  )
+
+  const aiLen    = aiSlides.length
+  const eventLen = eventSlides.length
 
   const prevAI    = () => setActiveSlide(p => (p - 1 + aiLen) % aiLen)
   const nextAI    = () => setActiveSlide(p => (p + 1) % aiLen)
@@ -85,11 +105,10 @@ export default function HeroBanner() {
           className="ai-slides-wrap"
           style={{ transform: `translateX(-${activeSlide * 100}%)` }}
         >
-          {AI_SLIDES.map((slide, i) => (
+          {aiSlides.map((slide, i) => (
             <div key={i} className="ai-slide">
               {slide.type === 'ai' ? (
                 <>
-                  {/* 장식 원 */}
                   <div className="ai-deco-circle ai-deco-circle--outline" />
                   <div className="ai-deco-circle ai-deco-circle--rose" />
                   <span className="ai-label">{slide.label}</span>
@@ -114,7 +133,6 @@ export default function HeroBanner() {
           ))}
         </div>
 
-        {/* 화살표 버튼 */}
         <button className="banner-arrow banner-arrow--left"  onClick={prevAI}>
           <i className="ri-arrow-left-s-line" />
         </button>
@@ -122,9 +140,8 @@ export default function HeroBanner() {
           <i className="ri-arrow-right-s-line" />
         </button>
 
-        {/* 페이지네이션 dot */}
         <div className="ai-pagination">
-          {AI_SLIDES.map((_, i) => (
+          {aiSlides.map((_, i) => (
             <button
               key={i}
               className={`dot${activeSlide === i ? ' active' : ''}`}
@@ -145,16 +162,18 @@ export default function HeroBanner() {
           className="event-slides-wrap"
           style={{ transform: `translateX(-${activeEvent * 100}%)` }}
         >
-          {EVENT_SLIDES.map((slide, i) => (
+          {eventSlides.map((slide, i) => (
             <div key={i} className="event-slide" style={{ background: slide.bg }}>
               <div className="event-label" style={{ color: slide.color }}>
                 {slide.title}
               </div>
+              {slide.hasReceived && (
+                <div style={{ fontSize: 11, color: slide.color, marginTop: 4, opacity: 0.7 }}>수령 완료</div>
+              )}
             </div>
           ))}
         </div>
 
-        {/* 화살표 버튼 */}
         <button className="banner-arrow banner-arrow--left"  onClick={prevEvent}>
           <i className="ri-arrow-left-s-line" />
         </button>
@@ -163,7 +182,7 @@ export default function HeroBanner() {
         </button>
 
         <div className="event-pagination">
-          {EVENT_SLIDES.map((_, i) => (
+          {eventSlides.map((_, i) => (
             <button
               key={i}
               className={`dot${activeEvent === i ? ' active' : ''}`}
