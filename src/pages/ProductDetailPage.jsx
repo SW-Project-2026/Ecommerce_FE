@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { getProduct } from '../api/products'
+import { getProduct, getRelatedProducts } from '../api/products'
 import { viewProductDetail, clickCart, clickWishlist } from '../api/snippets'
 
 const FLUENTD_URL = import.meta.env.VITE_FLUENTD_URL || 'http://localhost:9880'
@@ -183,21 +183,53 @@ function Breadcrumb({ product, prevCategory, onNavigate }) {
   )
 }
 
-function RelatedProducts() {
+function RelatedProducts({ productId, onNavigate, wishMap = {}, setWishMap, auth }) {
+  const [products, setProducts] = useState([])
+  const [offset,   setOffset]   = useState(0)
+  const CARD_WIDTH = 160
+
+  useEffect(() => {
+    if (!productId) return
+    getRelatedProducts({ productId, limit: 8 })
+      .then(data => setProducts(Array.isArray(data) ? data : []))
+      .catch(() => {})
+  }, [productId])
+
+  const maxOffset = Math.max(0, (products.length - RELATED_VISIBLE) * CARD_WIDTH)
+
+  function handleNext() {
+    setOffset(prev => prev >= maxOffset ? 0 : prev + CARD_WIDTH)
+  }
+
   return (
     <div className="pdp-related">
       <h3 className="pdp-related-title">연관 상품</h3>
       <div className="pdp-related-row">
-        <div className="pdp-related-grid">
-          {Array.from({ length: RELATED_VISIBLE }).map((_, i) => (
-            <div key={i} className="pdp-related-card">
-              <div className="pdp-related-thumb pdp-no-image" />
-              <div className="pdp-related-name pdp-skeleton" />
-              <div className="pdp-related-price pdp-skeleton" />
-            </div>
-          ))}
+        <div className="pdp-related-grid" style={{ overflow: 'hidden' }}>
+          <div style={{ display: 'flex', transition: 'transform 0.3s', transform: `translateX(-${offset}px)` }}>
+            {products.length === 0
+              ? Array.from({ length: RELATED_VISIBLE }).map((_, i) => (
+                  <div key={i} className="pdp-related-card">
+                    <div className="pdp-related-thumb pdp-no-image" />
+                    <div className="pdp-related-name pdp-skeleton" />
+                    <div className="pdp-related-price pdp-skeleton" />
+                  </div>
+                ))
+              : products.map(p => (
+                  <div key={p.productId} className="pdp-related-card" onClick={() => onNavigate?.('product', p.productId)} style={{ cursor: 'pointer', flexShrink: 0 }}>
+                    <div className="pdp-related-thumb">
+                      {p.imageUrl
+                        ? <img src={p.imageUrl} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        : <div className="pdp-no-image" />}
+                    </div>
+                    <div className="pdp-related-name">{p.name}</div>
+                    <div className="pdp-related-price">{p.minPrice?.toLocaleString()}원</div>
+                  </div>
+                ))
+            }
+          </div>
         </div>
-        <button className="pdp-related-arrow"><i className="ri-arrow-right-s-line" /></button>
+        <button className="pdp-related-arrow" onClick={handleNext}><i className="ri-arrow-right-s-line" /></button>
       </div>
     </div>
   )
@@ -445,7 +477,7 @@ export default function ProductDetailPage({ productId, onNavigate, prevCategory,
         {activeTab === 'return' && <div className="pdp-desc"><p>· 반품/교환: 수령 후 30일 이내 무료</p><p>· 배송비: 무료배송</p></div>}
       </div>
 
-      <RelatedProducts />
+      <RelatedProducts productId={productId} onNavigate={onNavigate} auth={auth} />
     </div>
   )
 }
