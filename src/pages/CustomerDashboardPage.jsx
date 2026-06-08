@@ -203,7 +203,7 @@ export default function CustomerDashboardPage({ userId, onBack }) {
             </div>
             <div className="cd-profile-stat-row">
               <span className="cd-profile-stat-label">최근 구매일</span>
-              <span className="cd-profile-stat-value">{info.lastPurchaseDaysAgo != null ? `${info.lastPurchaseDaysAgo}일 전` : "–"}</span>
+              <span className="cd-profile-stat-value">{info.lastPurchase || "–"}</span>
             </div>
             <div className="cd-profile-stat-row">
               <span className="cd-profile-stat-label">탈퇴 페이지 방문</span>

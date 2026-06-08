@@ -87,6 +87,14 @@ export async function setSchedule({ cycle, time }) {
   return res.data.data
 }
 
+// ── 연관 상품 조회 ──
+export async function getRelatedProducts({ productId, limit = 8 } = {}) {
+  const res = await axiosInstance.get(`/api/products/${productId}/related`, {
+    params: { limit },
+  })
+  return res.data.data
+}
+
 // ── 자동 수집 스케줄 취소 ──
 export async function cancelSchedule() {
   const res = await axiosInstance.delete('/api/products/sync/schedule')

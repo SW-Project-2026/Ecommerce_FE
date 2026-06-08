@@ -69,12 +69,6 @@ export default function OrderCompletePage({ orderInfo, onNavigate, userId = null
           </div>
         </div>
 
-        <div className="oc-coupon-box">
-          <span className="oc-coupon-icon">🎁</span>
-          <strong> 구매 감사 쿠폰 지급!</strong>
-          <p>5,000원 할인 쿠폰이 마이페이지에 지급되었습니다.</p>
-        </div>
-
         <div className="oc-btns">
           <button className="oc-btn-outline" onClick={() => onNavigate('home')}>계속 쇼핑하기</button>
           <button className="oc-btn-primary" onClick={() => onNavigate('mypage', 'orders')}>주문 내역 확인</button>
