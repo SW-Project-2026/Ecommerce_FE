@@ -1,9 +1,8 @@
-import { useState } from 'react'
 import { wishlistAdd, wishlistDelete } from '../../api/wishlists'
 
-export default function ProductCard({ name = '상품명', price = '89,000원', thumbHeight = 257, imageUrl, productId, isWishlisted = false, wishId: initialWishId = null, onNavigate, auth }) {
-  const [liked, setLiked] = useState(isWishlisted)
-  const [wishId, setWishId] = useState(initialWishId)
+export default function ProductCard({ name = '상품명', price = '89,000원', thumbHeight = 257, imageUrl, productId, wishMap = {}, setWishMap, onNavigate, auth }) {
+  const wishId = wishMap[productId] ?? null
+  const liked  = wishId !== null
 
   async function handleLike(e) {
     e.stopPropagation()
@@ -14,12 +13,10 @@ export default function ProductCard({ name = '상품명', price = '89,000원', t
     try {
       if (liked) {
         await wishlistDelete({ wishId })
-        setWishId(null)
-        setLiked(false)
+        setWishMap(prev => { const next = { ...prev }; delete next[productId]; return next })
       } else {
         const res = await wishlistAdd({ productId })
-        setWishId(res?.wishId ?? null)
-        setLiked(true)
+        setWishMap(prev => ({ ...prev, [productId]: res?.wishId }))
       }
     } catch {
       // 실패 시 상태 유지

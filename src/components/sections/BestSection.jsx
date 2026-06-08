@@ -1,27 +1,21 @@
-import { useState } from 'react'
 import { wishlistAdd, wishlistDelete } from '../../api/wishlists'
 
 const WIDTHS = [399, 398, 399]
 
-function BestCard({ rank, productId, productName, price, imageUrl, isWishlisted, wishId: initialWishId, width, onNavigate, auth }) {
-  const [liked, setLiked] = useState(isWishlisted ?? false)
-  const [wishId, setWishId] = useState(initialWishId ?? null)
+function BestCard({ rank, productId, productName, price, imageUrl, width, wishMap, setWishMap, onNavigate, auth }) {
+  const wishId = wishMap[productId] ?? null
+  const liked  = wishId !== null
 
   async function handleLike(e) {
     e.stopPropagation()
-    if (!auth) {
-      onNavigate?.('login')
-      return
-    }
+    if (!auth) { onNavigate?.('login'); return }
     try {
       if (liked) {
         await wishlistDelete({ wishId })
-        setWishId(null)
-        setLiked(false)
+        setWishMap(prev => { const next = { ...prev }; delete next[productId]; return next })
       } else {
         const res = await wishlistAdd({ productId })
-        setWishId(res?.wishId ?? null)
-        setLiked(true)
+        setWishMap(prev => ({ ...prev, [productId]: res?.wishId }))
       }
     } catch {
       // 실패 시 상태 유지
@@ -51,7 +45,7 @@ function BestCard({ rank, productId, productName, price, imageUrl, isWishlisted,
   )
 }
 
-export default function BestSection({ onNavigate, auth, products = [] }) {
+export default function BestSection({ onNavigate, auth, products = [], wishMap = {}, setWishMap }) {
   if (products.length === 0) return null
 
   return (
@@ -69,9 +63,9 @@ export default function BestSection({ onNavigate, auth, products = [] }) {
             productName={item.productName}
             price={item.price}
             imageUrl={item.imageUrl}
-            isWishlisted={item.isWishlisted}
-            wishId={item.wishId}
             width={WIDTHS[i] ?? 399}
+            wishMap={wishMap}
+            setWishMap={setWishMap}
             onNavigate={onNavigate}
             auth={auth}
           />
