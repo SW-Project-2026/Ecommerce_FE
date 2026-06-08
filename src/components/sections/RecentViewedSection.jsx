@@ -3,7 +3,7 @@ import ProductCard from '../common/ProductCard'
 
 const CARD_STEP = 332
 
-export default function RecommendSection({ onNavigate, auth, products = [], category = '' }) {
+export default function RecentViewedSection({ onNavigate, auth, products = [] }) {
   const [offset, setOffset] = useState(0)
   const maxOffset = Math.max(0, (products.length - 4) * CARD_STEP)
 
@@ -14,12 +14,10 @@ export default function RecommendSection({ onNavigate, auth, products = [], cate
   if (products.length === 0) return null
 
   return (
-    <section className="section-recommend">
-      <div className="section-divider" />
-      <div className="section-indicator" />
-      <div className="section-title">이런 상품을 찾고 있나요?</div>
-      {category && <div className="section-subtitle">관심 있는 카테고리 {category}</div>}
-      <div className="view-all">전체보기 ›</div>
+    <section className="section-timebased">
+      <div className="section-indicator" style={{ background: '#1C2E5C' }} />
+      <div className="section-title">최근 본 상품</div>
+      <div className="view-all" style={{ color: '#1C2E5C' }}>전체보기 ›</div>
       <div className="nav-arrow" onClick={handleNext}>
         <i className="ri-arrow-down-wide-fill" />
       </div>
@@ -28,7 +26,7 @@ export default function RecommendSection({ onNavigate, auth, products = [], cate
           {products.map((item, i) => (
             <ProductCard
               key={item.productId ?? i}
-              thumbHeight={257}
+              thumbHeight={186.69}
               productId={item.productId}
               name={item.productName}
               price={`${item.price?.toLocaleString()}원`}

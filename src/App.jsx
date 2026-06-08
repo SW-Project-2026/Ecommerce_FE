@@ -5,8 +5,8 @@ import Footer from './components/layout/Footer'
 import HeroBanner from './components/sections/HeroBanner'
 import RecommendSection from './components/sections/RecommendSection'
 import AdBanner from './components/sections/AdBanner'
-import RepurchaseSection from './components/sections/RepurchaseSection'
-import TimeBasedSection from './components/sections/TimeBasedSection'
+import PurchasedSection from './components/sections/PurchasedSection'
+import RecentViewedSection from './components/sections/RecentViewedSection'
 import BestSection from './components/sections/BestSection'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
@@ -24,6 +24,7 @@ import { getMyProfile } from './api/users'
 import { refreshToken } from './api/auth'
 import { cartGet } from './api/carts'
 import { userLogin as snippetUserLogin } from './api/snippets'
+import { getHome, getHomeByUser } from './api/home'
 import './App.css'
 
 const FLUENTD_URL = import.meta.env.VITE_FLUENTD_URL || 'https://fluentd.daon.site'
@@ -65,6 +66,9 @@ export default function App() {
   const [mypageTab, setMypageTab] = useState(() => sessionStorage.getItem('mypageTab') || 'home')
   const [auth, setAuth] = useState(null)
   const [authLoading, setAuthLoading] = useState(true)
+
+  // 홈 데이터 state
+  const [homeData, setHomeData] = useState(null)
 
   // 쿠폰 팝업 state
   const [couponPopup, setCouponPopup] = useState(null)
@@ -108,6 +112,21 @@ export default function App() {
     initAuth()
   }, [])
 
+  // ── 홈 데이터 조회 ──
+  useEffect(() => {
+    if (page !== 'home') return
+    const userSeqId = localStorage.getItem('userSeqId')
+    if (userSeqId) {
+      getHomeByUser({ userId: userSeqId })
+        .then(data => setHomeData(data))
+        .catch(() => {
+          getHome().then(data => setHomeData(data)).catch(() => {})
+        })
+    } else {
+      getHome().then(data => setHomeData(data)).catch(() => {})
+    }
+  }, [page, auth])
+
   // ── SSE 연결: 로그인 상태일 때 ──
   useEffect(() => {
     const userSeqId = localStorage.getItem('userSeqId')
@@ -119,7 +138,6 @@ export default function App() {
       return
     }
 
-    // pending 알림 조회
     fetch(`${FLUENTD_URL}/api/notifications/pending?userId=${userSeqId}`)
       .then(res => res.json())
       .then(list => {
@@ -141,7 +159,6 @@ export default function App() {
       })
       .catch(() => {})
 
-    // 기존 연결 종료
     if (sseRef.current) {
       sseRef.current.close()
     }
@@ -228,6 +245,7 @@ export default function App() {
     setCartCount(0)
     setPage('home')
     setCouponPopup(null)
+    setHomeData(null)
   }
 
   function handleAddToCart(product, qty = 1) {
@@ -293,7 +311,6 @@ export default function App() {
 
   return (
     <>
-      {/* 쿠폰 팝업 — couponId 있을 때만 표시 */}
       {couponPopup?.couponId && (
         <CouponPopup
           coupon={{
@@ -376,12 +393,31 @@ export default function App() {
         <div className="page">
           <NavHeader onNavigate={handleNavigate} cartCount={cartCount} auth={auth} onLogout={handleLogout} userId={userId} />
           <CategoryBar onNavigate={handleNavigate} activeCategory="home" />
-          <HeroBanner />
-          <RecommendSection onNavigate={handleNavigate} auth={auth} />
+          <HeroBanner
+            promotions={homeData?.promotions ?? []}
+            userName={homeData?.userName ?? ''}
+          />
+          <RecommendSection
+            onNavigate={handleNavigate}
+            auth={auth}
+            products={homeData?.recommendedProducts ?? []}
+          />
           <AdBanner />
-          <RepurchaseSection onNavigate={handleNavigate} auth={auth} />
-          <TimeBasedSection onNavigate={handleNavigate} auth={auth} />
-          <BestSection onNavigate={handleNavigate} auth={auth} />
+          <RecentViewedSection
+            onNavigate={handleNavigate}
+            auth={auth}
+            products={homeData?.recentViewedProducts ?? []}
+          />
+          <PurchasedSection
+            onNavigate={handleNavigate}
+            auth={auth}
+            products={homeData?.purchasedProducts ?? []}
+          />
+          <BestSection
+            onNavigate={handleNavigate}
+            auth={auth}
+            products={homeData?.bestProducts ?? []}
+          />
           <Footer />
         </div>
       )}
