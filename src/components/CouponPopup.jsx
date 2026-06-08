@@ -58,7 +58,7 @@ export default function CouponPopup({ coupon, onClose, onDismiss }) {
               display: "flex", flexDirection: "column", justifyContent: "flex-end",
               padding: "12px", gap: 4,
             }}>
-              <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 60, fontWeight: 700, color: "#FFFFFF", lineHeight: 1 }}>
+              <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 44, fontWeight: 700, color: "#FFFFFF", lineHeight: 1 }}>
                 {discountDisplay}
               </div>
               <div style={{ fontFamily: "'Manrope','Inter',sans-serif", fontSize: 13, fontWeight: 500, color: "rgba(255,255,255,0.8)" }}>
@@ -108,7 +108,11 @@ export default function CouponPopup({ coupon, onClose, onDismiss }) {
               {info.minOrderAmount?.toLocaleString() ?? "–"}원 이상 구매 시
             </div>
             <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 18, color: "#21366B", textAlign: "center" }}>
-              최대 <span style={{ fontWeight: 800, color: "#3B61C2" }}>{info.maxDiscountAmount?.toLocaleString() ?? "–"}원</span> 할인받으세요!
+              최대 <span style={{ fontWeight: 800, color: "#3B61C2" }}>
+                {info.discountType === "RATE"
+                  ? `${info.maxDiscountAmount?.toLocaleString() ?? "–"}원`
+                  : `${info.discountAmount?.toLocaleString() ?? "–"}원`}
+              </span> 할인받으세요!
             </div>
           </div>
         </div>
