@@ -67,7 +67,7 @@ export default function App() {
   const [authLoading, setAuthLoading] = useState(true)
 
   // 쿠폰 팝업 state
-  const [couponPopup, setCouponPopup] = useState(null) // { couponId, campaignId, adId }
+  const [couponPopup, setCouponPopup] = useState(null)
 
   // SSE 연결 ref
   const sseRef = useRef(null)
@@ -126,11 +126,15 @@ export default function App() {
         if (Array.isArray(list) && list.length > 0) {
           const first = list[0]
           setCouponPopup({
-            couponId:   first.couponId   ?? null,
-            adId:       first.adId       ?? null,
-            campaignId: first.campaignId ?? null,
+            couponId:          first.couponId          ?? null,
+            adId:              first.adId              ?? null,
+            campaignId:        first.campaignId        ?? null,
+            couponName:        first.couponName        ?? null,
+            discountType:      first.discountType      ?? null,
+            discountAmount:    first.discountAmount    ?? null,
+            minOrderAmount:    first.minOrderAmount    ?? null,
+            maxDiscountAmount: first.maxDiscountAmount ?? null,
           })
-          // 확인 후 삭제
           fetch(`${FLUENTD_URL}/api/notifications/pending?userId=${userSeqId}`, { method: 'DELETE' })
             .catch(() => {})
         }
@@ -148,9 +152,14 @@ export default function App() {
       try {
         const data = JSON.parse(e.data)
         setCouponPopup({
-          couponId:   data.couponId   ?? null,
-          adId:       data.adId       ?? null,
-          campaignId: data.campaignId ?? null,
+          couponId:          data.couponId          ?? null,
+          adId:              data.adId              ?? null,
+          campaignId:        data.campaignId        ?? null,
+          couponName:        data.couponName        ?? null,
+          discountType:      data.discountType      ?? null,
+          discountAmount:    data.discountAmount    ?? null,
+          minOrderAmount:    data.minOrderAmount    ?? null,
+          maxDiscountAmount: data.maxDiscountAmount ?? null,
         })
       } catch (err) {
         console.error('SSE 이벤트 파싱 오류', err)
@@ -287,7 +296,14 @@ export default function App() {
       {/* 쿠폰 팝업 — couponId 있을 때만 표시 */}
       {couponPopup?.couponId && (
         <CouponPopup
-          coupon={{ couponId: couponPopup.couponId }}
+          coupon={{
+            couponId:          couponPopup.couponId,
+            couponName:        couponPopup.couponName,
+            discountType:      couponPopup.discountType,
+            discountAmount:    couponPopup.discountAmount,
+            minOrderAmount:    couponPopup.minOrderAmount,
+            maxDiscountAmount: couponPopup.maxDiscountAmount,
+          }}
           onClose={() => setCouponPopup(null)}
           onDismiss={() => setCouponPopup(null)}
         />
