@@ -280,7 +280,7 @@ export default function App() {
 
   const userId = auth?.userId ?? null
 
-  if (authLoading) return null
+  if (authLoading && page !== 'coupon-claim') return null
 
   return (
     <>
