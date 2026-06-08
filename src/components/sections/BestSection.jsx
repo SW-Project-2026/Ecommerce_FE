@@ -1,16 +1,31 @@
 import { useState } from 'react'
+import { wishlistAdd, wishlistDelete } from '../../api/wishlists'
 
 const WIDTHS = [399, 398, 399]
 
-function BestCard({ rank, productId, productName, price, imageUrl, isWishlisted, width, onNavigate, auth }) {
+function BestCard({ rank, productId, productName, price, imageUrl, isWishlisted, wishId: initialWishId, width, onNavigate, auth }) {
   const [liked, setLiked] = useState(isWishlisted ?? false)
+  const [wishId, setWishId] = useState(initialWishId ?? null)
 
-  function handleLike() {
+  async function handleLike(e) {
+    e.stopPropagation()
     if (!auth) {
       onNavigate?.('login')
       return
     }
-    setLiked(prev => !prev)
+    try {
+      if (liked) {
+        await wishlistDelete({ wishId })
+        setWishId(null)
+        setLiked(false)
+      } else {
+        const res = await wishlistAdd({ productId })
+        setWishId(res?.wishId ?? null)
+        setLiked(true)
+      }
+    } catch {
+      // 실패 시 상태 유지
+    }
   }
 
   function handleClick() {
@@ -24,7 +39,7 @@ function BestCard({ rank, productId, productName, price, imageUrl, isWishlisted,
           ? <img src={imageUrl} alt={productName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           : null}
         <div className="rank-badge">{rank}위</div>
-        <button className="heart-btn best-heart" onClick={e => { e.stopPropagation(); handleLike() }} aria-label="찜하기">
+        <button className="heart-btn best-heart" onClick={handleLike} aria-label="찜하기">
           <i className={liked ? 'ri-heart-fill' : 'ri-heart-line'} style={{ color: '#FF6B6B' }} />
         </button>
       </div>
@@ -55,6 +70,7 @@ export default function BestSection({ onNavigate, auth, products = [] }) {
             price={item.price}
             imageUrl={item.imageUrl}
             isWishlisted={item.isWishlisted}
+            wishId={item.wishId}
             width={WIDTHS[i] ?? 399}
             onNavigate={onNavigate}
             auth={auth}
