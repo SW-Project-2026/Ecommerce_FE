@@ -137,7 +137,7 @@ export default function CartPage({ cart, onNavigate, onCartChange, onGoCheckout,
   const appliedCoupon  = coupons.find(c => String(c.userCouponId) === couponId) ?? null
   const couponDiscount = appliedCoupon
     ? appliedCoupon.discountType === 'RATE'
-      ? Math.min(Math.floor(subtotal * appliedCoupon.discountAmount / 100), appliedCoupon.maxDiscountAmount ?? Infinity)
+      ? Math.min(Math.floor(subtotal * appliedCoupon.discountAmount / 100), appliedCoupon.maxDiscountAmount ?? Math.floor(subtotal * appliedCoupon.discountAmount / 100))
       : (appliedCoupon.discountAmount ?? 0)
     : 0
   const total = Math.max(0, subtotal - couponDiscount)
