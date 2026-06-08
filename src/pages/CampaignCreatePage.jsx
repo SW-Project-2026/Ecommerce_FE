@@ -5,7 +5,6 @@ import { eventList } from "../api/events";
 import { couponList } from "../api/coupons";
 import { adList } from "../api/ads";
 
-const FLUENTD_URL = import.meta.env.VITE_FLUENTD_URL || 'http://localhost:9880'
 
 const OPERATORS_NUMBER   = ["≥ (이상)", "≤ (이하)", "> (초과)", "< (미만)", "= (동등)"];
 const OPERATORS_STRING   = ["포함", "= (동등)"];
@@ -88,17 +87,6 @@ const S = {
   subCell: { fontFamily: "'Noto Sans KR', sans-serif", fontSize: 11, color: "#9EA6B5" },
 };
 
-async function sendCampaignToFluentd(payload) {
-  try {
-    await fetch(`${FLUENTD_URL}/campaign.logs`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    })
-  } catch {
-    // Fluentd 전송 실패 시 무시
-  }
-}
 
 export default function CampaignCreatePage({ onNavigate }) {
   const [name,      setName]      = useState("");
@@ -233,19 +221,6 @@ export default function CampaignCreatePage({ onNavigate }) {
         messageType:           isMessaging ? "SMS" : isLms ? "LMS" : null,
         messageSubject:        isLms ? msgTitle : null,
         messageContent:        (isMessaging || isLms) ? msgContent : null,
-        filters:               apiFilters,
-      });
-
-      await sendCampaignToFluentd({
-        action:                "UPSERT",
-        campaignId:            result?.campaignId,
-        collectionType:        COLLECTION_TYPE_MAP[processType],
-        filterLogicalOperator: filterLogic,
-        batchCycle:            processType === "batch" ? getBatchCycle()      : "",
-        batchTime:             processType === "batch" ? getBatchTime()       : "",
-        batchDayOfWeek:        processType === "batch" ? (getBatchDayOfWeek() ?? "") : "",
-        batchDayOfMonth:       processType === "batch" ? (getBatchDayOfMonth() ?? 0) : 0,
-        status:                "IN_PROGRESS",
         filters:               apiFilters,
       });
 
