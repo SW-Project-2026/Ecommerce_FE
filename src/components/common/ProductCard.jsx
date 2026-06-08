@@ -1,15 +1,29 @@
 import { useState } from 'react'
+import { wishlistAdd, wishlistDelete } from '../../api/wishlist'
 
-export default function ProductCard({ name = '상품명', price = '89,000원', thumbHeight = 257, imageUrl, productId, isWishlisted = false, onNavigate, auth }) {
+export default function ProductCard({ name = '상품명', price = '89,000원', thumbHeight = 257, imageUrl, productId, isWishlisted = false, wishId: initialWishId = null, onNavigate, auth }) {
   const [liked, setLiked] = useState(isWishlisted)
+  const [wishId, setWishId] = useState(initialWishId)
 
-  function handleLike(e) {
+  async function handleLike(e) {
     e.stopPropagation()
     if (!auth) {
       onNavigate?.('login')
       return
     }
-    setLiked(prev => !prev)
+    try {
+      if (liked) {
+        await wishlistDelete({ wishId })
+        setWishId(null)
+        setLiked(false)
+      } else {
+        const res = await wishlistAdd({ productId })
+        setWishId(res?.wishId ?? null)
+        setLiked(true)
+      }
+    } catch {
+      // 실패 시 상태 유지
+    }
   }
 
   function handleClick() {
