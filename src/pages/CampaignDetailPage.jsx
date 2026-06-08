@@ -5,19 +5,6 @@ import { eventList } from "../api/events";
 import { couponList } from "../api/coupons";
 import { adList } from "../api/ads";
 
-const FLUENTD_URL = import.meta.env.VITE_FLUENTD_URL || "http://localhost:9880"
-
-async function sendCampaignToFluentd(payload) {
-  try {
-    await fetch(`${FLUENTD_URL}/campaign.logs`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    })
-  } catch {
-    // Fluentd 전송 실패 시 무시
-  }
-}
 
 const OPERATORS_NUMBER   = ["≥ (이상)", "≤ (이하)", "> (초과)", "< (미만)", "= (동등)"];
 const OPERATORS_STRING   = ["포함", "= (동등)"];
@@ -476,7 +463,6 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
     setDeleting(true); setApiError(null);
     try {
       await campaignDelete({ campaignId: campaign.campaignId });
-      await sendCampaignToFluentd({ action: "DELETE", campaignId: campaign.campaignId });
       onNavigate("list");
     } catch (err) { setApiError(err.message); setShowDeleteModal(false); }
     finally { setDeleting(false); }
@@ -518,18 +504,6 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
         couponRestrictionDays: dedupeType === "period" ? parseInt(dedupeDays, 10) : null,
         filters:               apiFilters,
       });
-      await sendCampaignToFluentd({
-        action:                "UPSERT",
-        campaignId:            campaign.campaignId,
-        collectionType:        COLLECTION_TYPE_MAP[processType],
-        filterLogicalOperator: filterLogic,
-        batchCycle:            processType === "batch" ? getBatchCycle()      : "",
-        batchTime:             processType === "batch" ? getBatchTime()       : "",
-        batchDayOfWeek:        processType === "batch" ? (getBatchDayOfWeek() ?? "") : "",
-        batchDayOfMonth:       processType === "batch" ? (getBatchDayOfMonth() ?? 0) : 0,
-        status:                status,
-        filters:               apiFilters,
-      });
       setEditMode(false);
     } catch (err) { setApiError(err.message); }
     finally { setSaving(false); }
@@ -540,7 +514,6 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
     try {
       const updated = await campaignStatusUpdate({ campaignId: campaign.campaignId, status: newStatus });
       setStatus(updated?.status ?? newStatus);
-      await sendCampaignToFluentd({ action: "STATUS_UPDATE", campaignId: campaign.campaignId, status: newStatus });
       setShowStatusModal(false);
     } catch (err) { setApiError(err.message); setShowStatusModal(false); }
   };
