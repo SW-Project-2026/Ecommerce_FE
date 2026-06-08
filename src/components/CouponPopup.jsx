@@ -1,19 +1,11 @@
-import { useState, useEffect } from "react";
-import { couponDownload, couponDetail } from "../api/coupons";
+import { useState } from "react";
+import { couponDownload } from "../api/coupons";
 
 export default function CouponPopup({ coupon, onClose, onDismiss }) {
   const [downloaded, setDownloaded] = useState(false);
   const [downloading, setDownloading] = useState(false);
-  const [couponInfo, setCouponInfo] = useState(null);
 
-  useEffect(() => {
-    if (!coupon?.couponId) return;
-    couponDetail({ couponId: coupon.couponId })
-      .then(data => setCouponInfo(data))
-      .catch(() => {});
-  }, [coupon?.couponId]);
-
-  const info = couponInfo ?? coupon ?? {};
+  const info = coupon ?? {};
 
   const discountDisplay = info.discountType === "RATE"
     ? <>{info.discountAmount}<span style={{ fontSize: 28, fontWeight: 500 }}> % 할인</span></>
@@ -70,7 +62,7 @@ export default function CouponPopup({ coupon, onClose, onDismiss }) {
                 {discountDisplay}
               </div>
               <div style={{ fontFamily: "'Manrope','Inter',sans-serif", fontSize: 13, fontWeight: 500, color: "rgba(255,255,255,0.8)" }}>
-                {info.name ?? info.couponName ?? "쿠폰"}
+                {info.couponName ?? "쿠폰"}
               </div>
               <div style={{ fontFamily: "'Manrope','Inter',sans-serif", fontSize: 10, fontWeight: 400, color: "rgba(255,255,255,0.6)" }}>
                 발급일로부터 7일 유효
