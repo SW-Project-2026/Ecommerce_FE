@@ -107,6 +107,11 @@ export default function MyCoupons() {
                   <div className="myp-coupon-cond">
                     {c.minOrderAmount ? `${c.minOrderAmount?.toLocaleString()}원 이상 구매 시` : '조건 없음'}
                   </div>
+                  {c.discountType !== 'FIXED' && c.maxDiscountAmount && (
+                    <div className="myp-coupon-cond">
+                      최대 {c.maxDiscountAmount?.toLocaleString()}원 할인
+                    </div>
+                  )}
                   <div className={`myp-coupon-expire${soon ? ' myp-coupon-expire--soon' : ''}`}>
                     {soon ? '⚠ ' : ''}~{c.expiredAt ? new Date(c.expiredAt).toLocaleDateString('ko-KR') : '–'}
                   </div>

@@ -71,7 +71,16 @@ export default function CheckoutPage({ checkoutItems, selectedCoupon, onNavigate
   const [payMethod, setPayMethod] = useState('kakao')
 
   const subtotal = checkoutItems.reduce((s, i) => s + i.product.minPrice * i.qty, 0)
-  const couponDiscount = selectedCoupon?.discountAmount ?? 0
+  const couponDiscount = selectedCoupon
+    ? selectedCoupon.discountType === 'RATE'
+      ? (() => {
+          const calculated = Math.floor(subtotal * selectedCoupon.discountAmount / 100)
+          return selectedCoupon.maxDiscountAmount
+            ? Math.min(calculated, selectedCoupon.maxDiscountAmount)
+            : calculated
+        })()
+      : selectedCoupon.discountAmount ?? 0
+    : 0
   const total = Math.max(0, subtotal - couponDiscount)
   const canOrder = selectedAddr !== null && payMethod && !ordering
 
