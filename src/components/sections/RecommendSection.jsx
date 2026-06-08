@@ -3,7 +3,7 @@ import ProductCard from '../common/ProductCard'
 
 const CARD_STEP = 332
 
-export default function RecommendSection({ onNavigate, auth, products = [], category = '' }) {
+export default function RecommendSection({ onNavigate, auth, products = [], category = '', wishMap = {}, setWishMap }) {
   const [offset, setOffset] = useState(0)
   const maxOffset = Math.max(0, (products.length - 4) * CARD_STEP)
 
@@ -33,7 +33,8 @@ export default function RecommendSection({ onNavigate, auth, products = [], cate
               name={item.productName}
               price={`${item.price?.toLocaleString()}원`}
               imageUrl={item.imageUrl}
-              isWishlisted={item.isWishlisted}
+              wishMap={wishMap}
+              setWishMap={setWishMap}
               onNavigate={onNavigate}
               auth={auth}
             />

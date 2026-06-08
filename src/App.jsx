@@ -25,6 +25,7 @@ import { refreshToken } from './api/auth'
 import { cartGet } from './api/carts'
 import { userLogin as snippetUserLogin } from './api/snippets'
 import { getHome, getHomeByUser } from './api/home'
+import { wishlistGet } from './api/wishlists'
 import './App.css'
 
 const FLUENTD_URL = import.meta.env.VITE_FLUENTD_URL || 'https://fluentd.daon.site'
@@ -70,6 +71,9 @@ export default function App() {
   // 홈 데이터 state
   const [homeData, setHomeData] = useState(null)
 
+  // 찜 map state
+  const [wishMap, setWishMap] = useState({})
+
   // 쿠폰 팝업 state
   const [couponPopup, setCouponPopup] = useState(null)
 
@@ -111,6 +115,18 @@ export default function App() {
 
     initAuth()
   }, [])
+
+  // ── 찜 목록 조회 ──
+  useEffect(() => {
+    if (!auth) { setWishMap({}); return }
+    wishlistGet({ size: 100 })
+      .then(data => {
+        const map = {}
+        ;(data.content ?? []).forEach(w => { map[w.productId] = w.wishId })
+        setWishMap(map)
+      })
+      .catch(() => {})
+  }, [auth])
 
   // ── 홈 데이터 조회 ──
   useEffect(() => {
@@ -246,6 +262,7 @@ export default function App() {
     setPage('home')
     setCouponPopup(null)
     setHomeData(null)
+    setWishMap({})
   }
 
   function handleAddToCart(product, qty = 1) {
@@ -401,22 +418,30 @@ export default function App() {
             onNavigate={handleNavigate}
             auth={auth}
             products={homeData?.recommendedProducts ?? []}
+            wishMap={wishMap}
+            setWishMap={setWishMap}
           />
           <AdBanner />
           <RecentViewedSection
             onNavigate={handleNavigate}
             auth={auth}
             products={homeData?.recentViewedProducts ?? []}
+            wishMap={wishMap}
+            setWishMap={setWishMap}
           />
           <PurchasedSection
             onNavigate={handleNavigate}
             auth={auth}
             products={homeData?.purchasedProducts ?? []}
+            wishMap={wishMap}
+            setWishMap={setWishMap}
           />
           <BestSection
             onNavigate={handleNavigate}
             auth={auth}
             products={homeData?.bestProducts ?? []}
+            wishMap={wishMap}
+            setWishMap={setWishMap}
           />
           <Footer />
         </div>
