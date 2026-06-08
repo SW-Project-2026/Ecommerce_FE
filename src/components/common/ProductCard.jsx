@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { wishlistAdd, wishlistDelete } from '../../api/wishlist'
+import { wishlistAdd, wishlistDelete } from '../../api/wishlists'
 
 export default function ProductCard({ name = '상품명', price = '89,000원', thumbHeight = 257, imageUrl, productId, isWishlisted = false, wishId: initialWishId = null, onNavigate, auth }) {
   const [liked, setLiked] = useState(isWishlisted)

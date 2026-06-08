@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { wishlistAdd, wishlistDelete } from '../../api/wishlist'
+import { wishlistAdd, wishlistDelete } from '../../api/wishlists'
 
 const WIDTHS = [399, 398, 399]
 
