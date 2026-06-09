@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { getProducts } from '../../api/products'
+import { getProduct } from '../../api/products'
 
 const TAGS = ['이 상품 어때요?', '지금 인기 상품', '놓치지 마세요']
 
@@ -38,13 +38,22 @@ export default function HeroBanner({ promotions = [], userName = '', onNavigate,
   const [randomProducts, setRandomProducts] = useState([])
   const adReplaceRef = useRef(0)
 
-  // 랜덤 상품 3개 조회
+  // 랜덤 상품 3개 조회 (1~1800 랜덤 ID)
   useEffect(() => {
-    getProducts({ page: 0, size: 50 })
-      .then(data => {
-        const list = data.content ?? []
-        const shuffled = [...list].sort(() => Math.random() - 0.5)
-        setRandomProducts(shuffled.slice(0, 3))
+    const MAX_ID = 1800
+    const ids = []
+    while (ids.length < 9) {
+      const id = Math.floor(Math.random() * MAX_ID) + 1
+      if (!ids.includes(id)) ids.push(id)
+    }
+    // 9개 시도해서 성공한 3개 사용
+    Promise.allSettled(ids.map(id => getProduct(id)))
+      .then(results => {
+        const success = results
+          .filter(r => r.status === 'fulfilled' && r.value)
+          .map(r => r.value)
+          .slice(0, 3)
+        setRandomProducts(success)
       })
       .catch(() => {})
   }, [])
@@ -144,7 +153,7 @@ export default function HeroBanner({ promotions = [], userName = '', onNavigate,
                   </div>
                   <div className="ai-product-content">
                     <div className="ai-product-tag">{slide.tag}</div>
-                    <div className="ai-product-name">{slide.name}</div>
+                    <div className="ai-product-name" style={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>{slide.name}</div>
                     {slide.brand && <div className="ai-product-desc">{slide.brand}</div>}
                     {slide.category && <div className="ai-product-desc">{slide.category}</div>}
                     <div className="ai-product-price">{slide.price?.toLocaleString()}원</div>
