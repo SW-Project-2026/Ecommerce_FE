@@ -206,21 +206,6 @@ export default function CartPage({ cart, onNavigate, onCartChange, onGoCheckout,
             ))}
           </div>
 
-          <div className="cart-related">
-            <h3 className="cart-related-title">다른 고객이 함께 구매한 상품</h3>
-            <div className="cart-related-row">
-              <div className="cart-related-grid">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="cart-related-card">
-                    <div className="cart-related-thumb" />
-                    <div className="cart-related-name pdp-skeleton" />
-                    <div className="cart-related-price pdp-skeleton" />
-                  </div>
-                ))}
-              </div>
-              <button className="pdp-related-arrow"><i className="ri-arrow-right-s-line" /></button>
-            </div>
-          </div>
         </div>
 
         <div className="cart-right">

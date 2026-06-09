@@ -296,10 +296,11 @@ a { text-decoration: none; }
   font-size: 110px;
 }
 .ai-product-content {
-  flex: 1;
-  min-width: 0;
+  width: 595px;
+  flex-shrink: 0;
   display: flex; flex-direction: column; justify-content: center;
   padding: 0 48px;
+  min-width: 0;
 }
 .ai-product-tag {
   display: inline-block;
@@ -327,7 +328,6 @@ a { text-decoration: none; }
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-  line-clamp: 2;
   overflow: hidden;
 }
 .ai-product-desc {

@@ -17,7 +17,6 @@ export default function RecentViewedSection({ onNavigate, auth, products = [], w
     <section className="section-timebased">
       <div className="section-indicator" style={{ background: '#1C2E5C' }} />
       <div className="section-title">최근 본 상품</div>
-      <div className="view-all" style={{ color: '#1C2E5C' }}>전체보기 ›</div>
       <div className="nav-arrow" onClick={handleNext}>
         <i className="ri-arrow-down-wide-fill" />
       </div>
