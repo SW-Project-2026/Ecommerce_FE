@@ -45,7 +45,7 @@ function saveProducts(products) {
   } catch {}
 }
 
-export default function HeroBanner({ promotions = [], userName = '', onNavigate, adProduct = null }) {
+export default function HeroBanner({ promotions = [], userName = '', onNavigate, adProduct = null, onPromotionClick }) {
   const [activeSlide, setActiveSlide] = useState(0)
   const [activeEvent, setActiveEvent] = useState(0)
   const [pauseAI,    setPauseAI]    = useState(false)
@@ -98,8 +98,9 @@ export default function HeroBanner({ promotions = [], userName = '', onNavigate,
             ? `${p.discountAmount}% 할인`
             : `${p.discountAmount?.toLocaleString()}원 할인`}
         </>,
-        bg:    EVENT_COLORS[i % EVENT_COLORS.length].bg,
-        color: EVENT_COLORS[i % EVENT_COLORS.length].color,
+        bg:       EVENT_COLORS[i % EVENT_COLORS.length].bg,
+        color:    EVENT_COLORS[i % EVENT_COLORS.length].color,
+        couponId: p.couponId,
       }))
     : DEFAULT_EVENT_SLIDES
 
@@ -187,7 +188,12 @@ export default function HeroBanner({ promotions = [], userName = '', onNavigate,
           style={{ transform: `translateX(-${activeEvent * 100}%)` }}
         >
           {eventSlides.map((slide, i) => (
-            <div key={i} className="event-slide" style={{ background: slide.bg }}>
+            <div
+              key={i}
+              className="event-slide"
+              style={{ background: slide.bg, cursor: slide.couponId ? 'pointer' : 'default' }}
+              onClick={() => slide.couponId && onPromotionClick?.(slide.couponId)}
+            >
               <div className="event-label" style={{ color: slide.color }}>
                 {slide.title}
               </div>

@@ -53,7 +53,6 @@ export default function BestSection({ onNavigate, auth, products = [], wishMap =
       <div className="section-indicator" />
       <div className="section-title">베스트</div>
       <div className="section-subtitle-best">지금 가장 많이 팔리는 상품</div>
-      <div className="view-all">전체보기 ›</div>
       <div className="best-row">
         {products.map((item, i) => (
           <BestCard
