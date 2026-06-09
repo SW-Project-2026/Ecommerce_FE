@@ -1,44 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { getProducts } from '../../api/products'
 
-const AI_SLIDES = [
-  {
-    type: 'ai',
-    label: 'AI 맞춤 추천',
-    greeting: '안녕하세요, ooo님 👋',
-    subtitle: <>오늘 딱 맞는 상품을<br />골라왔어요</>,
-    desc: '최근 검색·구매 패턴을 분석해 취향에 맞는 상품을 추천해드려요',
-  },
-  {
-    type: 'product',
-    tag: '오늘의 특가',
-    badge: '30% OFF',
-    emoji: '🎧',
-    name: '갤럭시 버즈3 Pro 무선 이어폰',
-    desc: '노이즈 캔슬링 · 최대 30시간 재생 · 방수 IPX7',
-    price: '189,000원',
-  },
-  {
-    type: 'product',
-    tag: '신규 입고',
-    badge: 'NEW',
-    emoji: '👟',
-    name: '나이키 에어맥스 270',
-    desc: '탁월한 에어 쿠셔닝 · 10가지 컬러 · 유니섹스',
-    price: '149,000원',
-  },
-  {
-    type: 'product',
-    tag: '재구매 추천',
-    badge: '단골 혜택',
-    emoji: '🧴',
-    name: '세타필 모이스처라이징 크림',
-    desc: '민감한 피부를 위한 보습 크림 · 무향·무색소',
-    price: '18,500원',
-  },
-]
+const TAGS = ['이 상품 어때요?', '지금 인기 상품', '놓치지 마세요']
 
 const DEFAULT_EVENT_SLIDES = [
-  { title: <>추천 이벤트<br />및 쿠폰</>,    bg: 'rgba(212,212,212,0.95)', color: '#8B8B8B' },
+  { title: <>추천 이벤트<br />및 쿠폰</>, bg: 'rgba(212,212,212,0.95)', color: '#8B8B8B' },
 ]
 
 const EVENT_COLORS = [
@@ -51,29 +17,77 @@ const EVENT_COLORS = [
 const AI_INTERVAL    = 3500
 const EVENT_INTERVAL = 4000
 
-export default function HeroBanner({ promotions = [], userName = '' }) {
+function toSlide(p, i) {
+  return {
+    type: 'product',
+    tag: TAGS[i % TAGS.length],
+    productId: p.productId,
+    name: p.name ?? p.productName,
+    category: p.productCategory ?? p.subCategory ?? '',
+    price: p.minPrice ?? p.price,
+    imageUrl: p.imageUrl,
+    brand: p.brand ?? p.mallName ?? '',
+  }
+}
+
+export default function HeroBanner({ promotions = [], userName = '', onNavigate, adProduct = null }) {
   const [activeSlide, setActiveSlide] = useState(0)
   const [activeEvent, setActiveEvent] = useState(0)
   const [pauseAI,    setPauseAI]    = useState(false)
   const [pauseEvent, setPauseEvent] = useState(false)
+  const [randomProducts, setRandomProducts] = useState([])
+  const adReplaceRef = useRef(0)
 
-  // promotions 데이터로 이벤트 슬라이드 생성
+  // 랜덤 상품 3개 조회
+  useEffect(() => {
+    getProducts({ page: 0, size: 50 })
+      .then(data => {
+        const list = data.content ?? []
+        const shuffled = [...list].sort(() => Math.random() - 0.5)
+        setRandomProducts(shuffled.slice(0, 3))
+      })
+      .catch(() => {})
+  }, [])
+
+  // 광고 상품 수신 시 슬롯 교체
+  useEffect(() => {
+    if (!adProduct) return
+    const idx = adProduct._replaceIndex ?? adReplaceRef.current
+    adReplaceRef.current = (idx + 1) % 3
+    setRandomProducts(prev => {
+      const next = [...prev]
+      next[idx] = adProduct
+      return next
+    })
+  }, [adProduct])
+
+  // AI 슬라이드 구성
+  const productSlides = randomProducts.map((p, i) => toSlide(p, i))
+
+  const aiSlides = [
+    ...(userName ? [{
+      type: 'ai',
+      greeting: `안녕하세요, ${userName}님 👋`,
+      subtitle: <>오늘 딱 맞는 상품을<br />골라왔어요</>,
+      desc: '최근 검색·구매 패턴을 분석해 취향에 맞는 상품을 추천해드려요',
+    }] : []),
+    ...productSlides,
+  ]
+
   const eventSlides = promotions.length > 0
     ? promotions.map((p, i) => ({
-        title: <>{p.couponName}<br />{p.discountAmount?.toLocaleString()}원 할인</>,
+        title: <>
+          {p.couponName}<br />
+          {p.discountType === 'RATE' || (p.discountAmount <= 100 && !p.discountType)
+            ? `${p.discountAmount}% 할인`
+            : `${p.discountAmount?.toLocaleString()}원 할인`}
+        </>,
         bg:    EVENT_COLORS[i % EVENT_COLORS.length].bg,
         color: EVENT_COLORS[i % EVENT_COLORS.length].color,
-        hasReceived: p.hasReceived,
       }))
     : DEFAULT_EVENT_SLIDES
 
-  const aiSlides = AI_SLIDES.map(s =>
-    s.type === 'ai' && userName
-      ? { ...s, greeting: `안녕하세요, ${userName}님 👋` }
-      : s
-  )
-
-  const aiLen    = aiSlides.length
+  const aiLen    = Math.max(aiSlides.length, 1)
   const eventLen = eventSlides.length
 
   const prevAI    = () => setActiveSlide(p => (p - 1 + aiLen) % aiLen)
@@ -85,7 +99,7 @@ export default function HeroBanner({ promotions = [], userName = '' }) {
     if (pauseAI) return
     const t = setInterval(nextAI, AI_INTERVAL)
     return () => clearInterval(t)
-  }, [pauseAI])
+  }, [pauseAI, aiLen])
 
   useEffect(() => {
     if (pauseEvent) return
@@ -95,7 +109,6 @@ export default function HeroBanner({ promotions = [], userName = '' }) {
 
   return (
     <>
-      {/* ── AI 맞춤 추천 배너 ── */}
       <div
         className="ai-banner"
         onMouseEnter={() => setPauseAI(true)}
@@ -105,27 +118,37 @@ export default function HeroBanner({ promotions = [], userName = '' }) {
           className="ai-slides-wrap"
           style={{ transform: `translateX(-${activeSlide * 100}%)` }}
         >
-          {aiSlides.map((slide, i) => (
+          {aiSlides.length === 0 ? (
+            <div className="ai-slide">
+              <div className="ai-deco-circle ai-deco-circle--outline" />
+              <div className="ai-deco-circle ai-deco-circle--rose" />
+              <div className="ai-greeting">안녕하세요 👋</div>
+              <div className="ai-subtitle">오늘도 좋은 쇼핑 되세요</div>
+            </div>
+          ) : aiSlides.map((slide, i) => (
             <div key={i} className="ai-slide">
               {slide.type === 'ai' ? (
                 <>
                   <div className="ai-deco-circle ai-deco-circle--outline" />
                   <div className="ai-deco-circle ai-deco-circle--rose" />
-                  <span className="ai-label">{slide.label}</span>
                   <div className="ai-greeting">{slide.greeting}</div>
                   <div className="ai-subtitle">{slide.subtitle}</div>
                   <div className="ai-desc">{slide.desc}</div>
                 </>
               ) : (
                 <div className="ai-slide-product">
-                  <div className="ai-product-img-wrap">{slide.emoji}</div>
+                  <div className="ai-product-img-wrap">
+                    {slide.imageUrl
+                      ? <img src={slide.imageUrl} alt={slide.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 8 }} />
+                      : <span style={{ fontSize: 48 }}>🛍</span>}
+                  </div>
                   <div className="ai-product-content">
                     <div className="ai-product-tag">{slide.tag}</div>
-                    <div className="ai-product-badge">{slide.badge}</div>
                     <div className="ai-product-name">{slide.name}</div>
-                    <div className="ai-product-desc">{slide.desc}</div>
-                    <div className="ai-product-price">{slide.price}</div>
-                    <button className="ai-product-cta">바로 구매 →</button>
+                    {slide.brand && <div className="ai-product-desc">{slide.brand}</div>}
+                    {slide.category && <div className="ai-product-desc">{slide.category}</div>}
+                    <div className="ai-product-price">{slide.price?.toLocaleString()}원</div>
+                    <button className="ai-product-cta" onClick={() => onNavigate?.('product', slide.productId)}>바로 구매 →</button>
                   </div>
                 </div>
               )}
@@ -141,7 +164,7 @@ export default function HeroBanner({ promotions = [], userName = '' }) {
         </button>
 
         <div className="ai-pagination">
-          {aiSlides.map((_, i) => (
+          {(aiSlides.length === 0 ? [0] : aiSlides).map((_, i) => (
             <button
               key={i}
               className={`dot${activeSlide === i ? ' active' : ''}`}
@@ -167,9 +190,6 @@ export default function HeroBanner({ promotions = [], userName = '' }) {
               <div className="event-label" style={{ color: slide.color }}>
                 {slide.title}
               </div>
-              {slide.hasReceived && (
-                <div style={{ fontSize: 11, color: slide.color, marginTop: 4, opacity: 0.7 }}>수령 완료</div>
-              )}
             </div>
           ))}
         </div>
