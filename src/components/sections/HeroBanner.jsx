@@ -17,17 +17,32 @@ const EVENT_COLORS = [
 const AI_INTERVAL    = 3500
 const EVENT_INTERVAL = 4000
 
+const AD_STORAGE_KEY = 'hero_ad_products'
+
 function toSlide(p, i) {
   return {
     type: 'product',
     tag: TAGS[i % TAGS.length],
     productId: p.productId,
-    name: p.name ?? p.productName,
-    category: p.productCategory ?? p.subCategory ?? '',
-    price: p.minPrice ?? p.price,
-    imageUrl: p.imageUrl,
+    name: p.name ?? p.productName ?? p.title,
+    category: p.productCategory ?? p.subCategory ?? p.category ?? '',
+    price: p.minPrice ?? p.price ?? Number(p.lowestPrice),
+    imageUrl: p.imageUrl ?? p.image,
     brand: p.brand ?? p.mallName ?? '',
   }
+}
+
+function loadSavedProducts() {
+  try {
+    const saved = sessionStorage.getItem(AD_STORAGE_KEY)
+    return saved ? JSON.parse(saved) : []
+  } catch { return [] }
+}
+
+function saveProducts(products) {
+  try {
+    sessionStorage.setItem(AD_STORAGE_KEY, JSON.stringify(products))
+  } catch {}
 }
 
 export default function HeroBanner({ promotions = [], userName = '', onNavigate, adProduct = null }) {
@@ -35,18 +50,18 @@ export default function HeroBanner({ promotions = [], userName = '', onNavigate,
   const [activeEvent, setActiveEvent] = useState(0)
   const [pauseAI,    setPauseAI]    = useState(false)
   const [pauseEvent, setPauseEvent] = useState(false)
-  const [randomProducts, setRandomProducts] = useState([])
+  const [randomProducts, setRandomProducts] = useState(() => loadSavedProducts())
   const adReplaceRef = useRef(0)
 
-  // 랜덤 상품 3개 조회 (1~1800 랜덤 ID)
+  // 랜덤 상품 3개 조회 (저장된 게 없을 때만)
   useEffect(() => {
+    if (randomProducts.length >= 3) return
     const MAX_ID = 1800
     const ids = []
     while (ids.length < 9) {
       const id = Math.floor(Math.random() * MAX_ID) + 1
       if (!ids.includes(id)) ids.push(id)
     }
-    // 9개 시도해서 성공한 3개 사용
     Promise.allSettled(ids.map(id => getProduct(id)))
       .then(results => {
         const success = results
@@ -54,11 +69,12 @@ export default function HeroBanner({ promotions = [], userName = '', onNavigate,
           .map(r => r.value)
           .slice(0, 3)
         setRandomProducts(success)
+        saveProducts(success)
       })
       .catch(() => {})
   }, [])
 
-  // 광고 상품 수신 시 슬롯 교체
+  // 광고 상품 수신 시 슬롯 교체 및 저장
   useEffect(() => {
     if (!adProduct) return
     const idx = adProduct._replaceIndex ?? adReplaceRef.current
@@ -66,22 +82,13 @@ export default function HeroBanner({ promotions = [], userName = '', onNavigate,
     setRandomProducts(prev => {
       const next = [...prev]
       next[idx] = adProduct
+      saveProducts(next)
       return next
     })
   }, [adProduct])
 
-  // AI 슬라이드 구성
-  const productSlides = randomProducts.map((p, i) => toSlide(p, i))
-
-  const aiSlides = [
-    ...(userName ? [{
-      type: 'ai',
-      greeting: `안녕하세요, ${userName}님 👋`,
-      subtitle: <>오늘 딱 맞는 상품을<br />골라왔어요</>,
-      desc: '최근 검색·구매 패턴을 분석해 취향에 맞는 상품을 추천해드려요',
-    }] : []),
-    ...productSlides,
-  ]
+  // AI 슬라이드 구성 (안녕하세요 슬라이드 제거)
+  const aiSlides = randomProducts.map((p, i) => toSlide(p, i))
 
   const eventSlides = promotions.length > 0
     ? promotions.map((p, i) => ({
@@ -128,39 +135,24 @@ export default function HeroBanner({ promotions = [], userName = '', onNavigate,
           style={{ transform: `translateX(-${activeSlide * 100}%)` }}
         >
           {aiSlides.length === 0 ? (
-            <div className="ai-slide">
-              <div className="ai-deco-circle ai-deco-circle--outline" />
-              <div className="ai-deco-circle ai-deco-circle--rose" />
-              <div className="ai-greeting">안녕하세요 👋</div>
-              <div className="ai-subtitle">오늘도 좋은 쇼핑 되세요</div>
-            </div>
+            <div className="ai-slide" />
           ) : aiSlides.map((slide, i) => (
             <div key={i} className="ai-slide">
-              {slide.type === 'ai' ? (
-                <>
-                  <div className="ai-deco-circle ai-deco-circle--outline" />
-                  <div className="ai-deco-circle ai-deco-circle--rose" />
-                  <div className="ai-greeting">{slide.greeting}</div>
-                  <div className="ai-subtitle">{slide.subtitle}</div>
-                  <div className="ai-desc">{slide.desc}</div>
-                </>
-              ) : (
-                <div className="ai-slide-product">
-                  <div className="ai-product-img-wrap">
-                    {slide.imageUrl
-                      ? <img src={slide.imageUrl} alt={slide.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 8 }} />
-                      : <span style={{ fontSize: 48 }}>🛍</span>}
-                  </div>
-                  <div className="ai-product-content">
-                    <div className="ai-product-tag">{slide.tag}</div>
-                    <div className="ai-product-name" style={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>{slide.name}</div>
-                    {slide.brand && <div className="ai-product-desc">{slide.brand}</div>}
-                    {slide.category && <div className="ai-product-desc">{slide.category}</div>}
-                    <div className="ai-product-price">{slide.price?.toLocaleString()}원</div>
-                    <button className="ai-product-cta" onClick={() => onNavigate?.('product', slide.productId)}>바로 구매 →</button>
-                  </div>
+              <div className="ai-slide-product">
+                <div className="ai-product-img-wrap">
+                  {slide.imageUrl
+                    ? <img src={slide.imageUrl} alt={slide.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 8 }} />
+                    : <span style={{ fontSize: 48 }}>🛍</span>}
                 </div>
-              )}
+                <div className="ai-product-content">
+                  <div className="ai-product-tag">{slide.tag}</div>
+                  <div className="ai-product-name" style={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>{slide.name}</div>
+                  {slide.brand && <div className="ai-product-desc">{slide.brand}</div>}
+                  {slide.category && <div className="ai-product-desc">{slide.category}</div>}
+                  <div className="ai-product-price">{slide.price?.toLocaleString()}원</div>
+                  <button className="ai-product-cta" onClick={() => onNavigate?.('product', slide.productId)}>바로 구매 →</button>
+                </div>
+              </div>
             </div>
           ))}
         </div>
