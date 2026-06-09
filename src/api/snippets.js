@@ -178,4 +178,23 @@ export const userLogout = async ({ userId }) => {
   })
 }
 
+// ── 광고 클릭 ──
+export const clickAd = async ({ productName, productId, productCategory = null, userId = null }) => {
+  if (isAdmin()) return
+  await fetch(`${FLUENTD_URL}/kafka.logs`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      event_name:      'ad_click',
+      productName:     productName,
+      productId:       productId,
+      productCategory: productCategory,
+      user_id:         getUserSeqId(),
+      user_login_id:   userId,
+      client_uuid:     getOrCreateUUID(),
+      event_timestamp: getKSTTimestamp(),
+    })
+  })
+}
+
 export { INACTIVE_THRESHOLD }
