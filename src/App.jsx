@@ -18,6 +18,7 @@ import MyPage from './pages/MyPage'
 import WithdrawPage from './pages/WithdrawPage'
 import CouponPopup from './components/CouponPopup'
 import CouponClaimPage from './pages/CouponClaimPage'
+import PromotionCouponPage from './pages/PromotionCouponPage'
 import { usePageView } from './hooks/usePageView'
 import { getMyProfile } from './api/users'
 import { refreshToken } from './api/auth'
@@ -29,6 +30,17 @@ import { getProduct, getProducts, searchProducts } from './api/products'
 import './App.css'
 
 const FLUENTD_URL = import.meta.env.VITE_FLUENTD_URL || 'https://fluentd.daon.site'
+
+const AD_CATEGORY_MAP = {
+  BEAUTY:             '화장품/미용',
+  FASHION_ACCESSORY:  '패션잡화',
+  LIVING_HEALTH:      '생활/건강',
+  FOOD:               '식품',
+  FURNITURE_INTERIOR: '가구/인테리어',
+  SPORTS_LEISURE:     '스포츠/레저',
+  DIGITAL_APPLIANCE:  '디지털/가전',
+  FASHION_CLOTHING:   '패션의류',
+}
 
 function setCookie(name, value, days = 7) {
   const expires = new Date(Date.now() + days * 864e5).toUTCString()
@@ -80,6 +92,9 @@ export default function App() {
   // 광고 상품 교체 state
   const [adProduct, setAdProduct] = useState(null)
   const adReplaceIndexRef = useRef(0)
+
+  // 프로모션 쿠폰 페이지 state
+  const [promotionCouponId, setPromotionCouponId] = useState(null)
 
   // SSE 연결 ref
   const sseRef = useRef(null)
@@ -181,7 +196,8 @@ export default function App() {
               if (first.adTargetType === 'PRODUCT' && first.adProductId) {
                 product = await getProduct(first.adProductId)
               } else if (first.adTargetType === 'CATEGORY' && first.adCategory) {
-                const res = await getProducts({ category: first.adCategory, size: 20 })
+                const mappedCategory = AD_CATEGORY_MAP[first.adCategory] ?? first.adCategory
+                const res = await getProducts({ category: mappedCategory, size: 20 })
                 const list2 = res.content ?? []
                 product = list2[Math.floor(Math.random() * list2.length)] ?? null
               } else if (first.adTargetType === 'KEYWORD' && first.adKeyword) {
@@ -234,7 +250,8 @@ export default function App() {
             if (data.adTargetType === 'PRODUCT' && data.adProductId) {
               product = await getProduct(data.adProductId)
             } else if (data.adTargetType === 'CATEGORY' && data.adCategory) {
-              const res = await getProducts({ category: data.adCategory, size: 20 })
+              const mappedCategory = AD_CATEGORY_MAP[data.adCategory] ?? data.adCategory
+              const res = await getProducts({ category: mappedCategory, size: 20 })
               const list = res.content ?? []
               product = list[Math.floor(Math.random() * list.length)] ?? null
             } else if (data.adTargetType === 'KEYWORD' && data.adKeyword) {
@@ -368,6 +385,9 @@ export default function App() {
       setProductId(payload)
       sessionStorage.setItem('productId', payload)
     }
+    if (target === 'promotion-coupon') {
+      setPromotionCouponId(payload)
+    }
     if (target === 'mypage') {
       setMypageTab(payload ?? 'home')
       sessionStorage.setItem('mypageTab', payload ?? 'home')
@@ -399,6 +419,14 @@ export default function App() {
           onClose={() => setCouponPopup(null)}
           onDismiss={() => setCouponPopup(null)}
         />
+      )}
+
+      {page === 'promotion-coupon' && (
+        <div className="page page-list">
+          <NavHeader onNavigate={handleNavigate} cartCount={cartCount} auth={auth} onLogout={handleLogout} userId={userId} />
+          <PromotionCouponPage couponId={promotionCouponId} onNavigate={handleNavigate} />
+          <Footer />
+        </div>
       )}
 
       {page === 'coupon-claim' && <CouponClaimPage />}
@@ -473,6 +501,11 @@ export default function App() {
             userName={homeData?.userName ?? ''}
             onNavigate={handleNavigate}
             adProduct={adProduct}
+            auth={auth}
+            onPromotionClick={(couponId) => {
+              if (!auth) { handleNavigate('login'); return }
+              handleNavigate('promotion-coupon', couponId)
+            }}
           />
           <RecommendSection
             onNavigate={handleNavigate}

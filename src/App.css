@@ -497,7 +497,7 @@ a { text-decoration: none; }
 .section-repurchase {
   position: absolute;
   width: 1440px; height: 350px;
-  left: 0; top: 1230px;
+  left: 0; top: 1102px;
   background: #FFFFFF;
 }
 .section-repurchase .section-indicator { left: 60px; top: 19px; background: #1C2E5C; }
@@ -513,7 +513,7 @@ a { text-decoration: none; }
 .section-timebased {
   position: absolute;
   width: 1440px; height: 350px;
-  left: 0; top: 1580px;
+  left: 0; top: 1452px;
   background: #FFFFFF;
 }
 .section-timebased .section-indicator { left: 60px; top: 22px; background: #FF6B6B; }
@@ -529,7 +529,7 @@ a { text-decoration: none; }
 .section-best {
   position: absolute;
   width: 1340px; height: 563px;
-  left: 50px; top: 1932px;
+  left: 50px; top: 1804px;
 }
 .section-best .section-indicator { left: 0; top: 0; width: 4px; height: 46.15px; background: #FF6B6B; }
 .section-best .section-title {
@@ -575,7 +575,7 @@ a { text-decoration: none; }
 .footer {
   position: absolute;
   width: 1440px; height: 285.76px;
-  left: 0; top: 2555px;
+  left: 0; top: 2427px;
   background: #333333;
 }
 .footer-logo {
