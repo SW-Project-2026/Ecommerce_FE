@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { getProduct } from '../../api/products'
 
 const TAGS = ['이 상품 어때요?', '지금 인기 상품', '놓치지 마세요']
@@ -51,7 +51,6 @@ export default function HeroBanner({ promotions = [], userName = '', onNavigate,
   const [pauseAI,    setPauseAI]    = useState(false)
   const [pauseEvent, setPauseEvent] = useState(false)
   const [randomProducts, setRandomProducts] = useState(() => loadSavedProducts())
-  const adReplaceRef = useRef(0)
 
   // 랜덤 상품 3개 조회 (저장된 게 없을 때만)
   useEffect(() => {
@@ -77,8 +76,7 @@ export default function HeroBanner({ promotions = [], userName = '', onNavigate,
   // 광고 상품 수신 시 슬롯 교체 및 저장
   useEffect(() => {
     if (!adProduct) return
-    const idx = adProduct._replaceIndex ?? adReplaceRef.current
-    adReplaceRef.current = (idx + 1) % 3
+    const idx = adProduct._replaceIndex ?? 0
     setRandomProducts(prev => {
       const next = [...prev]
       next[idx] = adProduct
@@ -87,7 +85,7 @@ export default function HeroBanner({ promotions = [], userName = '', onNavigate,
     })
   }, [adProduct])
 
-  // AI 슬라이드 구성 (안녕하세요 슬라이드 제거)
+  // AI 슬라이드 구성
   const aiSlides = randomProducts.map((p, i) => toSlide(p, i))
 
   const eventSlides = promotions.length > 0
