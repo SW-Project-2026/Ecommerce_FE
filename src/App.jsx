@@ -26,6 +26,8 @@ import { cartGet } from './api/carts'
 import { userLogin as snippetUserLogin } from './api/snippets'
 import { getHome, getHomeByUser } from './api/home'
 import { wishlistGet } from './api/wishlists'
+import { adDetail } from './api/ads'
+import { getProduct, getProducts, searchProducts } from './api/products'
 import './App.css'
 
 const FLUENTD_URL = import.meta.env.VITE_FLUENTD_URL || 'https://fluentd.daon.site'
@@ -76,6 +78,11 @@ export default function App() {
 
   // 쿠폰 팝업 state
   const [couponPopup, setCouponPopup] = useState(null)
+
+  // 광고 상품 교체 state
+  const [adProduct, setAdProduct] = useState(null)
+  const [adReplaceIndex, setAdReplaceIndex] = useState(0)
+  const adReplaceIndexRef = useRef(0)
 
   // SSE 연결 ref
   const sseRef = useRef(null)
@@ -184,16 +191,47 @@ export default function App() {
     es.addEventListener('campaign', (e) => {
       try {
         const data = JSON.parse(e.data)
-        setCouponPopup({
-          couponId:          data.couponId          ?? null,
-          adId:              data.adId              ?? null,
-          campaignId:        data.campaignId        ?? null,
-          couponName:        data.couponName        ?? null,
-          discountType:      data.discountType      ?? null,
-          discountAmount:    data.discountAmount    ?? null,
-          minOrderAmount:    data.minOrderAmount    ?? null,
-          maxDiscountAmount: data.maxDiscountAmount ?? null,
-        })
+
+        // 쿠폰 팝업
+        if (data.couponId) {
+          setCouponPopup({
+            couponId:          data.couponId          ?? null,
+            adId:              data.adId              ?? null,
+            campaignId:        data.campaignId        ?? null,
+            couponName:        data.couponName        ?? null,
+            discountType:      data.discountType      ?? null,
+            discountAmount:    data.discountAmount    ?? null,
+            minOrderAmount:    data.minOrderAmount    ?? null,
+            maxDiscountAmount: data.maxDiscountAmount ?? null,
+          })
+        }
+
+        // 광고 배너 교체
+        if (data.adId) {
+          adDetail({ adId: data.adId })
+            .then(async ad => {
+              let product = null
+              if (ad.targetType === 'PRODUCT' && ad.productId) {
+                product = await getProduct(ad.productId)
+              } else if (ad.targetType === 'CATEGORY' && ad.category) {
+                const res = await getProducts({ category: ad.category, size: 20 })
+                const list = res.content ?? []
+                product = list[Math.floor(Math.random() * list.length)] ?? null
+              } else if (ad.targetType === 'KEYWORD' && ad.keyword) {
+                const res = await searchProducts({ query: ad.keyword, display: 20 })
+                const list = res.products ?? []
+                const idx = Math.floor(Math.random() * list.length)
+                product = list[idx] ?? null
+              }
+              if (product) {
+                const replaceIdx = adReplaceIndexRef.current
+                adReplaceIndexRef.current = (replaceIdx + 1) % 3
+                setAdReplaceIndex(replaceIdx)
+                setAdProduct({ ...product, _replaceIndex: replaceIdx })
+              }
+            })
+            .catch(() => {})
+        }
       } catch (err) {
         console.error('SSE 이벤트 파싱 오류', err)
       }
@@ -263,6 +301,8 @@ export default function App() {
     setCouponPopup(null)
     setHomeData(null)
     setWishMap({})
+    setAdProduct(null)
+    adReplaceIndexRef.current = 0
   }
 
   function handleAddToCart(product, qty = 1) {
@@ -413,6 +453,8 @@ export default function App() {
           <HeroBanner
             promotions={homeData?.promotions ?? []}
             userName={homeData?.userName ?? ''}
+            onNavigate={handleNavigate}
+            adProduct={adProduct}
           />
           <RecommendSection
             onNavigate={handleNavigate}
