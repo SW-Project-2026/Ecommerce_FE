@@ -47,7 +47,7 @@ function saveProducts(products) {
   } catch {}
 }
 
-export default function HeroBanner({ promotions = [], userName = '', onNavigate, adProduct = null, onPromotionClick }) {
+export default function HeroBanner({ promotions = [], userName = '', onNavigate, adProduct = null, onPromotionClick, userId = null }) {
   const [activeSlide, setActiveSlide] = useState(0)
   const [activeEvent, setActiveEvent] = useState(0)
   const [pauseAI,    setPauseAI]    = useState(false)
@@ -156,7 +156,8 @@ export default function HeroBanner({ promotions = [], userName = '', onNavigate,
                       clickAd({
                         productName:     slide.name,
                         productId:       slide.productId,
-                        productCategory: slide.category ?? null,
+                        productCategory: slide.category || null,
+                        userId,
                       }).catch(() => {})
                     }
                     onNavigate?.('product', slide.productId)
