@@ -26,7 +26,6 @@ import { cartGet } from './api/carts'
 import { userLogin as snippetUserLogin } from './api/snippets'
 import { getHome, getHomeByUser } from './api/home'
 import { wishlistGet } from './api/wishlists'
-import { adDetail } from './api/ads'
 import { getProduct, getProducts, searchProducts } from './api/products'
 import './App.css'
 
@@ -81,7 +80,6 @@ export default function App() {
 
   // 광고 상품 교체 state
   const [adProduct, setAdProduct] = useState(null)
-  const [adReplaceIndex, setAdReplaceIndex] = useState(0)
   const adReplaceIndexRef = useRef(0)
 
   // SSE 연결 ref
@@ -166,16 +164,40 @@ export default function App() {
       .then(list => {
         if (Array.isArray(list) && list.length > 0) {
           const first = list[0]
-          setCouponPopup({
-            couponId:          first.couponId          ?? null,
-            adId:              first.adId              ?? null,
-            campaignId:        first.campaignId        ?? null,
-            couponName:        first.couponName        ?? null,
-            discountType:      first.discountType      ?? null,
-            discountAmount:    first.discountAmount    ?? null,
-            minOrderAmount:    first.minOrderAmount    ?? null,
-            maxDiscountAmount: first.maxDiscountAmount ?? null,
-          })
+          if (first.couponId) {
+            setCouponPopup({
+              couponId:          first.couponId          ?? null,
+              adId:              first.adId              ?? null,
+              campaignId:        first.campaignId        ?? null,
+              couponName:        first.couponName        ?? null,
+              discountType:      first.discountType      ?? null,
+              discountAmount:    first.discountAmount    ?? null,
+              minOrderAmount:    first.minOrderAmount    ?? null,
+              maxDiscountAmount: first.maxDiscountAmount ?? null,
+            })
+          }
+          if (first.adId && first.adTargetType) {
+            const resolveAdProduct = async () => {
+              let product = null
+              if (first.adTargetType === 'PRODUCT' && first.adProductId) {
+                product = await getProduct(first.adProductId)
+              } else if (first.adTargetType === 'CATEGORY' && first.adCategory) {
+                const res = await getProducts({ category: first.adCategory, size: 20 })
+                const list2 = res.content ?? []
+                product = list2[Math.floor(Math.random() * list2.length)] ?? null
+              } else if (first.adTargetType === 'KEYWORD' && first.adKeyword) {
+                const res = await searchProducts({ query: first.adKeyword, display: 20 })
+                const list2 = res.products ?? []
+                product = list2[Math.floor(Math.random() * list2.length)] ?? null
+              }
+              if (product) {
+                const replaceIdx = adReplaceIndexRef.current
+                adReplaceIndexRef.current = (replaceIdx + 1) % 3
+                setAdProduct({ ...product, _replaceIndex: replaceIdx })
+              }
+            }
+            resolveAdProduct().catch(() => {})
+          }
           fetch(`${FLUENTD_URL}/api/notifications/pending?userId=${userSeqId}`, { method: 'DELETE' })
             .catch(() => {})
         }
@@ -207,30 +229,27 @@ export default function App() {
         }
 
         // 광고 배너 교체
-        if (data.adId) {
-          adDetail({ adId: data.adId })
-            .then(async ad => {
-              let product = null
-              if (ad.targetType === 'PRODUCT' && ad.productId) {
-                product = await getProduct(ad.productId)
-              } else if (ad.targetType === 'CATEGORY' && ad.category) {
-                const res = await getProducts({ category: ad.category, size: 20 })
-                const list = res.content ?? []
-                product = list[Math.floor(Math.random() * list.length)] ?? null
-              } else if (ad.targetType === 'KEYWORD' && ad.keyword) {
-                const res = await searchProducts({ query: ad.keyword, display: 20 })
-                const list = res.products ?? []
-                const idx = Math.floor(Math.random() * list.length)
-                product = list[idx] ?? null
-              }
-              if (product) {
-                const replaceIdx = adReplaceIndexRef.current
-                adReplaceIndexRef.current = (replaceIdx + 1) % 3
-                setAdReplaceIndex(replaceIdx)
-                setAdProduct({ ...product, _replaceIndex: replaceIdx })
-              }
-            })
-            .catch(() => {})
+        if (data.adId && data.adTargetType) {
+          const resolveAdProduct = async () => {
+            let product = null
+            if (data.adTargetType === 'PRODUCT' && data.adProductId) {
+              product = await getProduct(data.adProductId)
+            } else if (data.adTargetType === 'CATEGORY' && data.adCategory) {
+              const res = await getProducts({ category: data.adCategory, size: 20 })
+              const list = res.content ?? []
+              product = list[Math.floor(Math.random() * list.length)] ?? null
+            } else if (data.adTargetType === 'KEYWORD' && data.adKeyword) {
+              const res = await searchProducts({ query: data.adKeyword, display: 20 })
+              const list = res.products ?? []
+              product = list[Math.floor(Math.random() * list.length)] ?? null
+            }
+            if (product) {
+              const replaceIdx = adReplaceIndexRef.current
+              adReplaceIndexRef.current = (replaceIdx + 1) % 3
+              setAdProduct({ ...product, _replaceIndex: replaceIdx })
+            }
+          }
+          resolveAdProduct().catch(() => {})
         }
       } catch (err) {
         console.error('SSE 이벤트 파싱 오류', err)
