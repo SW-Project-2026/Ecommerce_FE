@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getProduct } from '../../api/products'
+import { clickAd } from '../../api/snippets'
 
 const TAGS = ['이 상품 어때요?', '지금 인기 상품', '놓치지 마세요']
 
@@ -29,6 +30,7 @@ function toSlide(p, i) {
     price: p.minPrice ?? p.price ?? Number(p.lowestPrice),
     imageUrl: p.imageUrl ?? p.image,
     brand: p.brand ?? p.mallName ?? '',
+    isAd: p._replaceIndex !== undefined,
   }
 }
 
@@ -149,7 +151,16 @@ export default function HeroBanner({ promotions = [], userName = '', onNavigate,
                   {slide.brand && <div className="ai-product-desc">{slide.brand}</div>}
                   {slide.category && <div className="ai-product-desc">{slide.category}</div>}
                   <div className="ai-product-price">{slide.price?.toLocaleString()}원</div>
-                  <button className="ai-product-cta" onClick={() => onNavigate?.('product', slide.productId)}>바로 구매 →</button>
+                  <button className="ai-product-cta" onClick={() => {
+                    if (slide.isAd) {
+                      clickAd({
+                        productName:     slide.name,
+                        productId:       slide.productId,
+                        productCategory: slide.category ?? null,
+                      }).catch(() => {})
+                    }
+                    onNavigate?.('product', slide.productId)
+                  }}>바로 구매 →</button>
                 </div>
               </div>
             </div>
