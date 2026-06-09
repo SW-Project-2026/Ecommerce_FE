@@ -4,7 +4,6 @@ import CategoryBar from './components/layout/CategoryBar'
 import Footer from './components/layout/Footer'
 import HeroBanner from './components/sections/HeroBanner'
 import RecommendSection from './components/sections/RecommendSection'
-import AdBanner from './components/sections/AdBanner'
 import PurchasedSection from './components/sections/PurchasedSection'
 import RecentViewedSection from './components/sections/RecentViewedSection'
 import BestSection from './components/sections/BestSection'
@@ -482,18 +481,17 @@ export default function App() {
             wishMap={wishMap}
             setWishMap={setWishMap}
           />
-          <AdBanner />
           <RecentViewedSection
             onNavigate={handleNavigate}
             auth={auth}
-            products={homeData?.recentViewedProducts ?? []}
+            products={auth ? (homeData?.recentViewedProducts ?? []) : []}
             wishMap={wishMap}
             setWishMap={setWishMap}
           />
           <PurchasedSection
             onNavigate={handleNavigate}
             auth={auth}
-            products={homeData?.purchasedProducts ?? []}
+            products={auth ? (homeData?.purchasedProducts ?? []) : []}
             wishMap={wishMap}
             setWishMap={setWishMap}
           />
