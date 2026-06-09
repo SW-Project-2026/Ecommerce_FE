@@ -17,7 +17,6 @@ export default function PurchasedSection({ onNavigate, auth, products = [], wish
     <section className="section-repurchase">
       <div className="section-indicator" />
       <div className="section-title">이전에 구매한 상품</div>
-      <div className="view-all">전체보기 ›</div>
       <div className="nav-arrow" onClick={handleNext}>
         <i className="ri-arrow-down-wide-fill" />
       </div>

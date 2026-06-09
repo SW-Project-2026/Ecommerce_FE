@@ -94,7 +94,7 @@ export default function HeroBanner({ promotions = [], userName = '', onNavigate,
     ? promotions.map((p, i) => ({
         title: <>
           {p.couponName}<br />
-          {p.discountType === 'RATE' || (p.discountAmount <= 100 && !p.discountType)
+          {p.discountType === 'RATE'
             ? `${p.discountAmount}% 할인`
             : `${p.discountAmount?.toLocaleString()}원 할인`}
         </>,

@@ -19,7 +19,6 @@ export default function RecommendSection({ onNavigate, auth, products = [], cate
       <div className="section-indicator" />
       <div className="section-title">이런 상품을 찾고 있나요?</div>
       {category && <div className="section-subtitle">관심 있는 카테고리 {category}</div>}
-      <div className="view-all">전체보기 ›</div>
       <div className="nav-arrow" onClick={handleNext}>
         <i className="ri-arrow-down-wide-fill" />
       </div>
