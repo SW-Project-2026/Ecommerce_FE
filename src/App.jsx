@@ -502,6 +502,7 @@ export default function App() {
             onNavigate={handleNavigate}
             adProduct={adProduct}
             auth={auth}
+            userId={userId}
             onPromotionClick={(couponId) => {
               if (!auth) { handleNavigate('login'); return }
               handleNavigate('promotion-coupon', couponId)

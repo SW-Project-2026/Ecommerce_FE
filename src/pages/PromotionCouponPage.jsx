@@ -165,9 +165,11 @@ export default function PromotionCouponPage({ couponId, onNavigate }) {
         <h1 style={{ fontSize: 44, fontWeight: 700, color: '#FFFFFF', margin: 0, textAlign: 'center' }}>
           {couponName}
         </h1>
-        <p style={{ fontSize: 15, fontWeight: 400, color: 'rgba(255,255,255,0.65)', margin: 0 }}>
-          첫 구매 시 즉시 사용 가능 · {minOrderText}
-        </p>
+        {minOrderText && (
+          <p style={{ fontSize: 15, fontWeight: 400, color: 'rgba(255,255,255,0.65)', margin: 0 }}>
+            {minOrderText}
+          </p>
+        )}
       </div>
 
       {/* 쿠폰 카드: 피그마 555×277, top 323px → marginTop -60으로 hero에 걸쳐짐 */}
@@ -176,7 +178,7 @@ export default function PromotionCouponPage({ couponId, onNavigate }) {
           {/* 왼쪽: 파란 그라데이션 */}
           <div style={s.couponLeft}>
             {/* 피그마 Title: font-size 97.08px, line-height 45px */}
-            <div style={{ fontSize: 97, fontWeight: 700, color: '#FFFFFF', lineHeight: '45px', letterSpacing: '-2px', marginBottom: 16 }}>
+            <div style={{ fontSize: 52, fontWeight: 700, color: '#FFFFFF', lineHeight: '45px', letterSpacing: '-2px', marginBottom: 16 }}>
               {discountText}
             </div>
             {/* 피그마 Support Text: font-size 21.035px, font-weight 500 */}
