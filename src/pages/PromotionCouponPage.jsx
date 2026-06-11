@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { couponDetail, couponDownload } from '../api/coupons'
 import { couponReceived } from '../api/snippets'
 
-export default function PromotionCouponPage({ couponId, onNavigate }) {
+export default function PromotionCouponPage({ couponId, onNavigate, userId = null }) {
   const [step,        setStep]        = useState('loading')
   const [couponData,  setCouponData]  = useState(null)
   const [errorMsg,    setErrorMsg]    = useState(null)
@@ -29,6 +29,7 @@ export default function PromotionCouponPage({ couponId, onNavigate }) {
         couponCode:     downloadData?.code ?? null,
         discountAmount: amount,
         expiryDate:     downloadData?.expiredAt ?? null,
+        userId,
       }).catch(() => {})
       setStep('success')
     } catch (err) {
