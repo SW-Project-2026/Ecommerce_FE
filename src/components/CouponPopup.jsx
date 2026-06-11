@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { couponDownload } from "../api/coupons";
+import { couponReceived } from "../api/snippets";
 
 export default function CouponPopup({ coupon, onClose, onDismiss }) {
   const [downloaded, setDownloaded] = useState(false);
@@ -16,6 +17,14 @@ export default function CouponPopup({ coupon, onClose, onDismiss }) {
     setDownloading(true);
     try {
       await couponDownload({ couponId: coupon.couponId });
+      const amount = info.discountType === 'RATE'
+        ? `${info.discountAmount}%`
+        : `${info.discountAmount?.toLocaleString()}원`
+      couponReceived({
+        couponCode:     info.couponName ?? null,
+        discountAmount: amount,
+        expiryDate:     null,
+      }).catch(() => {})
       setDownloaded(true);
     } catch (err) {
       alert(err.message ?? "쿠폰 다운로드에 실패했습니다.");

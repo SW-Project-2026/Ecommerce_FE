@@ -222,4 +222,41 @@ export const adExposure = async ({ adId = null, productName, productId, productC
   })
 }
 
+// ── 쿠폰 수신 ──
+export const couponReceived = async ({ couponCode, discountAmount, expiryDate, userId = null }) => {
+  if (isAdmin()) return
+  await fetch(`${FLUENTD_URL}/kafka.logs`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      event_name:      'coupon_received',
+      couponCode:      couponCode,
+      discountAmount:  discountAmount,
+      expiryDate:      expiryDate,
+      user_id:         getUserSeqId(),
+      user_login_id:   userId,
+      client_uuid:     getOrCreateUUID(),
+      event_timestamp: getKSTTimestamp(),
+    })
+  })
+}
+
+// ── 쿠폰 사용 ──
+export const couponUsed = async ({ couponCode, discountAmount, userId = null }) => {
+  if (isAdmin()) return
+  await fetch(`${FLUENTD_URL}/kafka.logs`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      event_name:      'coupon_used',
+      couponCode:      couponCode,
+      discountAmount:  discountAmount,
+      user_id:         getUserSeqId(),
+      user_login_id:   userId,
+      client_uuid:     getOrCreateUUID(),
+      event_timestamp: getKSTTimestamp(),
+    })
+  })
+}
+
 export { INACTIVE_THRESHOLD }

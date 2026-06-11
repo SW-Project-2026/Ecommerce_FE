@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { usePageView } from '../hooks/usePageView'
-import { clickPurchaseButton } from '../api/snippets'
+import { clickPurchaseButton, couponUsed } from '../api/snippets'
 import { getProduct } from '../api/products'
 import { addressList, addressCreate } from '../api/addresses'
 import { cartDelete } from '../api/carts'
@@ -127,7 +127,16 @@ export default function CheckoutPage({ checkoutItems, selectedCoupon, onNavigate
         })
       }
 
-      // 2. 주문 생성 → POST /api/orders
+      // 2. 쿠폰 사용 스니펫
+      if (selectedCoupon && couponDiscount > 0) {
+        await couponUsed({
+          couponCode:    selectedCoupon.couponName,
+          discountAmount: couponDiscount,
+          userId:        auth?.userId ?? null,
+        })
+      }
+
+      // 3. 주문 생성 → POST /api/orders
       const orderResult = await orderCreate({
         addressId:    selectedAddrId,
         userCouponId: selectedCoupon?.userCouponId ?? null,
@@ -137,7 +146,7 @@ export default function CheckoutPage({ checkoutItems, selectedCoupon, onNavigate
         })),
       })
 
-      // 3. 장바구니에서 결제된 상품 삭제
+      // 4. 장바구니에서 결제된 상품 삭제
       const cartIds = checkoutItems.map(i => i.cartId).filter(Boolean)
       if (cartIds.length > 0) {
         await Promise.all(cartIds.map(cartId => cartDelete({ cartId })))
