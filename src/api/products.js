@@ -1,5 +1,13 @@
 import axiosInstance from './axiosInstance'
 
+// ── 상품 선택 목록 조회 (광고 등록용) ──
+export async function selectProducts({ keyword = '', size = 10 } = {}) {
+  const params = { size }
+  if (keyword) params.keyword = keyword
+  const res = await axiosInstance.get('/api/products/select', { params })
+  return res.data.data
+}
+
 // ── 상품 검색 (인증 불필요) ──
 export async function searchProducts({ query, display = 10, start = 1, sort = 'sim' }) {
   const res = await axiosInstance.get('/api/products/search', {

@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import "./AdCreatePage.css";
-import { getProduct, getProducts, searchProducts } from "../api/products";
+import { selectProducts, getProducts, searchProducts } from "../api/products";
 import { adCreate, adUpdate } from "../api/ads";
 
 const AD_TARGET_TYPES = ["상품", "카테고리", "키워드"];
@@ -46,9 +46,19 @@ export default function AdCreatePage({ onNavigate, ad }) {
     name:       ad?.adName    ?? "",
     targetType: TARGET_TYPE_DISPLAY_MAP[ad?.targetType] ?? "상품",
     productId:  ad?.productId != null ? String(ad.productId) : "",
+    productName: "",
     category:   ad?.category  ?? "",
     keyword:    ad?.keyword   ?? "",
   });
+
+  // 상품 검색 state
+  const [searchKeyword,   setSearchKeyword]   = useState("");
+  const [searchResults,   setSearchResults]   = useState([]);
+  const [searchLoading,   setSearchLoading]   = useState(false);
+  const [showDropdown,    setShowDropdown]     = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const searchTimer = useRef(null)
+  const dropdownRef = useRef(null)
 
   const [previewImage,   setPreviewImage]   = useState(null);
   const [previewLoading, setPreviewLoading] = useState(false);
@@ -59,26 +69,66 @@ export default function AdCreatePage({ onNavigate, ad }) {
   const update = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
   const handleTargetTypeChange = (type) => {
-    setForm(p => ({ ...p, targetType: type, productId: "", category: "", keyword: "" }));
+    setForm(p => ({ ...p, targetType: type, productId: "", productName: "", category: "", keyword: "" }));
     setPreviewImage(null);
     setPreviewError(null);
+    setSelectedProduct(null);
+    setSearchKeyword("");
+    setSearchResults([]);
+    setShowDropdown(false);
   };
 
-  const handleProductIdBlur = async () => {
-    if (!form.productId.trim()) return;
-    setPreviewLoading(true);
-    setPreviewError(null);
-    try {
-      const product = await getProduct(form.productId);
-      setPreviewImage(product?.imageUrl ?? null);
-      if (!product?.imageUrl) setPreviewError("이미지가 없는 상품입니다.");
-    } catch {
-      setPreviewImage(null);
-      setPreviewError("상품을 찾을 수 없습니다.");
-    } finally {
-      setPreviewLoading(false);
+  // 상품 검색 디바운스
+  useEffect(() => {
+    if (form.targetType !== "상품") return
+    if (searchTimer.current) clearTimeout(searchTimer.current)
+    if (!searchKeyword.trim()) {
+      setSearchResults([])
+      setShowDropdown(false)
+      return
     }
-  };
+    searchTimer.current = setTimeout(async () => {
+      setSearchLoading(true)
+      try {
+        const data = await selectProducts({ keyword: searchKeyword, size: 10 })
+        setSearchResults(Array.isArray(data) ? data : [])
+        setShowDropdown(true)
+      } catch {
+        setSearchResults([])
+      } finally {
+        setSearchLoading(false)
+      }
+    }, 300)
+    return () => clearTimeout(searchTimer.current)
+  }, [searchKeyword, form.targetType])
+
+  // 드롭다운 외부 클릭 시 닫기
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setShowDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const handleSelectProduct = (product) => {
+    setSelectedProduct(product)
+    setForm(p => ({ ...p, productId: String(product.productId), productName: product.name }))
+    setSearchKeyword(product.name)
+    setPreviewImage(product.imageUrl ?? null)
+    setPreviewError(product.imageUrl ? null : "이미지가 없는 상품입니다.")
+    setShowDropdown(false)
+  }
+
+  // 편집 시 초기 상품 이름 로드
+  useEffect(() => {
+    if (isEdit && ad?.productId && form.targetType === "상품") {
+      setSearchKeyword(`ID: ${ad.productId}`)
+      setForm(p => ({ ...p, productId: String(ad.productId) }))
+    }
+  }, [])
 
   useEffect(() => {
     if (!form.category) { setPreviewImage(null); return; }
@@ -115,7 +165,7 @@ export default function AdCreatePage({ onNavigate, ad }) {
 
   const handleSubmit = async () => {
     if (!form.name.trim())                                         return setSaveError("광고명을 입력해주세요.");
-    if (form.targetType === "상품"    && !form.productId.trim())  return setSaveError("상품 ID를 입력해주세요.");
+    if (form.targetType === "상품"    && !form.productId.trim())  return setSaveError("상품을 선택해주세요.");
     if (form.targetType === "카테고리" && !form.category)          return setSaveError("카테고리를 선택해주세요.");
     if (form.targetType === "키워드"  && !form.keyword.trim())    return setSaveError("키워드를 입력해주세요.");
 
@@ -144,7 +194,7 @@ export default function AdCreatePage({ onNavigate, ad }) {
   };
 
   const previewTarget = () => {
-    if (form.targetType === "상품")    return form.productId ? `상품 ID: ${form.productId}` : "–";
+    if (form.targetType === "상품")    return selectedProduct ? selectedProduct.name : form.productId ? `ID: ${form.productId}` : "–";
     if (form.targetType === "카테고리") return CATEGORY_OPTIONS.find(o => o.value === form.category)?.label || "–";
     if (form.targetType === "키워드")  return form.keyword || "–";
     return "–";
@@ -211,15 +261,47 @@ export default function AdCreatePage({ onNavigate, ad }) {
 
             {form.targetType === "상품" && (
               <div className="ac-field ac-field-col">
-                <label className="ac-label">상품 ID *</label>
-                <input
-                  className="ac-input ac-input-wide"
-                  placeholder="예) 1023"
-                  value={form.productId}
-                  onChange={e => update("productId", e.target.value)}
-                  onBlur={handleProductIdBlur}
-                />
-                <p style={hintStyle}>상품 ID 입력 후 포커스를 벗어나면 이미지가 미리보기에 표시됩니다.</p>
+                <label className="ac-label">상품 검색 *</label>
+                <div className="ac-product-search-wrap" ref={dropdownRef}>
+                  <div className="ac-product-search-input-row">
+                    <input
+                      className="ac-input ac-input-wide"
+                      placeholder="상품명을 검색하세요"
+                      value={searchKeyword}
+                      onChange={e => { setSearchKeyword(e.target.value); setSelectedProduct(null); setForm(p => ({ ...p, productId: "", productName: "" })); }}
+                      onFocus={() => searchResults.length > 0 && setShowDropdown(true)}
+                    />
+                    {searchLoading && <span className="ac-search-spinner">⟳</span>}
+                  </div>
+                  {showDropdown && searchResults.length > 0 && (
+                    <div className="ac-product-dropdown">
+                      {searchResults.map(p => (
+                        <div key={p.productId} className="ac-product-dropdown-item" onClick={() => handleSelectProduct(p)}>
+                          {p.imageUrl
+                            ? <img src={p.imageUrl} alt={p.name} className="ac-product-dropdown-img" />
+                            : <div className="ac-product-dropdown-img ac-product-dropdown-img-empty">🛍</div>}
+                          <div className="ac-product-dropdown-info">
+                            <span className="ac-product-dropdown-name">{p.name}</span>
+                            <span className="ac-product-dropdown-id">ID: {p.productId}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {showDropdown && !searchLoading && searchResults.length === 0 && searchKeyword.trim() && (
+                    <div className="ac-product-dropdown">
+                      <div className="ac-product-dropdown-empty">검색 결과가 없습니다</div>
+                    </div>
+                  )}
+                </div>
+                {selectedProduct && (
+                  <div className="ac-product-selected">
+                    <span className="ac-product-selected-badge">선택됨</span>
+                    <span className="ac-product-selected-name">{selectedProduct.name}</span>
+                    <span className="ac-product-selected-id">ID: {selectedProduct.productId}</span>
+                  </div>
+                )}
+                <p style={hintStyle}>상품명을 입력하면 검색 결과가 표시됩니다.</p>
               </div>
             )}
 

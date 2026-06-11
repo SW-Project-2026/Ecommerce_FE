@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { couponClaim } from "../api/coupons";
+import { couponReceived } from "../api/snippets";
 
 export default function CouponClaimPage() {
   const [claimed,    setClaimed]    = useState(false);
@@ -21,6 +22,17 @@ export default function CouponClaimPage() {
       .then(data => {
         setCouponData(data);
         setClaimed(true);
+        // 쿠폰 수령 스니펫
+        const amount = data?.discountAmount
+          ? data?.discountType === 'RATE'
+            ? `${data.discountAmount}%`
+            : `${data.discountAmount.toLocaleString()}원`
+          : null
+        couponReceived({
+          couponCode:    data?.couponName ?? null,
+          discountAmount: amount,
+          expiryDate:    data?.expiredAt ?? null,
+        }).catch(() => {})
       })
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));

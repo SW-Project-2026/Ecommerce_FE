@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { couponDetail, couponDownload } from '../api/coupons'
+import { couponReceived } from '../api/snippets'
 
 export default function PromotionCouponPage({ couponId, onNavigate }) {
   const [step,        setStep]        = useState('loading')
@@ -19,6 +20,16 @@ export default function PromotionCouponPage({ couponId, onNavigate }) {
     setDownloading(true)
     try {
       await couponDownload({ couponId })
+      const amount = discountAmount
+        ? discountType === 'RATE'
+          ? `${discountAmount}%`
+          : `${discountAmount.toLocaleString()}원`
+        : null
+      couponReceived({
+        couponCode:     couponName,
+        discountAmount: amount,
+        expiryDate:     null,
+      }).catch(() => {})
       setStep('success')
     } catch (err) {
       setErrorMsg(err.message ?? '쿠폰 발급에 실패했습니다.')
