@@ -80,23 +80,12 @@ export default function App() {
   const [auth, setAuth] = useState(null)
   const [authLoading, setAuthLoading] = useState(true)
 
-  // 홈 데이터 state
   const [homeData, setHomeData] = useState(null)
-
-  // 찜 map state
   const [wishMap, setWishMap] = useState({})
-
-  // 쿠폰 팝업 state
   const [couponPopup, setCouponPopup] = useState(null)
-
-  // 광고 상품 교체 state
   const [adProduct, setAdProduct] = useState(null)
   const adReplaceIndexRef = useRef(0)
-
-  // 프로모션 쿠폰 페이지 state
   const [promotionCouponId, setPromotionCouponId] = useState(null)
-
-  // SSE 연결 ref
   const sseRef = useRef(null)
 
   useEffect(() => {
@@ -135,7 +124,6 @@ export default function App() {
     initAuth()
   }, [])
 
-  // ── 찜 목록 조회 ──
   useEffect(() => {
     if (!auth) { setWishMap({}); return }
     wishlistGet({ size: 100 })
@@ -147,7 +135,6 @@ export default function App() {
       .catch(() => {})
   }, [auth])
 
-  // ── 홈 데이터 조회 ──
   useEffect(() => {
     if (page !== 'home') return
     const userSeqId = localStorage.getItem('userSeqId')
@@ -162,7 +149,6 @@ export default function App() {
     }
   }, [page, auth])
 
-  // ── SSE 연결: 로그인 상태일 때 ──
   useEffect(() => {
     const userSeqId = localStorage.getItem('userSeqId')
     if (!auth || !userSeqId) {
@@ -208,7 +194,7 @@ export default function App() {
               if (product) {
                 const replaceIdx = adReplaceIndexRef.current
                 adReplaceIndexRef.current = (replaceIdx + 1) % 3
-                setAdProduct({ ...product, _replaceIndex: replaceIdx })
+                setAdProduct({ ...product, _replaceIndex: replaceIdx, _adId: first.adId ?? null })
               }
             }
             resolveAdProduct().catch(() => {})
@@ -229,7 +215,6 @@ export default function App() {
       try {
         const data = JSON.parse(e.data)
 
-        // 쿠폰 팝업
         if (data.couponId) {
           setCouponPopup({
             couponId:          data.couponId          ?? null,
@@ -243,7 +228,6 @@ export default function App() {
           })
         }
 
-        // 광고 배너 교체
         if (data.adId && data.adTargetType) {
           const resolveAdProduct = async () => {
             let product = null
@@ -262,7 +246,7 @@ export default function App() {
             if (product) {
               const replaceIdx = adReplaceIndexRef.current
               adReplaceIndexRef.current = (replaceIdx + 1) % 3
-              setAdProduct({ ...product, _replaceIndex: replaceIdx })
+              setAdProduct({ ...product, _replaceIndex: replaceIdx, _adId: data.adId ?? null })
             }
           }
           resolveAdProduct().catch(() => {})
@@ -285,7 +269,6 @@ export default function App() {
     }
   }, [auth])
 
-  // ── 로그인 상태일 때 장바구니 개수 조회 ──
   useEffect(() => {
     if (!auth) { setCartCount(0); return }
     fetchCartCount()
