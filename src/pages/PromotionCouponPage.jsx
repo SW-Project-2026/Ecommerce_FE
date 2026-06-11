@@ -19,16 +19,16 @@ export default function PromotionCouponPage({ couponId, onNavigate }) {
     if (downloading) return
     setDownloading(true)
     try {
-      await couponDownload({ couponId })
+      const downloadData = await couponDownload({ couponId })
       const amount = discountAmount
         ? discountType === 'RATE'
           ? `${discountAmount}%`
           : `${discountAmount.toLocaleString()}원`
         : null
       couponReceived({
-        couponCode:     couponName,
+        couponCode:     downloadData?.code ?? null,
         discountAmount: amount,
-        expiryDate:     null,
+        expiryDate:     downloadData?.expiredAt ?? null,
       }).catch(() => {})
       setStep('success')
     } catch (err) {

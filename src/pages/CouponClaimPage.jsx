@@ -29,9 +29,9 @@ export default function CouponClaimPage() {
             : `${data.discountAmount.toLocaleString()}원`
           : null
         couponReceived({
-          couponCode:    data?.couponName ?? null,
+          couponCode:     data?.code ?? null,
           discountAmount: amount,
-          expiryDate:    data?.expiredAt ?? null,
+          expiryDate:     data?.expiredAt ?? null,
         }).catch(() => {})
       })
       .catch(err => setError(err.message))

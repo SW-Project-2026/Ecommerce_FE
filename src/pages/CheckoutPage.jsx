@@ -130,9 +130,9 @@ export default function CheckoutPage({ checkoutItems, selectedCoupon, onNavigate
       // 2. 쿠폰 사용 스니펫
       if (selectedCoupon && couponDiscount > 0) {
         await couponUsed({
-          couponCode:    selectedCoupon.couponName,
+          couponCode:     selectedCoupon.code ?? null,
           discountAmount: couponDiscount,
-          userId:        auth?.userId ?? null,
+          userId:         auth?.userId ?? null,
         })
       }
 
