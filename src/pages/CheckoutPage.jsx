@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { usePageView } from '../hooks/usePageView'
 import { clickPurchaseButton } from '../api/snippets'
+import { getProduct } from '../api/products'
 import { addressList, addressCreate } from '../api/addresses'
 import { cartDelete } from '../api/carts'
 import { orderCreate } from '../api/orders'
@@ -110,11 +111,18 @@ export default function CheckoutPage({ checkoutItems, selectedCoupon, onNavigate
     try {
       // 1. 스니펫 전송
       for (const item of checkoutItems) {
+        let productCategory = item.product.productCategory ?? null
+        if (!productCategory) {
+          try {
+            const p = await getProduct(item.product.productId)
+            productCategory = p.productCategory ?? null
+          } catch {}
+        }
         await clickPurchaseButton({
           approvedAmount:  item.product.minPrice * item.qty,
           productName:     item.product.name,
           productId:       item.product.productId,
-          productCategory: item.product.productCategory ?? null,
+          productCategory,
           userId:          auth?.userId ?? null,
         })
       }

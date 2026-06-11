@@ -17,6 +17,7 @@ export default function RecentViewedSection({ onNavigate, auth, products = [], w
     <section className="section-timebased">
       <div className="section-indicator" style={{ background: '#1C2E5C' }} />
       <div className="section-title">최근 본 상품</div>
+      <div className="view-all" style={{ color: '#1C2E5C' }}>전체보기 ›</div>
       <div className="nav-arrow" onClick={handleNext}>
         <i className="ri-arrow-down-wide-fill" />
       </div>
@@ -28,6 +29,7 @@ export default function RecentViewedSection({ onNavigate, auth, products = [], w
               thumbHeight={186.69}
               productId={item.productId}
               name={item.productName}
+              productCategory={item.category ?? null}
               price={`${item.price?.toLocaleString()}원`}
               imageUrl={item.imageUrl}
               wishMap={wishMap}

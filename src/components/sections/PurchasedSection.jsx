@@ -17,6 +17,7 @@ export default function PurchasedSection({ onNavigate, auth, products = [], wish
     <section className="section-repurchase">
       <div className="section-indicator" />
       <div className="section-title">이전에 구매한 상품</div>
+      <div className="view-all">전체보기 ›</div>
       <div className="nav-arrow" onClick={handleNext}>
         <i className="ri-arrow-down-wide-fill" />
       </div>
@@ -28,6 +29,7 @@ export default function PurchasedSection({ onNavigate, auth, products = [], wish
               thumbHeight={186.69}
               productId={item.productId}
               name={item.productName}
+              productCategory={item.category ?? null}
               price={`${item.price?.toLocaleString()}원`}
               imageUrl={item.imageUrl}
               wishMap={wishMap}

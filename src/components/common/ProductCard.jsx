@@ -1,6 +1,7 @@
 import { wishlistAdd, wishlistDelete } from '../../api/wishlists'
+import { clickWishlist } from '../../api/snippets'
 
-export default function ProductCard({ name = '상품명', price = '89,000원', thumbHeight = 257, imageUrl, productId, wishMap = {}, setWishMap, onNavigate, auth }) {
+export default function ProductCard({ name = '상품명', price = '89,000원', thumbHeight = 257, imageUrl, productId, productCategory = null, wishMap = {}, setWishMap, onNavigate, auth }) {
   const wishId = wishMap[productId] ?? null
   const liked  = wishId !== null
 
@@ -14,9 +15,23 @@ export default function ProductCard({ name = '상품명', price = '89,000원', t
       if (liked) {
         await wishlistDelete({ wishId })
         setWishMap(prev => { const next = { ...prev }; delete next[productId]; return next })
+        clickWishlist({
+          productName:     name,
+          productId:       productId,
+          productCategory: productCategory,
+          actionType:      'remove',
+          userId:          auth.userId ?? null,
+        }).catch(() => {})
       } else {
         const res = await wishlistAdd({ productId })
         setWishMap(prev => ({ ...prev, [productId]: res?.wishId }))
+        clickWishlist({
+          productName:     name,
+          productId:       productId,
+          productCategory: productCategory,
+          actionType:      'add',
+          userId:          auth.userId ?? null,
+        }).catch(() => {})
       }
     } catch {
       // 실패 시 상태 유지
