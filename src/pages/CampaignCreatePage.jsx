@@ -126,7 +126,6 @@ export default function CampaignCreatePage({ onNavigate }) {
 
   const [filters,     setFilters]     = useState([]);
   const [filterLogic, setFilterLogic] = useState("AND");
-  const [targetCount, setTargetCount] = useState(null);
 
   const [rewardTab,      setRewardTab]      = useState("쿠폰");
   const [selectedCoupon, setSelectedCoupon] = useState(null);
@@ -376,10 +375,6 @@ export default function CampaignCreatePage({ onNavigate }) {
             {filters.length === 0 && <div className="cc-filter-empty">조건을 추가해주세요</div>}
           </div>
           <div className="cc-filter-footer">
-            <div className="cc-target-area">
-              {targetCount !== null && <span className="cc-target-text">예상 대상: <strong className="cc-target-num">{targetCount}명</strong></span>}
-              <button className="cc-btn-query" onClick={() => setTargetCount(Math.floor(Math.random() * 50) + 1)}>고객 수 조회</button>
-            </div>
             <button className="cc-btn-add-filter" onClick={addFilter}>+ 조건 추가</button>
           </div>
         </div>
