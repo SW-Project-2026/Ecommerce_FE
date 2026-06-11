@@ -16,14 +16,14 @@ export default function CouponPopup({ coupon, onClose, onDismiss }) {
     if (downloaded || downloading || !coupon?.couponId) return;
     setDownloading(true);
     try {
-      await couponDownload({ couponId: coupon.couponId });
+      const downloadData = await couponDownload({ couponId: coupon.couponId });
       const amount = info.discountType === 'RATE'
         ? `${info.discountAmount}%`
         : `${info.discountAmount?.toLocaleString()}원`
       couponReceived({
-        couponCode:     info.couponName ?? null,
+        couponCode:     downloadData?.code ?? null,
         discountAmount: amount,
-        expiryDate:     null,
+        expiryDate:     downloadData?.expiredAt ?? null,
       }).catch(() => {})
       setDownloaded(true);
     } catch (err) {
