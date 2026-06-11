@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getProduct } from '../../api/products'
-import { clickAd } from '../../api/snippets'
+import { clickAd, adExposure } from '../../api/snippets'
 
 const TAGS = ['이 상품 어때요?', '지금 인기 상품', '놓치지 마세요']
 
@@ -31,6 +31,7 @@ function toSlide(p, i) {
     imageUrl: p.imageUrl ?? p.image,
     brand: p.brand ?? p.mallName ?? '',
     isAd: p._replaceIndex !== undefined,
+    adId: p._adId ?? null,
   }
 }
 
@@ -104,6 +105,19 @@ export default function HeroBanner({ promotions = [], userName = '', onNavigate,
       }))
     : DEFAULT_EVENT_SLIDES
 
+  // 광고 슬라이드 노출 시 adExposure 호출
+  useEffect(() => {
+    const slide = aiSlides[activeSlide]
+    if (!slide?.isAd) return
+    adExposure({
+      adId:            slide.adId,
+      productName:     slide.name,
+      productId:       slide.productId,
+      productCategory: slide.category || null,
+      userId,
+    }).catch(() => {})
+  }, [activeSlide])
+
   const aiLen    = Math.max(aiSlides.length, 1)
   const eventLen = eventSlides.length
 
@@ -154,6 +168,7 @@ export default function HeroBanner({ promotions = [], userName = '', onNavigate,
                   <button className="ai-product-cta" onClick={() => {
                     if (slide.isAd) {
                       clickAd({
+                        adId:            slide.adId,
                         productName:     slide.name,
                         productId:       slide.productId,
                         productCategory: slide.category || null,
