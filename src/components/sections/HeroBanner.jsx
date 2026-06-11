@@ -26,7 +26,7 @@ function toSlide(p, i) {
     tag: TAGS[i % TAGS.length],
     productId: p.productId,
     name: p.name ?? p.productName ?? p.title,
-    category: p.productCategory ?? p.subCategory ?? p.category ?? '',
+    category: p.productCategory ?? p.subCategory ?? p.category ?? p.category1 ?? '',
     price: p.minPrice ?? p.price ?? Number(p.lowestPrice),
     imageUrl: p.imageUrl ?? p.image,
     brand: p.brand ?? p.mallName ?? '',
