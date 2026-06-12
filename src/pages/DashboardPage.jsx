@@ -16,15 +16,6 @@ const FILTER_API_MAP = {
   "신규": "NEW",
 };
 
-function DonutLabel({ cx, cy, value }) {
-  return (
-    <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central"
-      style={{ fontFamily: "'DM Sans','Inter',sans-serif", fontWeight: 700, fontSize: 22, fill: "#212023" }}>
-      {value}
-    </text>
-  );
-}
-
 export default function DashboardPage({ onNavigateToCustomer }) {
   const [summary,      setSummary]      = useState(null);
   const [monthlyData,  setMonthlyData]  = useState([]);
@@ -102,19 +93,28 @@ export default function DashboardPage({ onNavigateToCustomer }) {
               <span className="db-donut-card-sub">CTR</span>
             </div>
             <div className="db-donut-body">
-              <PieChart width={210} height={210}>
-                <Pie
-                  data={ctrData.length ? ctrData : [{ name: "없음", value: 1 }]}
-                  cx={105} cy={105} innerRadius={65} outerRadius={90}
-                  startAngle={90} endAngle={-270}
-                  dataKey="value" strokeWidth={0}
-                >
-                  <Cell fill="#4F6EF7" />
-                  <Cell fill="#D7DFF0" />
-                </Pie>
-                <Tooltip formatter={(v, n) => [`${v.toLocaleString()}회`, n]} />
-                {DonutLabel({ cx: 105, cy: 105, value: ctrRate })}
-              </PieChart>
+              <div style={{ position: 'relative', width: 210, height: 210 }}>
+                <PieChart width={210} height={210}>
+                  <Pie
+                    data={ctrData.length ? ctrData : [{ name: "없음", value: 1 }]}
+                    cx={105} cy={105} innerRadius={65} outerRadius={90}
+                    startAngle={90} endAngle={-270}
+                    dataKey="value" strokeWidth={0}
+                  >
+                    <Cell fill="#4F6EF7" />
+                    <Cell fill="#D7DFF0" />
+                  </Pie>
+                  <Tooltip formatter={(v, n) => [`${v.toLocaleString()}회`, n]} />
+                </PieChart>
+                <div style={{
+                  position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  pointerEvents: 'none',
+                  fontFamily: "'DM Sans','Inter',sans-serif", fontWeight: 700, fontSize: 22, color: '#212023',
+                }}>
+                  {ctrRate}
+                </div>
+              </div>
               <div className="db-donut-legends">
                 <div className="db-donut-legend">
                   <span className="db-donut-legend-dot" style={{ background: "#4F6EF7" }} />
@@ -134,19 +134,28 @@ export default function DashboardPage({ onNavigateToCustomer }) {
               <span className="db-donut-card-title">쿠폰 사용률</span>
             </div>
             <div className="db-donut-body">
-              <PieChart width={210} height={210}>
-                <Pie
-                  data={couponData.length ? couponData : [{ name: "없음", value: 1 }]}
-                  cx={105} cy={105} innerRadius={65} outerRadius={90}
-                  startAngle={90} endAngle={-270}
-                  dataKey="value" strokeWidth={0}
-                >
-                  <Cell fill="#3F6B90" />
-                  <Cell fill="#D7DFF0" />
-                </Pie>
-                <Tooltip formatter={(v, n) => [`${v.toLocaleString()}회`, n]} />
-                {DonutLabel({ cx: 105, cy: 105, value: couponRate })}
-              </PieChart>
+              <div style={{ position: 'relative', width: 210, height: 210 }}>
+                <PieChart width={210} height={210}>
+                  <Pie
+                    data={couponData.length ? couponData : [{ name: "없음", value: 1 }]}
+                    cx={105} cy={105} innerRadius={65} outerRadius={90}
+                    startAngle={90} endAngle={-270}
+                    dataKey="value" strokeWidth={0}
+                  >
+                    <Cell fill="#3F6B90" />
+                    <Cell fill="#D7DFF0" />
+                  </Pie>
+                  <Tooltip formatter={(v, n) => [`${v.toLocaleString()}회`, n]} />
+                </PieChart>
+                <div style={{
+                  position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  pointerEvents: 'none',
+                  fontFamily: "'DM Sans','Inter',sans-serif", fontWeight: 700, fontSize: 22, color: '#212023',
+                }}>
+                  {couponRate}
+                </div>
+              </div>
               <div className="db-donut-legends">
                 <div className="db-donut-legend">
                   <span className="db-donut-legend-dot" style={{ background: "#3F6B90" }} />
