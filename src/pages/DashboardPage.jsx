@@ -109,7 +109,7 @@ export default function DashboardPage({ onNavigateToCustomer }) {
                 <div style={{
                   position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  pointerEvents: 'none',
+                  pointerEvents: 'none', transform: 'translate(4px, 1px)',
                   fontFamily: "'DM Sans','Inter',sans-serif", fontWeight: 700, fontSize: 22, color: '#212023',
                 }}>
                   {ctrRate}
@@ -150,7 +150,7 @@ export default function DashboardPage({ onNavigateToCustomer }) {
                 <div style={{
                   position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  pointerEvents: 'none',
+                  pointerEvents: 'none', transform: 'translate(4px, 1px)',
                   fontFamily: "'DM Sans','Inter',sans-serif", fontWeight: 700, fontSize: 22, color: '#212023',
                 }}>
                   {couponRate}
