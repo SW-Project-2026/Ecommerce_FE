@@ -94,6 +94,7 @@
   flex-direction: column;
   gap: 8px;
   padding-bottom: 10px;
+  margin-left: 16px;
 }
 
 .db-donut-legend {

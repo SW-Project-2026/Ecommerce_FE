@@ -2,15 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
 import "./CustomerDashboardPage.css";
 import { getCustomerDetail, getCustomerOrders, getCustomerCart } from "../api/dashboard";
-
-function DonutLabel({ cx, cy, value }) {
-  return (
-    <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central"
-      style={{ fontFamily: "'DM Sans','Inter',sans-serif", fontWeight: 700, fontSize: 18, fill: "#212023" }}>
-      {value}
-    </text>
-  );
-}
+import { getUserDetail } from "../api/users";
 
 // 시간대 바 색상
 function getTimeColor(count, max) {
@@ -23,6 +15,7 @@ function getTimeColor(count, max) {
 
 export default function CustomerDashboardPage({ userId, onBack }) {
   const [detail,       setDetail]       = useState(null);
+  const [loginId,      setLoginId]      = useState(null);
   const [orders,       setOrders]       = useState([]);
   const [cart,         setCart]         = useState([]);
   const [orderCursor,  setOrderCursor]  = useState(null);
@@ -42,6 +35,14 @@ export default function CustomerDashboardPage({ userId, onBack }) {
       .then(data => setDetail(data))
       .catch(() => {})
       .finally(() => setLoading(false));
+  }, [userId]);
+
+  // 로그인 ID 조회
+  useEffect(() => {
+    if (!userId) return;
+    getUserDetail({ userId })
+      .then(data => setLoginId(data?.loginId ?? null))
+      .catch(() => {});
   }, [userId]);
 
   // 구매이력 초기 조회
@@ -169,7 +170,7 @@ export default function CustomerDashboardPage({ userId, onBack }) {
       <div className="cd-page-header">
         <div>
           <h1 className="cd-page-title">개인 고객 대시보드</h1>
-          <p className="cd-page-sub">고객 ID: {userId} · {info.name ?? "–"}</p>
+          <p className="cd-page-sub">고객 ID: {loginId ?? userId} · {info.name ?? "–"}</p>
         </div>
         <button className="cd-back-btn" onClick={onBack}>← 고객 목록</button>
       </div>
@@ -229,18 +230,27 @@ export default function CustomerDashboardPage({ userId, onBack }) {
                     </div>
                   ))}
                 </div>
-                <PieChart width={140} height={140}>
-                  <Pie
-                    data={s.data}
-                    cx={70} cy={70} innerRadius={42} outerRadius={60}
-                    startAngle={90} endAngle={-270}
-                    dataKey="value" strokeWidth={0}
-                  >
-                    {s.colors.map((c, k) => <Cell key={k} fill={c} />)}
-                  </Pie>
-                  <Tooltip formatter={(v, n) => [`${v.toLocaleString()}`, n]} />
-                  {DonutLabel({ cx: 70, cy: 70, value: s.value })}
-                </PieChart>
+                <div style={{ position: 'relative', width: 140, height: 140 }}>
+                  <PieChart width={140} height={140}>
+                    <Pie
+                      data={s.data}
+                      cx={70} cy={70} innerRadius={42} outerRadius={60}
+                      startAngle={90} endAngle={-270}
+                      dataKey="value" strokeWidth={0}
+                    >
+                      {s.colors.map((c, k) => <Cell key={k} fill={c} />)}
+                    </Pie>
+                    <Tooltip formatter={(v, n) => [`${v.toLocaleString()}`, n]} />
+                  </PieChart>
+                  <div style={{
+                    position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    pointerEvents: 'none',
+                    fontFamily: "'DM Sans','Inter',sans-serif", fontWeight: 700, fontSize: 18, color: '#212023',
+                  }}>
+                    {s.value}
+                  </div>
+                </div>
               </div>
             </div>
           ))}
