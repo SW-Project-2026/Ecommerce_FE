@@ -399,6 +399,7 @@ export default function App() {
             minOrderAmount:    couponPopup.minOrderAmount,
             maxDiscountAmount: couponPopup.maxDiscountAmount,
           }}
+          userId={userId}
           onClose={() => setCouponPopup(null)}
           onDismiss={() => setCouponPopup(null)}
         />
@@ -407,7 +408,7 @@ export default function App() {
       {page === 'promotion-coupon' && (
         <div className="page page-list">
           <NavHeader onNavigate={handleNavigate} cartCount={cartCount} auth={auth} onLogout={handleLogout} userId={userId} />
-          <PromotionCouponPage couponId={promotionCouponId} onNavigate={handleNavigate} />
+          <PromotionCouponPage couponId={promotionCouponId} onNavigate={handleNavigate} userId={userId} />
           <Footer />
         </div>
       )}

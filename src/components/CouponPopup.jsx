@@ -2,7 +2,7 @@ import { useState } from "react";
 import { couponDownload } from "../api/coupons";
 import { couponReceived } from "../api/snippets";
 
-export default function CouponPopup({ coupon, onClose, onDismiss }) {
+export default function CouponPopup({ coupon, onClose, onDismiss, userId = null }) {
   const [downloaded, setDownloaded] = useState(false);
   const [downloading, setDownloading] = useState(false);
 
@@ -24,6 +24,7 @@ export default function CouponPopup({ coupon, onClose, onDismiss }) {
         couponCode:     downloadData?.code ?? null,
         discountAmount: amount,
         expiryDate:     downloadData?.expiredAt ?? null,
+        userId,
       }).catch(() => {})
       setDownloaded(true);
     } catch (err) {

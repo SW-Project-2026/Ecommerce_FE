@@ -32,6 +32,7 @@ export default function CouponClaimPage() {
           couponCode:     data?.code ?? null,
           discountAmount: amount,
           expiryDate:     data?.expiredAt ?? null,
+          userId:         localStorage.getItem('userId') ?? null,
         }).catch(() => {})
       })
       .catch(err => setError(err.message))
