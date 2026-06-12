@@ -18,9 +18,7 @@ const EVENT_COLORS = [
 const AI_INTERVAL    = 3500
 const EVENT_INTERVAL = 4000
 
-const AD_STORAGE_KEY = 'hero_ad_products'
-
-function toSlide(p, i) {
+function toSlide(p, i, adBanner = null) {
   return {
     type: 'product',
     tag: TAGS[i % TAGS.length],
@@ -30,66 +28,38 @@ function toSlide(p, i) {
     price: p.minPrice ?? p.price ?? Number(p.lowestPrice),
     imageUrl: p.imageUrl ?? p.image,
     brand: p.brand ?? p.mallName ?? '',
-    isAd: p._replaceIndex !== undefined,
-    adId: p._adId ?? null,
+    isAd: !!adBanner,
+    adId: adBanner?.adId ?? null,
   }
 }
 
-function loadSavedProducts() {
-  try {
-    const saved = sessionStorage.getItem(AD_STORAGE_KEY)
-    return saved ? JSON.parse(saved) : []
-  } catch { return [] }
-}
-
-function saveProducts(products) {
-  try {
-    sessionStorage.setItem(AD_STORAGE_KEY, JSON.stringify(products))
-  } catch {}
-}
-
-export default function HeroBanner({ promotions = [], userName = '', onNavigate, adProduct = null, onPromotionClick, userId = null }) {
+export default function HeroBanner({ promotions = [], userName = '', onNavigate, adBanner = null, onPromotionClick, userId = null }) {
   const [activeSlide, setActiveSlide] = useState(0)
   const [activeEvent, setActiveEvent] = useState(0)
   const [pauseAI,    setPauseAI]    = useState(false)
   const [pauseEvent, setPauseEvent] = useState(false)
-  const [randomProducts, setRandomProducts] = useState(() => loadSavedProducts())
+  const [adProduct,  setAdProduct]  = useState(null)
 
-  // 랜덤 상품 3개 조회 (저장된 게 없을 때만)
+  // 광고 배너 상품 정보 조회
   useEffect(() => {
-    if (randomProducts.length >= 3) return
-    const MAX_ID = 1800
-    const ids = []
-    while (ids.length < 9) {
-      const id = Math.floor(Math.random() * MAX_ID) + 1
-      if (!ids.includes(id)) ids.push(id)
-    }
-    Promise.allSettled(ids.map(id => getProduct(id)))
-      .then(results => {
-        const success = results
-          .filter(r => r.status === 'fulfilled' && r.value)
-          .map(r => r.value)
-          .slice(0, 3)
-        setRandomProducts(success)
-        saveProducts(success)
+    if (!adBanner) { setAdProduct(null); return }
+    if (adBanner.productId) {
+      getProduct(adBanner.productId)
+        .then(data => setAdProduct(data))
+        .catch(() => setAdProduct(null))
+    } else {
+      // 카테고리/키워드 광고 - BE에서 내려준 정보로 슬라이드 구성
+      setAdProduct({
+        productId:       adBanner.productId,
+        name:            adBanner.productName,
+        imageUrl:        adBanner.productImageUrl,
+        productCategory: adBanner.category,
       })
-      .catch(() => {})
-  }, [])
+    }
+  }, [adBanner])
 
-  // 광고 상품 수신 시 슬롯 교체 및 저장
-  useEffect(() => {
-    if (!adProduct) return
-    const idx = adProduct._replaceIndex ?? 0
-    setRandomProducts(prev => {
-      const next = [...prev]
-      next[idx] = adProduct
-      saveProducts(next)
-      return next
-    })
-  }, [adProduct])
-
-  // AI 슬라이드 구성
-  const aiSlides = randomProducts.map((p, i) => toSlide(p, i))
+  // 광고 슬라이드 구성
+  const aiSlides = adProduct ? [toSlide(adProduct, 0, adBanner)] : []
 
   const eventSlides = promotions.length > 0
     ? promotions.map((p, i) => ({
@@ -116,7 +86,7 @@ export default function HeroBanner({ promotions = [], userName = '', onNavigate,
       productCategory: slide.category || null,
       userId,
     }).catch(() => {})
-  }, [activeSlide])
+  }, [activeSlide, aiSlides.length])
 
   const aiLen    = Math.max(aiSlides.length, 1)
   const eventLen = eventSlides.length

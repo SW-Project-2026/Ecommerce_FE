@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import NavHeader from './components/layout/NavHeader'
 import CategoryBar from './components/layout/CategoryBar'
 import Footer from './components/layout/Footer'
@@ -26,21 +26,9 @@ import { cartGet } from './api/carts'
 import { userLogin as snippetUserLogin } from './api/snippets'
 import { getHome, getHomeByUser } from './api/home'
 import { wishlistGet } from './api/wishlists'
-import { getProduct, getProducts, searchProducts } from './api/products'
 import './App.css'
 
 const FLUENTD_URL = import.meta.env.VITE_FLUENTD_URL || 'https://fluentd.daon.site'
-
-const AD_CATEGORY_MAP = {
-  BEAUTY:             '화장품/미용',
-  FASHION_ACCESSORY:  '패션잡화',
-  LIVING_HEALTH:      '생활/건강',
-  FOOD:               '식품',
-  FURNITURE_INTERIOR: '가구/인테리어',
-  SPORTS_LEISURE:     '스포츠/레저',
-  DIGITAL_APPLIANCE:  '디지털/가전',
-  FASHION_CLOTHING:   '패션의류',
-}
 
 function setCookie(name, value, days = 7) {
   const expires = new Date(Date.now() + days * 864e5).toUTCString()
@@ -83,10 +71,7 @@ export default function App() {
   const [homeData, setHomeData] = useState(null)
   const [wishMap, setWishMap] = useState({})
   const [couponPopup, setCouponPopup] = useState(null)
-  const [adProduct, setAdProduct] = useState(null)
-  const adReplaceIndexRef = useRef(0)
   const [promotionCouponId, setPromotionCouponId] = useState(null)
-  const sseRef = useRef(null)
 
   useEffect(() => {
     async function initAuth() {
@@ -149,15 +134,10 @@ export default function App() {
     }
   }, [page, auth])
 
+  // ── 쿠폰 팝업: pending 조회 ──
   useEffect(() => {
     const userSeqId = localStorage.getItem('userSeqId')
-    if (!auth || !userSeqId) {
-      if (sseRef.current) {
-        sseRef.current.close()
-        sseRef.current = null
-      }
-      return
-    }
+    if (!auth || !userSeqId) return
 
     fetch(`${FLUENTD_URL}/api/notifications/pending?userId=${userSeqId}`)
       .then(res => res.json())
@@ -167,7 +147,6 @@ export default function App() {
           if (first.couponId) {
             setCouponPopup({
               couponId:          first.couponId          ?? null,
-              adId:              first.adId              ?? null,
               campaignId:        first.campaignId        ?? null,
               couponName:        first.couponName        ?? null,
               discountType:      first.discountType      ?? null,
@@ -176,40 +155,21 @@ export default function App() {
               maxDiscountAmount: first.maxDiscountAmount ?? null,
             })
           }
-          if (first.adId && first.adTargetType) {
-            const resolveAdProduct = async () => {
-              let product = null
-              if (first.adTargetType === 'PRODUCT' && first.adProductId) {
-                product = await getProduct(first.adProductId)
-              } else if (first.adTargetType === 'CATEGORY' && first.adCategory) {
-                const mappedCategory = AD_CATEGORY_MAP[first.adCategory] ?? first.adCategory
-                const res = await getProducts({ category: mappedCategory, size: 20 })
-                const list2 = res.content ?? []
-                product = list2[Math.floor(Math.random() * list2.length)] ?? null
-              } else if (first.adTargetType === 'KEYWORD' && first.adKeyword) {
-                const res = await searchProducts({ query: first.adKeyword, display: 20 })
-                const list2 = res.products ?? []
-                product = list2[Math.floor(Math.random() * list2.length)] ?? null
-              }
-              if (product) {
-                const replaceIdx = adReplaceIndexRef.current
-                adReplaceIndexRef.current = (replaceIdx + 1) % 3
-                setAdProduct({ ...product, _replaceIndex: replaceIdx, _adId: first.adId ?? null })
-              }
-            }
-            resolveAdProduct().catch(() => {})
-          }
           fetch(`${FLUENTD_URL}/api/notifications/pending?userId=${userSeqId}`, { method: 'DELETE' })
             .catch(() => {})
         }
       })
       .catch(() => {})
+  }, [auth])
 
-    if (sseRef.current) {
-      sseRef.current.close()
-    }
+  // ── 쿠폰 팝업: SSE 연결 ──
+  useEffect(() => {
+    const userSeqId = localStorage.getItem('userSeqId')
+    let es = null
 
-    const es = new EventSource(`${FLUENTD_URL}/api/notifications/stream?userId=${userSeqId}`)
+    if (!auth || !userSeqId) return
+
+    es = new EventSource(`${FLUENTD_URL}/api/notifications/stream?userId=${userSeqId}`)
 
     es.addEventListener('campaign', (e) => {
       try {
@@ -218,7 +178,6 @@ export default function App() {
         if (data.couponId) {
           setCouponPopup({
             couponId:          data.couponId          ?? null,
-            adId:              data.adId              ?? null,
             campaignId:        data.campaignId        ?? null,
             couponName:        data.couponName        ?? null,
             discountType:      data.discountType      ?? null,
@@ -227,30 +186,6 @@ export default function App() {
             maxDiscountAmount: data.maxDiscountAmount ?? null,
           })
         }
-
-        if (data.adId && data.adTargetType) {
-          const resolveAdProduct = async () => {
-            let product = null
-            if (data.adTargetType === 'PRODUCT' && data.adProductId) {
-              product = await getProduct(data.adProductId)
-            } else if (data.adTargetType === 'CATEGORY' && data.adCategory) {
-              const mappedCategory = AD_CATEGORY_MAP[data.adCategory] ?? data.adCategory
-              const res = await getProducts({ category: mappedCategory, size: 20 })
-              const list = res.content ?? []
-              product = list[Math.floor(Math.random() * list.length)] ?? null
-            } else if (data.adTargetType === 'KEYWORD' && data.adKeyword) {
-              const res = await searchProducts({ query: data.adKeyword, display: 20 })
-              const list = res.products ?? []
-              product = list[Math.floor(Math.random() * list.length)] ?? null
-            }
-            if (product) {
-              const replaceIdx = adReplaceIndexRef.current
-              adReplaceIndexRef.current = (replaceIdx + 1) % 3
-              setAdProduct({ ...product, _replaceIndex: replaceIdx, _adId: data.adId ?? null })
-            }
-          }
-          resolveAdProduct().catch(() => {})
-        }
       } catch (err) {
         console.error('SSE 이벤트 파싱 오류', err)
       }
@@ -258,14 +193,10 @@ export default function App() {
 
     es.onerror = () => {
       es.close()
-      sseRef.current = null
     }
-
-    sseRef.current = es
 
     return () => {
       es.close()
-      sseRef.current = null
     }
   }, [auth])
 
@@ -319,8 +250,6 @@ export default function App() {
     setCouponPopup(null)
     setHomeData(null)
     setWishMap({})
-    setAdProduct(null)
-    adReplaceIndexRef.current = 0
   }
 
   function handleAddToCart(product, qty = 1) {
@@ -484,7 +413,7 @@ export default function App() {
             promotions={homeData?.promotions ?? []}
             userName={homeData?.userName ?? ''}
             onNavigate={handleNavigate}
-            adProduct={adProduct}
+            adBanner={homeData?.adBanner ?? null}
             auth={auth}
             userId={userId}
             onPromotionClick={(couponId) => {
