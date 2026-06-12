@@ -245,7 +245,7 @@ export default function CustomerDashboardPage({ userId, onBack }) {
                   <div style={{
                     position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    pointerEvents: 'none', transform: 'translate(4px, 1px)',
+                    pointerEvents: 'none', transform: 'translate(6px, 2px)',
                     fontFamily: "'DM Sans','Inter',sans-serif", fontWeight: 700, fontSize: 18, color: '#212023',
                   }}>
                     {s.value}
