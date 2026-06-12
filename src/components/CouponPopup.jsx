@@ -118,11 +118,15 @@ export default function CouponPopup({ coupon, onClose, onDismiss, userId = null 
               {info.minOrderAmount?.toLocaleString() ?? "–"}원 이상 구매 시
             </div>
             <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 18, color: "#21366B", textAlign: "center" }}>
-              최대 <span style={{ fontWeight: 800, color: "#3B61C2" }}>
-                {info.discountType === "RATE"
-                  ? `${info.maxDiscountAmount?.toLocaleString() ?? "–"}원`
-                  : `${info.discountAmount?.toLocaleString() ?? "–"}원`}
-              </span> 할인받으세요!
+              {info.discountType === "RATE" && !info.maxDiscountAmount ? (
+                <>최대 한도 없이 <span style={{ fontWeight: 800, color: "#3B61C2" }}>{info.discountAmount}%</span> 할인받으세요!</>
+              ) : (
+                <>최대 <span style={{ fontWeight: 800, color: "#3B61C2" }}>
+                  {info.discountType === "RATE"
+                    ? `${info.maxDiscountAmount?.toLocaleString()}원`
+                    : `${info.discountAmount?.toLocaleString() ?? "–"}원`}
+                </span> 할인받으세요!</>
+              )}
             </div>
           </div>
         </div>
