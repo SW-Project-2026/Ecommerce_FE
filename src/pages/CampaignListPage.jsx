@@ -112,6 +112,7 @@ export default function CampaignListPage() {
   const handleLogout = () => {
     localStorage.removeItem('role')
     localStorage.removeItem('userId')
+    localStorage.removeItem('userSeqId')
     sessionStorage.removeItem('adminPage')
     sessionStorage.removeItem('adminCampaignId')
     sessionStorage.removeItem('adminCampaignOpen')
