@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import "./AdCreatePage.css";
-import { selectProducts, getProducts, searchProducts } from "../api/products";
+import { selectProducts, getProducts, searchProducts, getProduct } from "../api/products";
 import { adCreate, adUpdate } from "../api/ads";
 
 const AD_TARGET_TYPES = ["상품", "카테고리", "키워드"];
@@ -125,8 +125,20 @@ export default function AdCreatePage({ onNavigate, ad }) {
   // 편집 시 초기 상품 이름 로드
   useEffect(() => {
     if (isEdit && ad?.productId && form.targetType === "상품") {
-      setSearchKeyword(`ID: ${ad.productId}`)
       setForm(p => ({ ...p, productId: String(ad.productId) }))
+      setSearchKeyword("불러오는 중...")
+      getProduct(ad.productId)
+        .then(p => {
+          const name = p?.name ?? p?.productName ?? `ID: ${ad.productId}`
+          setSearchKeyword(name)
+          setSelectedProduct({ productId: ad.productId, name, imageUrl: p?.imageUrl ?? p?.image ?? null })
+          if (p?.imageUrl ?? p?.image) {
+            setPreviewImage(p.imageUrl ?? p.image)
+          }
+        })
+        .catch(() => {
+          setSearchKeyword("")
+        })
     }
   }, [])
 
@@ -194,7 +206,7 @@ export default function AdCreatePage({ onNavigate, ad }) {
   };
 
   const previewTarget = () => {
-    if (form.targetType === "상품")    return selectedProduct ? selectedProduct.name : form.productId ? `ID: ${form.productId}` : "–";
+    if (form.targetType === "상품")    return selectedProduct ? selectedProduct.name : "–";
     if (form.targetType === "카테고리") return CATEGORY_OPTIONS.find(o => o.value === form.category)?.label || "–";
     if (form.targetType === "키워드")  return form.keyword || "–";
     return "–";
@@ -282,7 +294,6 @@ export default function AdCreatePage({ onNavigate, ad }) {
                             : <div className="ac-product-dropdown-img ac-product-dropdown-img-empty">🛍</div>}
                           <div className="ac-product-dropdown-info">
                             <span className="ac-product-dropdown-name">{p.name}</span>
-                            <span className="ac-product-dropdown-id">ID: {p.productId}</span>
                           </div>
                         </div>
                       ))}
@@ -298,7 +309,6 @@ export default function AdCreatePage({ onNavigate, ad }) {
                   <div className="ac-product-selected">
                     <span className="ac-product-selected-badge">선택됨</span>
                     <span className="ac-product-selected-name">{selectedProduct.name}</span>
-                    <span className="ac-product-selected-id">ID: {selectedProduct.productId}</span>
                   </div>
                 )}
                 <p style={hintStyle}>상품명을 입력하면 검색 결과가 표시됩니다.</p>
@@ -379,7 +389,7 @@ export default function AdCreatePage({ onNavigate, ad }) {
             </div>
             <div className="ac-summary-row">
               <span className="ac-summary-key">타겟 값</span>
-              <span className="ac-summary-val">{previewTarget()}</span>
+              <span className="ac-summary-val" style={{ maxWidth: 220, whiteSpace: "normal", wordBreak: "break-word", textAlign: "right" }}>{previewTarget()}</span>
             </div>
 
             <div className="ac-notice">
