@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import "./AdManagePage.css";
 import { adList, adDelete } from "../api/ads";
+import { getProduct } from "../api/products";
 
 const TARGET_TYPE_DISPLAY = {
   PRODUCT:  "상품",
@@ -25,10 +26,10 @@ const TARGET_TYPE_BADGE = {
   "키워드":  { color: "#FF6B6B", background: "rgba(255,107,107,0.12)" },
 };
 
-function getTargetInfo(ad) {
+function getTargetInfo(ad, productNames = {}) {
   const type = TARGET_TYPE_DISPLAY[ad.targetType] ?? "–";
   let value = "–";
-  if (ad.targetType === "PRODUCT")  value = `ID: ${ad.productId}`;
+  if (ad.targetType === "PRODUCT")  value = productNames[ad.productId] ?? "불러오는 중...";
   if (ad.targetType === "CATEGORY") value = CATEGORY_DISPLAY[ad.category] ?? ad.category;
   if (ad.targetType === "KEYWORD")  value = ad.keyword;
   return { type, value };
@@ -36,6 +37,7 @@ function getTargetInfo(ad) {
 
 export default function AdManagePage({ onNavigate }) {
   const [ads,        setAds]        = useState([]);
+  const [productNames, setProductNames] = useState({});
   const [loading,    setLoading]    = useState(false);
   const [error,      setError]      = useState(null);
   const [searchText, setSearchText] = useState("");
@@ -46,7 +48,19 @@ export default function AdManagePage({ onNavigate }) {
     setLoading(true); setError(null);
     try {
       const data = await adList();
-      setAds(Array.isArray(data) ? data : []);
+      const list = Array.isArray(data) ? data : [];
+      setAds(list);
+
+      const productAds = list.filter(a => a.targetType === "PRODUCT" && a.productId != null);
+      productAds.forEach(a => {
+        getProduct(a.productId)
+          .then(p => {
+            setProductNames(prev => ({ ...prev, [a.productId]: p?.name ?? p?.productName ?? `ID: ${a.productId}` }));
+          })
+          .catch(() => {
+            setProductNames(prev => ({ ...prev, [a.productId]: `ID: ${a.productId}` }));
+          });
+      });
     } catch (err) { setError(err.message); }
     finally { setLoading(false); }
   }
@@ -145,7 +159,7 @@ export default function AdManagePage({ onNavigate }) {
                 {filtered.length === 0 ? (
                   <tr><td colSpan={6} style={{ textAlign: "center", padding: 40 }}>광고가 없습니다</td></tr>
                 ) : filtered.map((ad, i) => {
-                  const { type, value } = getTargetInfo(ad);
+                  const { type, value } = getTargetInfo(ad, productNames);
                   const badgeStyle = TARGET_TYPE_BADGE[type] ?? {};
                   return (
                     <tr key={ad.adId}>
@@ -167,7 +181,7 @@ export default function AdManagePage({ onNavigate }) {
                           {type}
                         </span>
                       </td>
-                      <td>{value}</td>
+                      <td style={{ maxWidth: 220, whiteSpace: "normal", wordBreak: "break-word" }}>{value}</td>
                       <td>
                         <div className="ad-action-btns">
                           <button className="ad-btn-edit" onClick={() => onNavigate?.("create", ad)}>수정</button>

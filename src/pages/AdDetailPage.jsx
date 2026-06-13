@@ -34,6 +34,7 @@ const CATEGORY_DB_KEY = {
 
 export default function AdDetailPage({ adId, onNavigate }) {
   const [ad,           setAd]           = useState(null);
+  const [productName,  setProductName]  = useState(null);
   const [loading,      setLoading]      = useState(true);
   const [error,        setError]        = useState(null);
   const [editMode,     setEditMode]     = useState(false);
@@ -57,6 +58,7 @@ export default function AdDetailPage({ adId, onNavigate }) {
       if (data.targetType === "PRODUCT" && data.productId) {
         const product = await getProduct(data.productId);
         setPreviewImage(product?.imageUrl ?? null);
+        setProductName(product?.name ?? product?.productName ?? `ID: ${data.productId}`);
       } else if (data.targetType === "CATEGORY" && data.category) {
         const dbKey = CATEGORY_DB_KEY[data.category] ?? data.category;
         const res = await getProducts({ page: 0, size: 20, category: dbKey });
@@ -112,7 +114,7 @@ export default function AdDetailPage({ adId, onNavigate }) {
 
   const targetTypeLabel = TARGET_TYPE_DISPLAY_MAP[ad.targetType] ?? ad.targetType;
   const targetValue = ad.targetType === "PRODUCT"
-    ? `ID: ${ad.productId}`
+    ? (productName ?? "불러오는 중...")
     : ad.targetType === "CATEGORY"
       ? (CATEGORY_OPTIONS.find(o => o.value === ad.category)?.label ?? ad.category)
       : ad.keyword;
@@ -184,7 +186,7 @@ export default function AdDetailPage({ adId, onNavigate }) {
             </div>
             <div className="ac-field">
               <label className="ac-label">타겟 값</label>
-              <span style={{ fontFamily: "'Noto Sans KR', sans-serif", fontSize: 13, color: "#4F6EF7", fontWeight: 500 }}>{targetValue ?? "–"}</span>
+              <span style={{ fontFamily: "'Noto Sans KR', sans-serif", fontSize: 13, color: "#4F6EF7", fontWeight: 500, maxWidth: 320, whiteSpace: "normal", wordBreak: "break-word" }}>{targetValue ?? "–"}</span>
             </div>
           </div>
         </div>
@@ -221,7 +223,7 @@ export default function AdDetailPage({ adId, onNavigate }) {
             </div>
             <div className="ac-summary-row">
               <span className="ac-summary-key">타겟 값</span>
-              <span className="ac-summary-val">{targetValue ?? "–"}</span>
+              <span className="ac-summary-val" style={{ maxWidth: 220, whiteSpace: "normal", wordBreak: "break-word", textAlign: "right" }}>{targetValue ?? "–"}</span>
             </div>
           </div>
         </div>
