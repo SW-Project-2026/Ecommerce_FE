@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getProduct } from '../../api/products'
+import { getProduct, getProducts, searchProducts } from '../../api/products'
 import { clickAd, adExposure } from '../../api/snippets'
 
 const TAGS = ['이 상품 어때요?', '지금 인기 상품', '놓치지 마세요']
@@ -43,18 +43,33 @@ export default function HeroBanner({ promotions = [], userName = '', onNavigate,
   // 광고 배너 상품 정보 조회
   useEffect(() => {
     if (!adBanner) { setAdProduct(null); return }
-    if (adBanner.productId) {
+
+    if (adBanner.targetType === 'PRODUCT' && adBanner.productId) {
+      getProduct(adBanner.productId)
+        .then(data => setAdProduct(data))
+        .catch(() => setAdProduct(null))
+    } else if (adBanner.targetType === 'CATEGORY' && adBanner.category) {
+      getProducts({ category: adBanner.category, size: 20 })
+        .then(res => {
+          const list = res.content ?? []
+          const product = list[Math.floor(Math.random() * list.length)] ?? null
+          setAdProduct(product)
+        })
+        .catch(() => setAdProduct(null))
+    } else if (adBanner.targetType === 'KEYWORD' && adBanner.keyword) {
+      searchProducts({ query: adBanner.keyword, display: 20 })
+        .then(res => {
+          const list = res.products ?? []
+          const product = list[Math.floor(Math.random() * list.length)] ?? null
+          setAdProduct(product)
+        })
+        .catch(() => setAdProduct(null))
+    } else if (adBanner.productId) {
       getProduct(adBanner.productId)
         .then(data => setAdProduct(data))
         .catch(() => setAdProduct(null))
     } else {
-      // 카테고리/키워드 광고 - BE에서 내려준 정보로 슬라이드 구성
-      setAdProduct({
-        productId:       adBanner.productId,
-        name:            adBanner.productName,
-        imageUrl:        adBanner.productImageUrl,
-        productCategory: adBanner.category,
-      })
+      setAdProduct(null)
     }
   }, [adBanner])
 
