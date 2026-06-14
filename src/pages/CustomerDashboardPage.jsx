@@ -165,7 +165,7 @@ export default function CustomerDashboardPage({ userId, onBack }) {
     return () => el.removeEventListener("scroll", onScroll);
   }, [loadMoreWishlist]);
 
-  if (loading) return (
+  if (loading && !detail) return (
     <div className="cd-main">
       <div style={{ padding: 40, textAlign: "center", color: "#9BAAC0", fontSize: 13 }}>불러오는 중...</div>
     </div>
