@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
 import "./CustomerDashboardPage.css";
-import { getCustomerDetail, getCustomerOrders, getCustomerCart } from "../api/dashboard";
+import { getCustomerDetail, getCustomerOrders, getCustomerCart, getCustomerWishlist } from "../api/dashboard";
 import { getUserDetail } from "../api/users";
 
 // 시간대 바 색상
@@ -13,29 +13,46 @@ function getTimeColor(count, max) {
   return "#DCE2FD";
 }
 
+function toDateStr(d) {
+  const pad = n => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+}
+
+function defaultDateRange() {
+  const to = new Date()
+  const from = new Date()
+  from.setDate(from.getDate() - 30)
+  return { from: toDateStr(from), to: toDateStr(to) }
+}
+
 export default function CustomerDashboardPage({ userId, onBack }) {
   const [detail,       setDetail]       = useState(null);
   const [loginId,      setLoginId]      = useState(null);
+  const [dateRange,    setDateRange]    = useState(() => defaultDateRange());
   const [orders,       setOrders]       = useState([]);
   const [cart,         setCart]         = useState([]);
+  const [wishlist,     setWishlist]     = useState([]);
   const [orderCursor,  setOrderCursor]  = useState(null);
   const [cartCursor,   setCartCursor]   = useState(null);
+  const [wishlistCursor, setWishlistCursor] = useState(null);
   const [orderHasNext, setOrderHasNext] = useState(false);
   const [cartHasNext,  setCartHasNext]  = useState(false);
+  const [wishlistHasNext, setWishlistHasNext] = useState(false);
   const [loading,      setLoading]      = useState(true);
 
   const orderRef = useRef(null);
   const cartRef  = useRef(null);
+  const wishlistRef = useRef(null);
 
   // 상세 조회
   useEffect(() => {
     if (!userId) return;
     setLoading(true);
-    getCustomerDetail({ userId })
+    getCustomerDetail({ userId, from: dateRange.from, to: dateRange.to })
       .then(data => setDetail(data))
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [userId]);
+  }, [userId, dateRange]);
 
   // 로그인 ID 조회
   useEffect(() => {
@@ -69,6 +86,18 @@ export default function CustomerDashboardPage({ userId, onBack }) {
       .catch(() => {});
   }, [userId]);
 
+  // 찜 목록 초기 조회
+  useEffect(() => {
+    if (!userId) return;
+    getCustomerWishlist({ userId, size: 4 })
+      .then(data => {
+        setWishlist(data.content ?? []);
+        setWishlistCursor(data.nextCursor);
+        setWishlistHasNext(data.hasNext);
+      })
+      .catch(() => {});
+  }, [userId]);
+
   // 구매이력 무한스크롤
   const loadMoreOrders = useCallback(() => {
     if (!orderHasNext || !orderCursor) return;
@@ -93,6 +122,18 @@ export default function CustomerDashboardPage({ userId, onBack }) {
       .catch(() => {});
   }, [userId, cartCursor, cartHasNext]);
 
+  // 찜 목록 무한스크롤
+  const loadMoreWishlist = useCallback(() => {
+    if (!wishlistHasNext || !wishlistCursor) return;
+    getCustomerWishlist({ userId, cursor: wishlistCursor, size: 4 })
+      .then(data => {
+        setWishlist(prev => [...prev, ...(data.content ?? [])]);
+        setWishlistCursor(data.nextCursor);
+        setWishlistHasNext(data.hasNext);
+      })
+      .catch(() => {});
+  }, [userId, wishlistCursor, wishlistHasNext]);
+
   // 스크롤 감지
   useEffect(() => {
     const el = orderRef.current;
@@ -113,6 +154,16 @@ export default function CustomerDashboardPage({ userId, onBack }) {
     el.addEventListener("scroll", onScroll);
     return () => el.removeEventListener("scroll", onScroll);
   }, [loadMoreCart]);
+
+  useEffect(() => {
+    const el = wishlistRef.current;
+    if (!el) return;
+    const onScroll = () => {
+      if (el.scrollTop + el.clientHeight >= el.scrollHeight - 10) loadMoreWishlist();
+    };
+    el.addEventListener("scroll", onScroll);
+    return () => el.removeEventListener("scroll", onScroll);
+  }, [loadMoreWishlist]);
 
   if (loading) return (
     <div className="cd-main">
@@ -172,7 +223,27 @@ export default function CustomerDashboardPage({ userId, onBack }) {
           <h1 className="cd-page-title">개인 고객 대시보드</h1>
           <p className="cd-page-sub">고객 ID: {loginId ?? userId} · {info.name ?? "–"}</p>
         </div>
-        <button className="cd-back-btn" onClick={onBack}>← 고객 목록</button>
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <div className="cd-date-range">
+            <input
+              type="date"
+              className="cd-date-input"
+              value={dateRange.from}
+              max={dateRange.to}
+              onChange={e => setDateRange(prev => ({ ...prev, from: e.target.value }))}
+            />
+            <span className="cd-date-tilde">~</span>
+            <input
+              type="date"
+              className="cd-date-input"
+              value={dateRange.to}
+              min={dateRange.from}
+              max={toDateStr(new Date())}
+              onChange={e => setDateRange(prev => ({ ...prev, to: e.target.value }))}
+            />
+          </div>
+          <button className="cd-back-btn" onClick={onBack}>← 고객 목록</button>
+        </div>
       </div>
 
       <div className="cd-content">
@@ -270,7 +341,7 @@ export default function CustomerDashboardPage({ userId, onBack }) {
 
           <div className="cd-card cd-timeslot-card">
             <p className="cd-card-title">주 접속 시간대</p>
-            <p className="cd-card-sub">최근 30일 기반</p>
+            <p className="cd-card-sub">선택 기간 기준</p>
             <ResponsiveContainer width="100%" height={160}>
               <BarChart data={timeSlots.map(t => ({ ...t, fill: getTimeColor(t.count, maxCount) }))}
                 margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
@@ -288,8 +359,25 @@ export default function CustomerDashboardPage({ userId, onBack }) {
           </div>
         </div>
 
-        {/* 장바구니 + 최근 구매 이력 */}
-        <div className="cd-grid-2">
+        {/* 찜 목록 + 장바구니 + 최근 구매 이력 */}
+        <div className="cd-grid-3">
+          <div className="cd-card">
+            <p className="cd-card-title">현재 찜 목록</p>
+            <div className="cd-card-divider" />
+            <div ref={wishlistRef} className="cd-scroll-list">
+              {wishlist.length === 0
+                ? <p style={{ fontSize: 12, color: "#9BAAC0", textAlign: "center", padding: 16 }}>데이터 없음</p>
+                : wishlist.map((item, i) => (
+                  <div key={i} className="cd-list-item">
+                    <div>
+                      <p className="cd-list-name">{item.productName}</p>
+                      <p className="cd-list-cat">{item.category}</p>
+                    </div>
+                    <span className="cd-list-price">{item.price?.toLocaleString()}원</span>
+                  </div>
+                ))}
+            </div>
+          </div>
           <div className="cd-card">
             <p className="cd-card-title">현재 장바구니</p>
             <div className="cd-card-divider" />
