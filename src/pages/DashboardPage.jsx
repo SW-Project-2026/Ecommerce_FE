@@ -11,9 +11,9 @@ const FILTERS = ["전체", "VIP", "이탈위험 높음", "이탈위험 낮음", 
 const FILTER_API_MAP = {
   "전체": undefined,
   "VIP": "VIP",
-  "이탈위험 높음": "CHURN_HIGH",
-  "이탈위험 낮음": "CHURN_LOW",
-  "신규": "NEW",
+  "이탈위험 높음": "이탈위험높음",
+  "이탈위험 낮음": "이탈위험낮음",
+  "신규": "신규",
 };
 
 export default function DashboardPage({ onNavigateToCustomer }) {
