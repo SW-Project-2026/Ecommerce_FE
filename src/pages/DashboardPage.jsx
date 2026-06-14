@@ -16,6 +16,18 @@ const FILTER_API_MAP = {
   "신규": "신규",
 };
 
+function toDateStr(d) {
+  const pad = n => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+}
+
+function defaultDateRange() {
+  const to = new Date()
+  const from = new Date()
+  from.setDate(from.getDate() - 30)
+  return { from: toDateStr(from), to: toDateStr(to) }
+}
+
 export default function DashboardPage({ onNavigateToCustomer }) {
   const [summary,      setSummary]      = useState(null);
   const [monthlyData,  setMonthlyData]  = useState([]);
@@ -25,9 +37,11 @@ export default function DashboardPage({ onNavigateToCustomer }) {
   const [activeFilter, setActiveFilter] = useState("전체");
   const [currentPage,  setCurrentPage]  = useState(1);
   const [loading,      setLoading]      = useState(true);
+  const [dateRange,    setDateRange]    = useState(() => defaultDateRange());
 
   useEffect(() => {
-    Promise.all([getDashboardSummary(), getMonthlyStats()])
+    setLoading(true);
+    Promise.all([getDashboardSummary({ from: dateRange.from, to: dateRange.to }), getMonthlyStats()])
       .then(([sum, monthly]) => {
         setSummary(sum);
         setMonthlyData(
@@ -40,11 +54,11 @@ export default function DashboardPage({ onNavigateToCustomer }) {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  }, [dateRange]);
 
   useEffect(() => {
     const filter = FILTER_API_MAP[activeFilter];
-    getCustomerList({ page: currentPage - 1, size: 10, search: search || undefined, filter })
+    getCustomerList({ page: currentPage - 1, size: 10, search: search || undefined, filter, from: dateRange.from, to: dateRange.to })
       .then(data => {
         setCustomers(data.customers ?? []);
         setPagination({
@@ -53,7 +67,7 @@ export default function DashboardPage({ onNavigateToCustomer }) {
         });
       })
       .catch(() => {});
-  }, [search, activeFilter, currentPage]);
+  }, [search, activeFilter, currentPage, dateRange]);
 
   const ctrData = summary ? [
     { name: "클릭",   value: summary.ctr?.clicks ?? 0 },
@@ -80,6 +94,24 @@ export default function DashboardPage({ onNavigateToCustomer }) {
         {summary && (
           <span className="db-total-customers">총 고객 수 {summary.totalCustomers?.toLocaleString()}명</span>
         )}
+        <div className="db-date-range">
+          <input
+            type="date"
+            className="db-date-input"
+            value={dateRange.from}
+            max={dateRange.to}
+            onChange={e => setDateRange(prev => ({ ...prev, from: e.target.value }))}
+          />
+          <span className="db-date-tilde">~</span>
+          <input
+            type="date"
+            className="db-date-input"
+            value={dateRange.to}
+            min={dateRange.from}
+            max={toDateStr(new Date())}
+            onChange={e => setDateRange(prev => ({ ...prev, to: e.target.value }))}
+          />
+        </div>
       </div>
 
       <div className="db-content">

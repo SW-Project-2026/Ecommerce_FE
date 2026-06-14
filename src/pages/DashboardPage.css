@@ -36,6 +36,32 @@
   color: #8892AA;
 }
 
+/* ══════════ DATE RANGE PICKER ══════════ */
+.db-date-range {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.db-date-input {
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid #E0E4E8;
+  border-radius: 8px;
+  background: #F5F7FA;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: #5A6A8A;
+  outline: none;
+}
+
+.db-date-tilde {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: #9BAAC0;
+}
+
 /* ══════════ CONTENT ══════════ */
 .db-content {
   flex: 1;
