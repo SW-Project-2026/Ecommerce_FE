@@ -222,7 +222,7 @@ export default function DashboardPage({ onNavigateToCustomer }) {
               <CartesianGrid strokeDasharray="3 3" stroke="#E0E0DE" vertical={false} />
               <XAxis dataKey="month" tick={{ fontSize: 10, fill: "#888880" }} axisLine={false} tickLine={false} />
               <YAxis yAxisId="left"  orientation="left"  tick={{ fontSize: 10, fill: "#3B477B" }} axisLine={false} tickLine={false} label={{ value: "신규 가입 (명)", angle: -90, position: "insideLeft", fontSize: 10, fill: "#3B477B" }} />
-              <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10, fill: "#D84E2D" }} axisLine={false} tickLine={false} label={{ value: "탈퇴율 (%)", angle: 90, position: "insideRight", fontSize: 10, fill: "#D84E2D" }} />
+              <YAxis yAxisId="right" orientation="right" domain={[0, 100]} tick={{ fontSize: 10, fill: "#D84E2D" }} axisLine={false} tickLine={false} label={{ value: "탈퇴율 (%)", angle: 90, position: "insideRight", fontSize: 10, fill: "#D84E2D" }} />
               <Tooltip />
               <Bar yAxisId="left" dataKey="join" name="신규 가입자" shape={renderBar} />
               <Line yAxisId="right" dataKey="churnRate" name="탈퇴율" stroke="#D84E2D" strokeWidth={2} dot={{ fill: "#fff", stroke: "#D84E2D", strokeWidth: 2, r: 3 }} />
