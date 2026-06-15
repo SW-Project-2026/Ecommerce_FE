@@ -18,6 +18,18 @@ const EVENT_COLORS = [
 const AI_INTERVAL    = 3500
 const EVENT_INTERVAL = 4000
 
+// 광고 카테고리 코드 -> 상품 DB의 productCategory 값
+const AD_CATEGORY_TO_PRODUCT_CATEGORY = {
+  DIGITAL_APPLIANCE: '디지털/가전',
+  FASHION_CLOTHING: '패션의류',
+  FASHION_ACCESSORY: '패션잡화',
+  BEAUTY: '화장품/미용',
+  FOOD: '식품',
+  LIVING_HEALTH: '생활/건강',
+  SPORTS_LEISURE: '스포츠/레저',
+  FURNITURE_INTERIOR: '가구/인테리어',
+}
+
 function toSlide(p, i, adBanner = null) {
   return {
     type: 'product',
@@ -49,7 +61,8 @@ export default function HeroBanner({ promotions = [], userName = '', onNavigate,
         .then(data => setAdProduct(data))
         .catch(() => setAdProduct(null))
     } else if (adBanner.targetType === 'CATEGORY' && adBanner.category) {
-      getProducts({ category: adBanner.category, size: 20 })
+      const productCategory = AD_CATEGORY_TO_PRODUCT_CATEGORY[adBanner.category] ?? adBanner.category
+      getProducts({ category: productCategory, size: 20 })
         .then(res => {
           const list = res.content ?? []
           const product = list[Math.floor(Math.random() * list.length)] ?? null

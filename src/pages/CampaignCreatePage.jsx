@@ -42,14 +42,14 @@ const WEEKDAY_MAP = {
 const DISCOUNT_TYPE_DISPLAY = { FIXED: "정액", RATE: "정률" };
 const TARGET_TYPE_DISPLAY   = { PRODUCT: "상품", CATEGORY: "카테고리", KEYWORD: "키워드" };
 const CATEGORY_DISPLAY_MAP = {
-  DIGITAL_APPLIANCE: "가전/디지털",
+  DIGITAL_APPLIANCE: "디지털/가전",
   FASHION_CLOTHING: "패션의류",
   FASHION_ACCESSORY: "패션잡화",
-  BEAUTY: "뷰티",
+  BEAUTY: "화장품/미용",
   FOOD: "식품",
-  LIVING_HEALTH: "생활건강",
-  SPORTS_LEISURE: "스포츠레저",
-  FURNITURE_INTERIOR: "가구인테리어",
+  LIVING_HEALTH: "생활/건강",
+  SPORTS_LEISURE: "스포츠/레저",
+  FURNITURE_INTERIOR: "가구/인테리어",
 };
 
 const ISSUANCE_METHOD_OPTIONS = [
