@@ -4,6 +4,7 @@ import { campaignDelete, campaignUpdate, campaignStatusUpdate, getCampaignSmsSta
 import { eventList } from "../api/events";
 import { couponList } from "../api/coupons";
 import { adList } from "../api/ads";
+import { getProduct } from "../api/products";
 
 
 const OPERATORS_NUMBER   = ["≥ (이상)", "≤ (이하)", "> (초과)", "< (미만)", "= (동등)"];
@@ -56,6 +57,16 @@ const WEEKDAY_MAP = {
 };
 const DISCOUNT_TYPE_DISPLAY = { FIXED: "정액", RATE: "정률" };
 const TARGET_TYPE_DISPLAY   = { PRODUCT: "상품", CATEGORY: "카테고리", KEYWORD: "키워드" };
+const CATEGORY_DISPLAY_MAP = {
+  DIGITAL_APPLIANCE: "가전/디지털",
+  FASHION_CLOTHING: "패션의류",
+  FASHION_ACCESSORY: "패션잡화",
+  BEAUTY: "뷰티",
+  FOOD: "식품",
+  LIVING_HEALTH: "생활건강",
+  SPORTS_LEISURE: "스포츠레저",
+  FURNITURE_INTERIOR: "가구인테리어",
+};
 
 const STATUS_DISPLAY = {
   IN_PROGRESS: { cls: "cdp-badge-running", label: "수행중" },
@@ -358,6 +369,7 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
   const [eventsLoading, setEventsLoading] = useState(false);
   const [coupons,       setCoupons]       = useState([]);
   const [ads,           setAds]           = useState([]);
+  const [productNames,  setProductNames]  = useState({});
   const [rewardLoading, setRewardLoading] = useState(false);
 
   useEffect(() => {
@@ -371,7 +383,15 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
     Promise.all([couponList(), adList()])
       .then(([couponData, adData]) => {
         setCoupons(Array.isArray(couponData) ? couponData : []);
-        setAds(Array.isArray(adData) ? adData : []);
+        const adsArr = Array.isArray(adData) ? adData : [];
+        setAds(adsArr);
+
+        const productAds = adsArr.filter(a => a.targetType === "PRODUCT" && a.productId);
+        productAds.forEach(a => {
+          getProduct(a.productId)
+            .then(p => setProductNames(prev => ({ ...prev, [a.productId]: p?.name ?? p?.productName ?? `ID: ${a.productId}` })))
+            .catch(() => setProductNames(prev => ({ ...prev, [a.productId]: `ID: ${a.productId}` })));
+        });
       })
       .catch(err => console.error("리워드 조회 실패:", err))
       .finally(() => setRewardLoading(false));
@@ -872,7 +892,11 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
                 <div className="cdp-reward-empty">등록된 광고가 없습니다</div>
               ) : displayAds.map((a, idx) => {
                 const isSelected = selectedAd === a.adId;
-                const targetVal  = a.targetType === "PRODUCT" ? `ID: ${a.productId}` : (a.category || a.keyword || "–");
+                const targetVal  = a.targetType === "PRODUCT"
+                  ? (productNames[a.productId] ?? "불러오는 중...")
+                  : a.targetType === "CATEGORY"
+                    ? (CATEGORY_DISPLAY_MAP[a.category] ?? a.category ?? "–")
+                    : (a.keyword || "–");
                 return (
                   <div key={a.adId} style={{ ...S.row, ...S.rowAd, ...(isSelected ? S.rowSelected : {}), borderBottom: idx === displayAds.length - 1 ? "none" : "0.5px solid #F0F2F5" }}>
                     <div style={{ display: "flex", justifyContent: "center" }}>
@@ -882,7 +906,7 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
                     </div>
                     <span style={S.name}>{a.adName}</span>
                     <span style={{ ...S.cell, fontSize: 11 }}>{TARGET_TYPE_DISPLAY[a.targetType] ?? a.targetType}</span>
-                    <span style={S.code}>{targetVal}</span>
+                    <span style={{ ...S.code, wordBreak: "break-word" }}>{targetVal}</span>
                     <span style={S.subCell}>{a.createdAt?.substring(0, 10)}</span>
                   </div>
                 );
