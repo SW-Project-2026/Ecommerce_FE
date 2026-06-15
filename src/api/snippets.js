@@ -9,7 +9,7 @@ function getKSTTimestamp() {
   return kst.toISOString().replace('Z', '+09:00')
 }
 
-function getOrCreateUUID() {
+export function getOrCreateUUID() {
   let uuid = localStorage.getItem('client_uuid')
   if (!uuid) {
     uuid = crypto.randomUUID()
