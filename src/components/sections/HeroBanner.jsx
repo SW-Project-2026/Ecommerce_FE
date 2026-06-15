@@ -71,7 +71,7 @@ export default function HeroBanner({ promotions = [], userName = '', onNavigate,
     } else {
       setAdProduct(null)
     }
-  }, [adBanner])
+  }, [adBanner?.adId, adBanner?.targetType, adBanner?.productId, adBanner?.category, adBanner?.keyword])
 
   // 광고 슬라이드 구성
   const aiSlides = adProduct ? [toSlide(adProduct, 0, adBanner)] : []

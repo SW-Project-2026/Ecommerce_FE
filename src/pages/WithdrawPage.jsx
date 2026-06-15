@@ -58,8 +58,7 @@ export default function WithdrawPage({ onNavigate, onLogout, userId = null }) {
             <p className="wd-warn-title">⚠️ 탈퇴 시 아래 정보가 모두 삭제됩니다</p>
             <ul className="wd-warn-list">
               <li>주문 내역 및 배송 정보</li>
-              <li>적립 포인트 및 쿠폰</li>
-              <li>찜 목록 및 리뷰</li>
+              <li>찜 목록 및 쿠폰</li>
             </ul>
           </div>
 
