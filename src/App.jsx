@@ -122,6 +122,7 @@ export default function App() {
 
   useEffect(() => {
     if (page !== 'home') return
+    if (authLoading) return
     const userSeqId = localStorage.getItem('userSeqId')
     if (userSeqId) {
       getHomeByUser({ userId: userSeqId })
@@ -132,7 +133,7 @@ export default function App() {
     } else {
       getHome().then(data => setHomeData(data)).catch(() => {})
     }
-  }, [page, auth])
+  }, [page, auth, authLoading])
 
   // ── 쿠폰 팝업: pending 조회 ──
   useEffect(() => {
