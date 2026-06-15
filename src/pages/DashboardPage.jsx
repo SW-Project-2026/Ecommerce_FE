@@ -28,6 +28,8 @@ function defaultDateRange() {
   return { from: toDateStr(from), to: toDateStr(to) }
 }
 
+const PAGINATION_WINDOW = 3;
+
 export default function DashboardPage({ onNavigateToCustomer }) {
   const [summary,      setSummary]      = useState(null);
   const [monthlyData,  setMonthlyData]  = useState([]);
@@ -86,6 +88,11 @@ export default function DashboardPage({ onNavigateToCustomer }) {
     const { x, y, width, height, value } = props;
     return <rect x={x} y={y} width={width} height={height} fill={value === maxJoin ? "#3B477B" : "rgba(82,97,164,0.38)"} rx={3} />;
   };
+
+  const totalPages = pagination.totalPages;
+  const windowStart = Math.max(1, Math.min(currentPage - 1, totalPages - PAGINATION_WINDOW + 1));
+  const windowEnd   = Math.min(totalPages, windowStart + PAGINATION_WINDOW - 1);
+  const pageNumbers = Array.from({ length: Math.max(0, windowEnd - windowStart + 1) }, (_, i) => windowStart + i);
 
   return (
     <div className="db-main">
@@ -300,7 +307,14 @@ export default function DashboardPage({ onNavigateToCustomer }) {
             </table>
 
             <div className="db-pagination">
-              {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map(p => (
+              <button
+                className="db-page-btn db-page-arrow"
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage <= 1}
+              >
+                &lt;
+              </button>
+              {pageNumbers.map(p => (
                 <button
                   key={p}
                   className={`db-page-btn ${currentPage === p ? "db-page-active" : ""}`}
@@ -309,6 +323,13 @@ export default function DashboardPage({ onNavigateToCustomer }) {
                   {p}
                 </button>
               ))}
+              <button
+                className="db-page-btn db-page-arrow"
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage >= totalPages}
+              >
+                &gt;
+              </button>
             </div>
           </div>
         </div>
