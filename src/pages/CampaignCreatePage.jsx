@@ -71,6 +71,19 @@ function today() {
   return new Date().toISOString().split("T")[0];
 }
 
+// "2026-01-10" -> "2026-01-10T00:00:00.000+09:00"
+function dateToIsoValue(dateStr) {
+  if (!dateStr) return "";
+  return `${dateStr}T00:00:00.000+09:00`;
+}
+
+// "2026-01-10T00:00:00.000+09:00" -> "2026-01-10"
+function isoValueToDate(value) {
+  if (!value) return "";
+  const match = value.match(/^(\d{4}-\d{2}-\d{2})/);
+  return match ? match[1] : "";
+}
+
 const S = {
   rewardTable: { width: "100%", borderRadius: 8, overflow: "hidden", border: "1px solid #EBEDF0" },
   rewardHeader: { display: "grid", alignItems: "center", padding: "10px 16px", background: "#F7FAFF", borderBottom: "1px solid #EBEDF0" },
@@ -357,6 +370,14 @@ export default function CampaignCreatePage({ onNavigate }) {
                         <option value="마이페이지">마이페이지</option>
                         <option value="회원탈퇴">회원탈퇴</option>
                       </select>
+                    ) : (f.dataType === "DATETIME" || f.dataType === "DATE") ? (
+                      <input
+                        type="date"
+                        className="cc-input cc-input-sm"
+                        value={isoValueToDate(f.value)}
+                        onChange={e => updateFilter(f.id, "value", dateToIsoValue(e.target.value))}
+                        disabled={!f.operator}
+                      />
                     ) : (
                       <input className="cc-input cc-input-sm" placeholder="값 입력" value={f.value} onChange={e => updateFilter(f.id, "value", e.target.value)} disabled={!f.operator} />
                     )}

@@ -106,6 +106,19 @@ function today() {
   return new Date().toISOString().split("T")[0];
 }
 
+// "2026-01-10" -> "2026-01-10T00:00:00.000+09:00"
+function dateToIsoValue(dateStr) {
+  if (!dateStr) return "";
+  return `${dateStr}T00:00:00.000+09:00`;
+}
+
+// "2026-01-10T00:00:00.000+09:00" -> "2026-01-10"
+function isoValueToDate(value) {
+  if (!value) return "";
+  const match = value.match(/^(\d{4}-\d{2}-\d{2})/);
+  return match ? match[1] : "";
+}
+
 function initBatchSchedule(campaign) {
   const cycle      = CYCLE_DISPLAY_MAP[campaign?.batchCycle] ?? "매일";
   const timeStr    = campaign?.batchTime ?? "09:00";
@@ -679,8 +692,18 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
                         </select>}
                   </div>
                   <div className="cdp-fc">
-                    {isReadOnly ? <span className="cdp-cell-val">{f.value || "–"}</span>
-                      : <input className="cdp-input cdp-input-sm" value={f.value} onChange={e => updateFilter(f.id, "value", e.target.value)} disabled={!f.operator} placeholder="값 입력" />}
+                    {isReadOnly ? <span className="cdp-cell-val">{(f.dataType === "DATETIME" || f.dataType === "DATE") ? (isoValueToDate(f.value) || f.value || "–") : (f.value || "–")}</span>
+                      : (f.dataType === "DATETIME" || f.dataType === "DATE") ? (
+                          <input
+                            type="date"
+                            className="cdp-input cdp-input-sm"
+                            value={isoValueToDate(f.value)}
+                            onChange={e => updateFilter(f.id, "value", dateToIsoValue(e.target.value))}
+                            disabled={!f.operator}
+                          />
+                        ) : (
+                          <input className="cdp-input cdp-input-sm" value={f.value} onChange={e => updateFilter(f.id, "value", e.target.value)} disabled={!f.operator} placeholder="값 입력" />
+                        )}
                   </div>
                   <div className="cdp-fc">
                     {isReadOnly ? <span className="cdp-cell-val">최근 {f.period}일</span>
