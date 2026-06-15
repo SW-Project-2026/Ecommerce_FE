@@ -23,7 +23,7 @@ import { usePageView } from './hooks/usePageView'
 import { getMyProfile } from './api/users'
 import { refreshToken } from './api/auth'
 import { cartGet } from './api/carts'
-import { userLogin as snippetUserLogin } from './api/snippets'
+import { userLogin as snippetUserLogin, getOrCreateUUID } from './api/snippets'
 import { getHome, getHomeByUser } from './api/home'
 import { wishlistGet } from './api/wishlists'
 import './App.css'
@@ -137,10 +137,13 @@ export default function App() {
 
   // ── 쿠폰 팝업: pending 조회 ──
   useEffect(() => {
+    if (authLoading) return
     const userSeqId = localStorage.getItem('userSeqId')
-    if (!auth || !userSeqId) return
+    const query = (auth && userSeqId)
+      ? `userId=${userSeqId}`
+      : `clientUuid=${getOrCreateUUID()}`
 
-    fetch(`${FLUENTD_URL}/api/notifications/pending?userId=${userSeqId}`)
+    fetch(`${FLUENTD_URL}/api/notifications/pending?${query}`)
       .then(res => res.json())
       .then(list => {
         if (Array.isArray(list) && list.length > 0) {
@@ -156,21 +159,22 @@ export default function App() {
               maxDiscountAmount: first.maxDiscountAmount ?? null,
             })
           }
-          fetch(`${FLUENTD_URL}/api/notifications/pending?userId=${userSeqId}`, { method: 'DELETE' })
+          fetch(`${FLUENTD_URL}/api/notifications/pending?${query}`, { method: 'DELETE' })
             .catch(() => {})
         }
       })
       .catch(() => {})
-  }, [auth])
+  }, [auth, authLoading])
 
   // ── 쿠폰 팝업: SSE 연결 ──
   useEffect(() => {
+    if (authLoading) return
     const userSeqId = localStorage.getItem('userSeqId')
-    let es = null
+    const query = (auth && userSeqId)
+      ? `userId=${userSeqId}`
+      : `clientUuid=${getOrCreateUUID()}`
 
-    if (!auth || !userSeqId) return
-
-    es = new EventSource(`${FLUENTD_URL}/api/notifications/stream?userId=${userSeqId}`)
+    const es = new EventSource(`${FLUENTD_URL}/api/notifications/stream?${query}`)
 
     es.addEventListener('campaign', (e) => {
       try {
@@ -199,7 +203,7 @@ export default function App() {
     return () => {
       es.close()
     }
-  }, [auth])
+  }, [auth, authLoading])
 
   useEffect(() => {
     if (!auth) { setCartCount(0); return }
