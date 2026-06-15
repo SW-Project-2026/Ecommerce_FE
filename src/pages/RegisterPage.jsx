@@ -49,7 +49,7 @@ export default function RegisterPage({ onNavigate, onLogin }) {
     try {
       const phone = form.phone.replace(/-/g, '')
       const data = await signup({ ...form, phone, marketingAgreed: agreements.marketing })
-      onLogin(data)
+      await onLogin(data)
       userLogin({ userId: form.loginId })
       onNavigate('home')
     } catch (err) {

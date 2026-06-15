@@ -221,7 +221,6 @@ export default function App() {
   async function handleLogin(data) {
     setCookie('accessToken', data.accessToken)
     localStorage.setItem('role', data.role)
-    setAuth({ role: data.role, userId: null })
 
     try {
       const profile = await getMyProfile()
@@ -234,7 +233,7 @@ export default function App() {
         snippetUserLogin({ userId })
       }
     } catch {
-      // userId 없이 진행
+      setAuth({ role: data.role, userId: null })
     }
 
     if (data.role === 'ADMIN') {

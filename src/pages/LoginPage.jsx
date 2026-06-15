@@ -22,7 +22,7 @@ export default function LoginPage({ onNavigate, onLogin }) {
     setError('')
     try {
       const data = await login({ loginId, password })
-      onLogin(data)
+      await onLogin(data)
       if (data.role !== 'ADMIN') {
         onNavigate('home')
       }
