@@ -380,3 +380,9 @@
   color: #FFFFFF;
   font-weight: 700;
 }
+
+.db-page-btn:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+.db-page-btn:disabled:hover { background: #F3F3F3; }
