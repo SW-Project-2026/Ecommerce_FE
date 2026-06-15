@@ -239,6 +239,9 @@ export default function App() {
     if (data.role === 'ADMIN') {
       window.location.href = '/#admin'
       window.location.reload()
+    } else {
+      sessionStorage.setItem('page', 'home')
+      window.location.reload()
     }
   }
 
@@ -246,10 +249,11 @@ export default function App() {
     clearAuth()
     setAuth(null)
     setCartCount(0)
-    setPage('home')
     setCouponPopup(null)
     setHomeData(null)
     setWishMap({})
+    sessionStorage.setItem('page', 'home')
+    window.location.reload()
   }
 
   function handleAddToCart(product, qty = 1) {
