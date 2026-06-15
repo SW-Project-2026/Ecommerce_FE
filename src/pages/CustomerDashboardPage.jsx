@@ -29,6 +29,7 @@ export default function CustomerDashboardPage({ userId, onBack }) {
   const [detail,       setDetail]       = useState(null);
   const [loginId,      setLoginId]      = useState(null);
   const [dateRange,    setDateRange]    = useState(() => defaultDateRange());
+  const [draftDateRange, setDraftDateRange] = useState(() => defaultDateRange());
   const [orders,       setOrders]       = useState([]);
   const [cart,         setCart]         = useState([]);
   const [wishlist,     setWishlist]     = useState([]);
@@ -228,19 +229,26 @@ export default function CustomerDashboardPage({ userId, onBack }) {
             <input
               type="date"
               className="cd-date-input"
-              value={dateRange.from}
-              max={dateRange.to}
-              onChange={e => setDateRange(prev => ({ ...prev, from: e.target.value }))}
+              value={draftDateRange.from}
+              max={draftDateRange.to}
+              onChange={e => setDraftDateRange(prev => ({ ...prev, from: e.target.value }))}
             />
             <span className="cd-date-tilde">~</span>
             <input
               type="date"
               className="cd-date-input"
-              value={dateRange.to}
-              min={dateRange.from}
+              value={draftDateRange.to}
+              min={draftDateRange.from}
               max={toDateStr(new Date())}
-              onChange={e => setDateRange(prev => ({ ...prev, to: e.target.value }))}
+              onChange={e => setDraftDateRange(prev => ({ ...prev, to: e.target.value }))}
             />
+            <button
+              className="cd-date-apply-btn"
+              onClick={() => setDateRange(draftDateRange)}
+              disabled={draftDateRange.from === dateRange.from && draftDateRange.to === dateRange.to}
+            >
+              적용
+            </button>
           </div>
           <button className="cd-back-btn" onClick={onBack}>← 고객 목록</button>
         </div>

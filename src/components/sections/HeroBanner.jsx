@@ -97,8 +97,10 @@ export default function HeroBanner({ promotions = [], userName = '', onNavigate,
   // 광고 슬라이드 구성
   const aiSlides = adSlides.map((slide, i) => ({ ...slide, tag: TAGS[i % TAGS.length] }))
 
-  const eventSlides = promotions.length > 0
-    ? promotions.map((p, i) => ({
+  const visiblePromotions = promotions.filter(p => p.couponId !== 10)
+
+  const eventSlides = visiblePromotions.length > 0
+    ? visiblePromotions.map((p, i) => ({
         title: <>
           {p.couponName}<br />
           {p.discountType === 'RATE'

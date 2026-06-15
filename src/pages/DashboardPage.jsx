@@ -40,6 +40,7 @@ export default function DashboardPage({ onNavigateToCustomer }) {
   const [currentPage,  setCurrentPage]  = useState(1);
   const [loading,      setLoading]      = useState(true);
   const [dateRange,    setDateRange]    = useState(() => defaultDateRange());
+  const [draftDateRange, setDraftDateRange] = useState(() => defaultDateRange());
 
   useEffect(() => {
     setLoading(true);
@@ -105,19 +106,26 @@ export default function DashboardPage({ onNavigateToCustomer }) {
           <input
             type="date"
             className="db-date-input"
-            value={dateRange.from}
-            max={dateRange.to}
-            onChange={e => setDateRange(prev => ({ ...prev, from: e.target.value }))}
+            value={draftDateRange.from}
+            max={draftDateRange.to}
+            onChange={e => setDraftDateRange(prev => ({ ...prev, from: e.target.value }))}
           />
           <span className="db-date-tilde">~</span>
           <input
             type="date"
             className="db-date-input"
-            value={dateRange.to}
-            min={dateRange.from}
+            value={draftDateRange.to}
+            min={draftDateRange.from}
             max={toDateStr(new Date())}
-            onChange={e => setDateRange(prev => ({ ...prev, to: e.target.value }))}
+            onChange={e => setDraftDateRange(prev => ({ ...prev, to: e.target.value }))}
           />
+          <button
+            className="db-date-apply-btn"
+            onClick={() => setDateRange(draftDateRange)}
+            disabled={draftDateRange.from === dateRange.from && draftDateRange.to === dateRange.to}
+          >
+            적용
+          </button>
         </div>
       </div>
 
