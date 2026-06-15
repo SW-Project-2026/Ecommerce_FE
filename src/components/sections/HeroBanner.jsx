@@ -45,49 +45,57 @@ function toSlide(p, i, adBanner = null) {
   }
 }
 
-export default function HeroBanner({ promotions = [], userName = '', onNavigate, adBanner = null, onPromotionClick, userId = null }) {
+export default function HeroBanner({ promotions = [], userName = '', onNavigate, adBanners = [], onPromotionClick, userId = null }) {
   const [activeSlide, setActiveSlide] = useState(0)
   const [activeEvent, setActiveEvent] = useState(0)
   const [pauseAI,    setPauseAI]    = useState(false)
   const [pauseEvent, setPauseEvent] = useState(false)
-  const [adProduct,  setAdProduct]  = useState(null)
+  const [adSlides,   setAdSlides]   = useState([])
 
-  // 광고 배너 상품 정보 조회
+  // 광고 배너들의 상품 정보 조회
   useEffect(() => {
-    if (!adBanner) { setAdProduct(null); return }
+    if (!adBanners || adBanners.length === 0) { setAdSlides([]); return }
 
-    if (adBanner.targetType === 'PRODUCT' && adBanner.productId) {
-      getProduct(adBanner.productId)
-        .then(data => setAdProduct(data))
-        .catch(() => setAdProduct(null))
-    } else if (adBanner.targetType === 'CATEGORY' && adBanner.category) {
-      const productCategory = AD_CATEGORY_TO_PRODUCT_CATEGORY[adBanner.category] ?? adBanner.category
-      getProducts({ category: productCategory, size: 20 })
-        .then(res => {
+    let cancelled = false
+
+    async function fetchOne(adBanner) {
+      try {
+        if (adBanner.targetType === 'PRODUCT' && adBanner.productId) {
+          const data = await getProduct(adBanner.productId)
+          return data ? toSlide(data, 0, adBanner) : null
+        } else if (adBanner.targetType === 'CATEGORY' && adBanner.category) {
+          const productCategory = AD_CATEGORY_TO_PRODUCT_CATEGORY[adBanner.category] ?? adBanner.category
+          const res = await getProducts({ category: productCategory, size: 20 })
           const list = res.content ?? []
           const product = list[Math.floor(Math.random() * list.length)] ?? null
-          setAdProduct(product)
-        })
-        .catch(() => setAdProduct(null))
-    } else if (adBanner.targetType === 'KEYWORD' && adBanner.keyword) {
-      searchProducts({ query: adBanner.keyword, display: 20 })
-        .then(res => {
+          return product ? toSlide(product, 0, adBanner) : null
+        } else if (adBanner.targetType === 'KEYWORD' && adBanner.keyword) {
+          const res = await searchProducts({ query: adBanner.keyword, display: 20 })
           const list = res.products ?? []
           const product = list[Math.floor(Math.random() * list.length)] ?? null
-          setAdProduct(product)
-        })
-        .catch(() => setAdProduct(null))
-    } else if (adBanner.productId) {
-      getProduct(adBanner.productId)
-        .then(data => setAdProduct(data))
-        .catch(() => setAdProduct(null))
-    } else {
-      setAdProduct(null)
+          return product ? toSlide(product, 0, adBanner) : null
+        } else if (adBanner.productId) {
+          const data = await getProduct(adBanner.productId)
+          return data ? toSlide(data, 0, adBanner) : null
+        }
+        return null
+      } catch {
+        return null
+      }
     }
-  }, [adBanner?.adId, adBanner?.targetType, adBanner?.productId, adBanner?.category, adBanner?.keyword])
+
+    Promise.all(adBanners.map(fetchOne)).then(results => {
+      if (cancelled) return
+      setAdSlides(results.filter(Boolean))
+    })
+
+    return () => { cancelled = true }
+  }, [JSON.stringify((adBanners ?? []).map(a => ({
+      adId: a.adId, targetType: a.targetType, productId: a.productId, category: a.category, keyword: a.keyword,
+    })))])
 
   // 광고 슬라이드 구성
-  const aiSlides = adProduct ? [toSlide(adProduct, 0, adBanner)] : []
+  const aiSlides = adSlides.map((slide, i) => ({ ...slide, tag: TAGS[i % TAGS.length] }))
 
   const eventSlides = promotions.length > 0
     ? promotions.map((p, i) => ({
@@ -115,6 +123,13 @@ export default function HeroBanner({ promotions = [], userName = '', onNavigate,
       userId,
     }).catch(() => {})
   }, [activeSlide, aiSlides.length])
+
+  // adSlides 변경 시 activeSlide 범위 보정
+  useEffect(() => {
+    if (activeSlide >= aiSlides.length && aiSlides.length > 0) {
+      setActiveSlide(0)
+    }
+  }, [aiSlides.length])
 
   const aiLen    = Math.max(aiSlides.length, 1)
   const eventLen = eventSlides.length

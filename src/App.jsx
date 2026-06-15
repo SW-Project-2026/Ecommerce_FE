@@ -440,7 +440,7 @@ export default function App() {
             promotions={homeData?.promotions ?? []}
             userName={homeData?.userName ?? ''}
             onNavigate={handleNavigate}
-            adBanner={homeData?.adBanner ?? null}
+            adBanners={homeData?.adBanners ?? []}
             auth={auth}
             userId={userId}
             onPromotionClick={(couponId) => {
