@@ -477,27 +477,32 @@ export default function App() {
             onNavigate={handleNavigate}
             auth={auth}
             products={homeData?.recommendedProducts ?? []}
+            isFallback={!!(auth && homeData?.recentViewedFallback && homeData?.purchasedFallback)}
             wishMap={wishMap}
             setWishMap={setWishMap}
           />
-          <RecentViewedSection
-            onNavigate={handleNavigate}
-            auth={auth}
-            products={auth ? (homeData?.recentViewedProducts ?? []) : []}
-            fallbackProducts={homeData?.recommendedProducts ?? []}
-            isFallback={!!(auth && homeData?.recentViewedFallback)}
-            wishMap={wishMap}
-            setWishMap={setWishMap}
-          />
-          <PurchasedSection
-            onNavigate={handleNavigate}
-            auth={auth}
-            products={auth ? (homeData?.purchasedProducts ?? []) : []}
-            fallbackProducts={homeData?.recommendedProducts ?? []}
-            isFallback={!!(auth && homeData?.purchasedFallback)}
-            wishMap={wishMap}
-            setWishMap={setWishMap}
-          />
+          {!(homeData?.recentViewedFallback && homeData?.purchasedFallback) && (
+            <RecentViewedSection
+              onNavigate={handleNavigate}
+              auth={auth}
+              products={auth ? (homeData?.recentViewedProducts ?? []) : []}
+              fallbackProducts={homeData?.recommendedProducts ?? []}
+              isFallback={!!(auth && homeData?.recentViewedFallback)}
+              wishMap={wishMap}
+              setWishMap={setWishMap}
+            />
+          )}
+          {!(homeData?.recentViewedFallback && homeData?.purchasedFallback) && (
+            <PurchasedSection
+              onNavigate={handleNavigate}
+              auth={auth}
+              products={auth ? (homeData?.purchasedProducts ?? []) : []}
+              fallbackProducts={homeData?.recommendedProducts ?? []}
+              isFallback={!!(auth && homeData?.purchasedFallback)}
+              wishMap={wishMap}
+              setWishMap={setWishMap}
+            />
+          )}
           <BestSection
             onNavigate={handleNavigate}
             auth={auth}
