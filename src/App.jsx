@@ -331,6 +331,9 @@ export default function App() {
     if (target === 'cart' || target === 'home') {
       fetchCartCount()
     }
+    if (target === 'login' || target === 'register') {
+      setCouponQueue([])
+    }
     window.scrollTo(0, 0)
     sessionStorage.setItem('page', target)
     setPage(target)
