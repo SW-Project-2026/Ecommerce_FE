@@ -840,13 +840,13 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
               ) : (
                 <div className="cdp-dedupe-section">
                   <div className="cdp-dedupe-cards">
-                    <div className={`cdp-dedupe-card ${dedupeType === "none" ? "cdp-dedupe-card-inactive" : "cdp-dedupe-card-default"}`} onClick={() => setDedupeType("none")}>
-                      <div style={{ width: 18, height: 18, borderRadius: "50%", border: "1.5px solid #E0E4E8", background: "#FFFFFF", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                        {dedupeType === "none" && <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#E0E4E8" }} />}
+                    <div className={`cdp-dedupe-card ${dedupeType === "none" ? "cdp-dedupe-card-active" : "cdp-dedupe-card-default"}`} onClick={() => setDedupeType("none")}>
+                      <div style={{ width: 18, height: 18, borderRadius: "50%", border: dedupeType === "none" ? "1.5px solid #4F6EF7" : "1.5px solid #A6A8B8", background: dedupeType === "none" ? "#4F6EF7" : "#FFFFFF", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        {dedupeType === "none" && <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#FFFFFF" }} />}
                       </div>
                       <div>
-                        <div className="cdp-dedupe-card-title" style={{ color: dedupeType === "none" ? "#0F1E3D" : "#9EA6B5" }}>사용 안 함</div>
-                        <div className="cdp-dedupe-card-desc" style={{ color: dedupeType === "none" ? "rgba(90,106,138,0.75)" : "#C0C5D0" }}>중복 제거 없이 조건 충족 시 항상 발송</div>
+                        <div className="cdp-dedupe-card-title" style={{ color: dedupeType === "none" ? "#4F6EF7" : "#9EA6B5" }}>사용 안 함</div>
+                        <div className="cdp-dedupe-card-desc" style={{ color: dedupeType === "none" ? "rgba(79,110,247,0.75)" : "#C0C5D0" }}>중복 제거 없이 조건 충족 시 항상 발송</div>
                       </div>
                     </div>
                     <div className={`cdp-dedupe-card ${dedupeType === "once" ? "cdp-dedupe-card-active" : "cdp-dedupe-card-default"}`} onClick={() => setDedupeType("once")}>
