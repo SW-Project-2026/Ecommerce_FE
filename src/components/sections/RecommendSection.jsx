@@ -3,7 +3,7 @@ import ProductCard from '../common/ProductCard'
 
 const CARD_STEP = 332
 
-export default function RecommendSection({ onNavigate, auth, products = [], category = '', wishMap = {}, setWishMap }) {
+export default function RecommendSection({ onNavigate, auth, products = [], category = '', isFallback = false, wishMap = {}, setWishMap }) {
   const [offset, setOffset] = useState(0)
   const maxOffset = Math.max(0, (products.length - 4) * CARD_STEP)
 
@@ -13,8 +13,8 @@ export default function RecommendSection({ onNavigate, auth, products = [], cate
 
   if (products.length === 0) return null
 
-  // 비로그인 시 4개씩 3줄 그리드
-  if (!auth) {
+  // 비로그인 또는 로그인 후 fallback 시 4개씩 3줄 그리드
+  if (!auth || isFallback) {
     const gridProducts = products.slice(0, 12)
     return (
       <section className="section-recommend" style={{ height: 'auto', paddingBottom: 40 }}>
