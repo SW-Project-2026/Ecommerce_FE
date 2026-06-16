@@ -137,6 +137,14 @@ export default function CheckoutPage({ checkoutItems, selectedCoupon, onNavigate
       }
 
       // 3. 주문 생성 → POST /api/orders
+      // 주문 전 쿠폰 ID 목록 저장 (주문 완료 후 신규 쿠폰 판별용)
+      try {
+        const { userCouponList } = await import('../api/coupons')
+        const couponData = await userCouponList({ status: 'AVAILABLE', size: 100 })
+        const ids = (couponData.content ?? []).map(c => c.userCouponId)
+        sessionStorage.setItem('preOrderCouponIds', JSON.stringify(ids))
+      } catch {}
+
       const orderResult = await orderCreate({
         addressId:    selectedAddrId,
         userCouponId: selectedCoupon?.userCouponId ?? null,
