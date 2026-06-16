@@ -260,6 +260,9 @@ export default function App() {
       window.location.href = '/#admin'
       window.location.reload()
     } else {
+      const clientUuid = getOrCreateUUID()
+      fetch(`${FLUENTD_URL}/api/notifications/pending?clientUuid=${clientUuid}`, { method: 'DELETE' })
+        .catch(() => {})
       sessionStorage.setItem('page', 'home')
       window.location.reload()
     }
