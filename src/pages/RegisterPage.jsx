@@ -51,7 +51,6 @@ export default function RegisterPage({ onNavigate, onLogin }) {
       const data = await signup({ ...form, phone, marketingAgreed: agreements.marketing })
       await onLogin(data)
       userLogin({ userId: form.loginId })
-      onNavigate('home')
     } catch (err) {
       setError(err.message)
     } finally {

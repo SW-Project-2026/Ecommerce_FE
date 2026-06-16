@@ -16,9 +16,6 @@ export default function CouponPopup({ coupon, onClose, onDismiss, userId = null,
     if (downloaded || downloading) return;
 
     if (!isLoggedIn) {
-      try {
-        sessionStorage.setItem('pendingCouponPopup', JSON.stringify(coupon));
-      } catch {}
       onClose?.()
       onNavigate?.('register');
       return;
