@@ -435,7 +435,11 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
   const [selectedCoupon, setSelectedCoupon] = useState(campaign?.couponId ?? null);
   const [selectedAd,     setSelectedAd]     = useState(campaign?.adId     ?? null);
 
-  const [dedupeType, setDedupeType] = useState(campaign?.duplicatePolicy === "CHECK" ? "period" : "none");
+  const [dedupeType, setDedupeType] = useState(() => {
+    if (campaign?.duplicatePolicy !== "CHECK") return "none";
+    if (campaign?.couponRestrictionDays == null) return "once";
+    return "period";
+  });
   const [dedupeDays, setDedupeDays] = useState(campaign?.couponRestrictionDays ? String(campaign.couponRestrictionDays) : "30");
 
   const [issuanceMethod, setIssuanceMethod] = useState(() => {
@@ -533,7 +537,7 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
         messageType:           isMessaging ? (isLms ? "LMS" : "SMS") : null,
         messageSubject:        isLms ? msgTitle : null,
         messageContent:        isMessaging ? msgContent : null,
-        duplicatePolicy:       dedupeType === "period" ? "CHECK" : null,
+        duplicatePolicy:       dedupeType !== "none" ? "CHECK" : null,
         couponRestrictionDays: dedupeType === "period" ? parseInt(dedupeDays, 10) : null,
         filters:               apiFilters,
       });
@@ -562,9 +566,11 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
     ? selectedCoupon ? ["쿠폰"] : selectedAd ? ["광고"] : []
     : ["쿠폰", "광고"];
 
-  const dedupeReadLabel = dedupeType === "period"
-    ? `기간 설정 — ${dedupeDays}일 이내 수신 이력 있으면 발송 제외`
-    : "사용 안 함";
+  const dedupeReadLabel = dedupeType === "once"
+    ? "1회만 발송 — 발송 이력 있으면 무조건 제외"
+    : dedupeType === "period"
+      ? `기간 설정 — ${dedupeDays}일 이내 수신 이력 있으면 발송 제외`
+      : "사용 안 함";
 
   const selectedCouponName = coupons.find(c => c.couponId === selectedCoupon)?.name ?? "쿠폰명";
   const showSendStatus = isReadOnly && selectedCoupon && isMessaging;
@@ -841,6 +847,15 @@ export default function CampaignDetailPage({ campaign, onNavigate }) {
                       <div>
                         <div className="cdp-dedupe-card-title" style={{ color: dedupeType === "none" ? "#0F1E3D" : "#9EA6B5" }}>사용 안 함</div>
                         <div className="cdp-dedupe-card-desc" style={{ color: dedupeType === "none" ? "rgba(90,106,138,0.75)" : "#C0C5D0" }}>중복 제거 없이 조건 충족 시 항상 발송</div>
+                      </div>
+                    </div>
+                    <div className={`cdp-dedupe-card ${dedupeType === "once" ? "cdp-dedupe-card-active" : "cdp-dedupe-card-default"}`} onClick={() => setDedupeType("once")}>
+                      <div style={{ width: 18, height: 18, borderRadius: "50%", border: dedupeType === "once" ? "1.5px solid #4F6EF7" : "1.5px solid #A6A8B8", background: dedupeType === "once" ? "#4F6EF7" : "#FFFFFF", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        {dedupeType === "once" && <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#FFFFFF" }} />}
+                      </div>
+                      <div>
+                        <div className="cdp-dedupe-card-title" style={{ color: dedupeType === "once" ? "#4F6EF7" : "#0F1E3D" }}>1회만 발송</div>
+                        <div className="cdp-dedupe-card-desc" style={{ color: dedupeType === "once" ? "rgba(79,110,247,0.75)" : "rgba(90,106,138,0.75)" }}>발송 이력이 있으면 무조건 발송 제외 (기간 무관)</div>
                       </div>
                     </div>
                     <div className={`cdp-dedupe-card ${dedupeType === "period" ? "cdp-dedupe-card-active" : "cdp-dedupe-card-default"}`} onClick={() => setDedupeType("period")}>
