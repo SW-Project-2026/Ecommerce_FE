@@ -485,6 +485,7 @@ export default function App() {
             auth={auth}
             products={auth ? (homeData?.recentViewedProducts ?? []) : []}
             fallbackProducts={homeData?.recommendedProducts ?? []}
+            isFallback={!!(auth && homeData?.recentViewedFallback)}
             wishMap={wishMap}
             setWishMap={setWishMap}
           />
@@ -493,6 +494,7 @@ export default function App() {
             auth={auth}
             products={auth ? (homeData?.purchasedProducts ?? []) : []}
             fallbackProducts={homeData?.recommendedProducts ?? []}
+            isFallback={!!(auth && homeData?.purchasedFallback)}
             wishMap={wishMap}
             setWishMap={setWishMap}
           />
