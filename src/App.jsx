@@ -266,6 +266,9 @@ export default function App() {
   }
 
   function handleLogout() {
+    const clientUuid = getOrCreateUUID()
+    fetch(`${FLUENTD_URL}/api/notifications/pending?clientUuid=${clientUuid}`, { method: 'DELETE' })
+      .catch(() => {})
     clearAuth()
     setAuth(null)
     setCartCount(0)
