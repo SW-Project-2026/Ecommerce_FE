@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import NavHeader from './components/layout/NavHeader'
 import CategoryBar from './components/layout/CategoryBar'
 import Footer from './components/layout/Footer'
@@ -73,15 +73,21 @@ export default function App() {
   const [couponQueue,  setCouponQueue]  = useState([])
   const [promotionCouponId, setPromotionCouponId] = useState(null)
 
+  const dismissedIds = useRef(new Set())
+
   const addToQueue = (coupon) => {
     if (!coupon?.couponId) return
+    if (dismissedIds.current.has(coupon.couponId)) return
     setCouponQueue(prev => {
       if (prev.some(c => c.couponId === coupon.couponId)) return prev
       return [...prev, coupon]
     })
   }
 
-  const dismissQueue = () => setCouponQueue(prev => prev.slice(1))
+  const dismissQueue = () => setCouponQueue(prev => {
+    if (prev.length > 0) dismissedIds.current.add(prev[0].couponId)
+    return prev.slice(1)
+  })
 
   useEffect(() => {
     async function initAuth() {

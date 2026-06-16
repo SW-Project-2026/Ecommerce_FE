@@ -42,8 +42,13 @@ export default function OrderCompletePage({ orderInfo, onNavigate, userId = null
 
   useEffect(() => {
     if (!userId) return
-    userCouponList({ status: 'AVAILABLE', size: 20 })
-      .then(data => {
+    let count = 0
+    const MAX_TRIES = 5
+    const INTERVAL = 2000
+
+    const timer = setInterval(async () => {
+      try {
+        const data = await userCouponList({ status: 'AVAILABLE', size: 20 })
         const latest = data.content?.[0] ?? null
         if (latest) {
           const discountDisplay = latest.discountType === 'FIXED'
@@ -53,9 +58,14 @@ export default function OrderCompletePage({ orderInfo, onNavigate, userId = null
             title: `${latest.couponName} 지급!`,
             description: `${discountDisplay} 할인 쿠폰이 마이페이지에 지급되었습니다.`,
           })
+          clearInterval(timer)
+          return
         }
-      })
-      .catch(() => {})
+      } catch {}
+      if (++count >= MAX_TRIES) clearInterval(timer)
+    }, INTERVAL)
+
+    return () => clearInterval(timer)
   }, [userId])
 
   return (

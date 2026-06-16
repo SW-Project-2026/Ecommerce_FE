@@ -247,7 +247,7 @@ export default function CampaignCreatePage({ onNavigate }) {
         filterLogicalOperator: filterLogic,
         couponId:              selectedCoupon ?? null,
         adId:                  selectedAd     ?? null,
-        duplicatePolicy:       dedupeType === "period" ? "CHECK" : null,
+        duplicatePolicy:       dedupeType !== "none" ? "CHECK" : null,
         couponRestrictionDays: dedupeType === "period" ? parseInt(dedupeDays, 10) : null,
         issueType:             (isMessaging || isLms) ? "MESSAGE" : issuanceMethod,
         messageType:           isMessaging ? "SMS" : isLms ? "LMS" : null,
@@ -487,6 +487,15 @@ export default function CampaignCreatePage({ onNavigate }) {
                     <div>
                       <div className="cc-dedupe-card-title" style={{ color: dedupeType === "none" ? "#0F1E3D" : "#9EA6B5" }}>사용 안 함</div>
                       <div className="cc-dedupe-card-desc" style={{ color: dedupeType === "none" ? "rgba(90,106,138,0.75)" : "#C0C5D0" }}>중복 제거 없이 조건 충족 시 항상 발송</div>
+                    </div>
+                  </div>
+                  <div className={`cc-dedupe-card ${dedupeType === "once" ? "cc-dedupe-card-active" : "cc-dedupe-card-default"}`} onClick={() => setDedupeType("once")}>
+                    <div style={{ width: 18, height: 18, borderRadius: "50%", border: dedupeType === "once" ? "1.5px solid #4F6EF7" : "1.5px solid #A6A8B8", background: dedupeType === "once" ? "#4F6EF7" : "#FFFFFF", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      {dedupeType === "once" && <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#FFFFFF" }} />}
+                    </div>
+                    <div>
+                      <div className="cc-dedupe-card-title" style={{ color: dedupeType === "once" ? "#4F6EF7" : "#0F1E3D" }}>1회만 발송</div>
+                      <div className="cc-dedupe-card-desc" style={{ color: dedupeType === "once" ? "rgba(79,110,247,0.75)" : "rgba(90,106,138,0.75)" }}>발송 이력이 있으면 무조건 발송 제외 (기간 무관)</div>
                     </div>
                   </div>
                   <div className={`cc-dedupe-card ${dedupeType === "period" ? "cc-dedupe-card-active" : "cc-dedupe-card-default"}`} onClick={() => setDedupeType("period")}>
