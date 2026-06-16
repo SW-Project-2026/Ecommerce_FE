@@ -3,12 +3,10 @@ import ProductCard from '../common/ProductCard'
 
 const CARD_STEP = 332
 
-export default function RecentViewedSection({ onNavigate, auth, products = [], fallbackProducts = [], wishMap = {}, setWishMap }) {
+export default function RecentViewedSection({ onNavigate, auth, products = [], fallbackProducts = [], isFallback = false, wishMap = {}, setWishMap }) {
   const [offset, setOffset] = useState(0)
 
-  const isFallback = auth && products.length < 4
   const displayProducts = isFallback ? fallbackProducts.slice(0, 12) : products
-
   const maxOffset = Math.max(0, (displayProducts.length - 4) * CARD_STEP)
 
   function handleNext() {
