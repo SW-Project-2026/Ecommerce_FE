@@ -3,27 +3,33 @@ import ProductCard from '../common/ProductCard'
 
 const CARD_STEP = 332
 
-export default function PurchasedSection({ onNavigate, auth, products = [], wishMap = {}, setWishMap }) {
+export default function PurchasedSection({ onNavigate, auth, products = [], fallbackProducts = [], wishMap = {}, setWishMap }) {
   const [offset, setOffset] = useState(0)
-  const maxOffset = Math.max(0, (products.length - 4) * CARD_STEP)
+
+  const isFallback = auth && products.length < 4
+  const displayProducts = isFallback ? fallbackProducts.slice(0, 12) : products
+
+  const maxOffset = Math.max(0, (displayProducts.length - 4) * CARD_STEP)
 
   function handleNext() {
     setOffset(prev => prev >= maxOffset ? 0 : prev + CARD_STEP)
   }
 
-  if (products.length === 0) return null
+  if (!auth || displayProducts.length === 0) return null
 
   return (
     <section className="section-repurchase">
       <div className="section-indicator" />
-      <div className="section-title">이전에 구매한 상품</div>
-      <div className="view-all">전체보기 ›</div>
+      <div className="section-title">
+        {isFallback ? '이런 상품을 찾고 있나요?' : '이전에 구매한 상품'}
+      </div>
+      <div className="view-all"></div>
       <div className="nav-arrow" onClick={handleNext}>
         <i className="ri-arrow-down-wide-fill" />
       </div>
       <div className="carousel-clip">
         <div className="products-row" style={{ transform: `translateX(-${offset}px)` }}>
-          {products.map((item, i) => (
+          {displayProducts.map((item, i) => (
             <ProductCard
               key={item.productId ?? i}
               thumbHeight={186.69}

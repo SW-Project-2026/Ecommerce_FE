@@ -1,4 +1,6 @@
+import { useState, useEffect } from 'react'
 import { usePageView } from '../hooks/usePageView'
+import { userCouponList } from '../api/coupons'
 
 function ProgressBar({ step }) {
   const steps = ['장바구니', '주문/결제', '주문 완료']
@@ -36,6 +38,26 @@ export default function OrderCompletePage({ orderInfo, onNavigate, userId = null
   const orderId  = orderInfo?.orderId  ?? null
   const payMethod = orderInfo?.payMethod ?? '카카오페이'
 
+  const [rewardCoupon, setRewardCoupon] = useState(null)
+
+  useEffect(() => {
+    if (!userId) return
+    userCouponList({ status: 'AVAILABLE', size: 20 })
+      .then(data => {
+        const latest = data.content?.[0] ?? null
+        if (latest) {
+          const discountDisplay = latest.discountType === 'FIXED'
+            ? `${latest.discountAmount?.toLocaleString()}원`
+            : `${latest.discountAmount}%`
+          setRewardCoupon({
+            title: `${latest.couponName} 지급!`,
+            description: `${discountDisplay} 할인 쿠폰이 마이페이지에 지급되었습니다.`,
+          })
+        }
+      })
+      .catch(() => {})
+  }, [userId])
+
   return (
     <div className="checkout-page">
       <ProgressBar step={3} />
@@ -68,6 +90,13 @@ export default function OrderCompletePage({ orderInfo, onNavigate, userId = null
             </div>
           </div>
         </div>
+
+        {rewardCoupon && (
+          <div className="oc-coupon-box">
+            <p className="oc-coupon-title">🎁 {rewardCoupon.title}</p>
+            <p className="oc-coupon-desc">{rewardCoupon.description}</p>
+          </div>
+        )}
 
         <div className="oc-btns">
           <button className="oc-btn-outline" onClick={() => onNavigate('home')}>계속 쇼핑하기</button>

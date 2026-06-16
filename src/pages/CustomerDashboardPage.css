@@ -76,6 +76,28 @@
   color: #9BAAC0;
 }
 
+.cd-date-apply-btn {
+  height: 32px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 8px;
+  background: #1C2E5C;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: #FFFFFF;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.cd-date-apply-btn:hover { background: #2A3F7C; }
+
+.cd-date-apply-btn:disabled {
+  background: #D7DCE6;
+  color: #FFFFFF;
+  cursor: default;
+}
+
 /* ══════════ CONTENT ══════════ */
 .cd-content {
   flex: 1;

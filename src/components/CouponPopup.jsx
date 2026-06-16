@@ -2,7 +2,7 @@ import { useState } from "react";
 import { couponDownload } from "../api/coupons";
 import { couponReceived } from "../api/snippets";
 
-export default function CouponPopup({ coupon, onClose, onDismiss, userId = null }) {
+export default function CouponPopup({ coupon, onClose, onDismiss, userId = null, isLoggedIn = false, onNavigate }) {
   const [downloaded, setDownloaded] = useState(false);
   const [downloading, setDownloading] = useState(false);
 
@@ -13,7 +13,18 @@ export default function CouponPopup({ coupon, onClose, onDismiss, userId = null 
     : <>{info.discountAmount?.toLocaleString()}<span style={{ fontSize: 28, fontWeight: 500 }}>원 할인</span></>
 
   const handleDownload = async () => {
-    if (downloaded || downloading || !coupon?.couponId) return;
+    if (downloaded || downloading) return;
+
+    if (!isLoggedIn) {
+      try {
+        sessionStorage.setItem('pendingCouponPopup', JSON.stringify(coupon));
+      } catch {}
+      onClose?.()
+      onNavigate?.('register');
+      return;
+    }
+
+    if (!coupon?.couponId) return;
     setDownloading(true);
     try {
       const downloadData = await couponDownload({ couponId: coupon.couponId });
@@ -114,20 +125,28 @@ export default function CouponPopup({ coupon, onClose, onDismiss, userId = null 
             display: "flex", flexDirection: "column", justifyContent: "center",
             alignItems: "center", padding: "0 26px",
           }}>
-            <div style={{ fontFamily: "'Inter',sans-serif", fontWeight: 800, fontSize: 22, color: "#3B61C2", marginBottom: 4, textAlign: "center" }}>
-              {info.minOrderAmount?.toLocaleString() ?? "–"}원 이상 구매 시
-            </div>
-            <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 18, color: "#21366B", textAlign: "center" }}>
-              {info.discountType === "RATE" && !info.maxDiscountAmount ? (
-                <>최대 한도 없이 <span style={{ fontWeight: 800, color: "#3B61C2" }}>{info.discountAmount}%</span> 할인받으세요!</>
-              ) : (
-                <>최대 <span style={{ fontWeight: 800, color: "#3B61C2" }}>
-                  {info.discountType === "RATE"
-                    ? `${info.maxDiscountAmount?.toLocaleString()}원`
-                    : `${info.discountAmount?.toLocaleString() ?? "–"}원`}
-                </span> 할인받으세요!</>
-              )}
-            </div>
+            {!isLoggedIn ? (
+              <div style={{ fontFamily: "'Inter',sans-serif", fontWeight: 800, fontSize: 22, color: "#3B61C2", textAlign: "center" }}>
+                회원가입 하시고 쿠폰 받으세요!
+              </div>
+            ) : (
+              <>
+                <div style={{ fontFamily: "'Inter',sans-serif", fontWeight: 800, fontSize: 22, color: "#3B61C2", marginBottom: 4, textAlign: "center" }}>
+                  {info.minOrderAmount?.toLocaleString() ?? "–"}원 이상 구매 시
+                </div>
+                <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 18, color: "#21366B", textAlign: "center" }}>
+                  {info.discountType === "RATE" && !info.maxDiscountAmount ? (
+                    <>최대 한도 없이 <span style={{ fontWeight: 800, color: "#3B61C2" }}>{info.discountAmount}%</span> 할인받으세요!</>
+                  ) : (
+                    <>최대 <span style={{ fontWeight: 800, color: "#3B61C2" }}>
+                      {info.discountType === "RATE"
+                        ? `${info.maxDiscountAmount?.toLocaleString()}원`
+                        : `${info.discountAmount?.toLocaleString() ?? "–"}원`}
+                    </span> 할인받으세요!</>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </div>
 
