@@ -44,7 +44,9 @@ function clearAuth() {
   localStorage.removeItem('role')
   localStorage.removeItem('userId')
   localStorage.removeItem('userSeqId')
+  const pendingCoupon = sessionStorage.getItem('pendingCouponPopup')
   sessionStorage.clear()
+  if (pendingCoupon) sessionStorage.setItem('pendingCouponPopup', pendingCoupon)
 }
 
 export default function App() {
