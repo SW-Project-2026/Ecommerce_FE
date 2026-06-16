@@ -44,7 +44,9 @@ function clearAuth() {
   localStorage.removeItem('role')
   localStorage.removeItem('userId')
   localStorage.removeItem('userSeqId')
+  const pendingCoupon = sessionStorage.getItem('pendingCouponPopup')
   sessionStorage.clear()
+  if (pendingCoupon) sessionStorage.setItem('pendingCouponPopup', pendingCoupon)
 }
 
 export default function App() {
@@ -367,6 +369,7 @@ export default function App() {
     <>
       {couponQueue.length > 0 && (
         <CouponPopup
+          key={couponQueue[0].couponId}
           coupon={{
             couponId:          couponQueue[0].couponId,
             couponName:        couponQueue[0].couponName,

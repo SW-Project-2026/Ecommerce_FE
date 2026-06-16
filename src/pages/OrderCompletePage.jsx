@@ -46,23 +46,33 @@ export default function OrderCompletePage({ orderInfo, onNavigate, userId = null
     const MAX_TRIES = 5
     const INTERVAL = 2000
 
+    let preOrderIds = []
+    try {
+      const raw = sessionStorage.getItem('preOrderCouponIds')
+      if (raw) preOrderIds = JSON.parse(raw)
+    } catch {}
+
     const timer = setInterval(async () => {
       try {
         const data = await userCouponList({ status: 'AVAILABLE', size: 20 })
-        const latest = data.content?.[0] ?? null
-        if (latest) {
-          const discountDisplay = latest.discountType === 'FIXED'
-            ? `${latest.discountAmount?.toLocaleString()}원`
-            : `${latest.discountAmount}%`
+        const newCoupon = (data.content ?? []).find(c => !preOrderIds.includes(c.userCouponId))
+        if (newCoupon) {
+          const discountDisplay = newCoupon.discountType === 'FIXED'
+            ? `${newCoupon.discountAmount?.toLocaleString()}원`
+            : `${newCoupon.discountAmount}%`
           setRewardCoupon({
-            title: `${latest.couponName} 지급!`,
+            title: `${newCoupon.couponName} 지급!`,
             description: `${discountDisplay} 할인 쿠폰이 마이페이지에 지급되었습니다.`,
           })
+          sessionStorage.removeItem('preOrderCouponIds')
           clearInterval(timer)
           return
         }
       } catch {}
-      if (++count >= MAX_TRIES) clearInterval(timer)
+      if (++count >= MAX_TRIES) {
+        sessionStorage.removeItem('preOrderCouponIds')
+        clearInterval(timer)
+      }
     }, INTERVAL)
 
     return () => clearInterval(timer)
