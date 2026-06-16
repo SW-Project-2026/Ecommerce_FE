@@ -19,6 +19,7 @@ export default function CouponPopup({ coupon, onClose, onDismiss, userId = null,
       try {
         sessionStorage.setItem('pendingCouponPopup', JSON.stringify(coupon));
       } catch {}
+      onClose?.()
       onNavigate?.('register');
       return;
     }

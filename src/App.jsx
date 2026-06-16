@@ -70,8 +70,18 @@ export default function App() {
 
   const [homeData, setHomeData] = useState(null)
   const [wishMap, setWishMap] = useState({})
-  const [couponPopup, setCouponPopup] = useState(null)
+  const [couponQueue,  setCouponQueue]  = useState([])
   const [promotionCouponId, setPromotionCouponId] = useState(null)
+
+  const addToQueue = (coupon) => {
+    if (!coupon?.couponId) return
+    setCouponQueue(prev => {
+      if (prev.some(c => c.couponId === coupon.couponId)) return prev
+      return [...prev, coupon]
+    })
+  }
+
+  const dismissQueue = () => setCouponQueue(prev => prev.slice(1))
 
   useEffect(() => {
     async function initAuth() {
@@ -144,7 +154,7 @@ export default function App() {
       if (raw) saved = JSON.parse(raw)
     } catch {}
     if (saved?.couponId) {
-      setCouponPopup(saved)
+      addToQueue(saved)
     }
     sessionStorage.removeItem('pendingCouponPopup')
   }, [auth, authLoading])
@@ -161,18 +171,19 @@ export default function App() {
       .then(res => res.json())
       .then(list => {
         if (Array.isArray(list) && list.length > 0) {
-          const first = list[0]
-          if (first.couponId) {
-            setCouponPopup({
-              couponId:          first.couponId          ?? null,
-              campaignId:        first.campaignId        ?? null,
-              couponName:        first.couponName        ?? null,
-              discountType:      first.discountType      ?? null,
-              discountAmount:    first.discountAmount    ?? null,
-              minOrderAmount:    first.minOrderAmount    ?? null,
-              maxDiscountAmount: first.maxDiscountAmount ?? null,
-            })
-          }
+          list.forEach(item => {
+            if (item.couponId) {
+              addToQueue({
+                couponId:          item.couponId          ?? null,
+                campaignId:        item.campaignId        ?? null,
+                couponName:        item.couponName        ?? null,
+                discountType:      item.discountType      ?? null,
+                discountAmount:    item.discountAmount    ?? null,
+                minOrderAmount:    item.minOrderAmount    ?? null,
+                maxDiscountAmount: item.maxDiscountAmount ?? null,
+              })
+            }
+          })
           fetch(`${FLUENTD_URL}/api/notifications/pending?${query}`, { method: 'DELETE' })
             .catch(() => {})
         }
@@ -193,9 +204,8 @@ export default function App() {
     es.addEventListener('campaign', (e) => {
       try {
         const data = JSON.parse(e.data)
-
         if (data.couponId) {
-          setCouponPopup({
+          addToQueue({
             couponId:          data.couponId          ?? null,
             campaignId:        data.campaignId        ?? null,
             couponName:        data.couponName        ?? null,
@@ -267,7 +277,7 @@ export default function App() {
     clearAuth()
     setAuth(null)
     setCartCount(0)
-    setCouponPopup(null)
+    setCouponQueue([])
     setHomeData(null)
     setWishMap({})
     sessionStorage.setItem('page', 'home')
@@ -343,21 +353,21 @@ export default function App() {
 
   return (
     <>
-      {couponPopup?.couponId && (
+      {couponQueue.length > 0 && (
         <CouponPopup
           coupon={{
-            couponId:          couponPopup.couponId,
-            couponName:        couponPopup.couponName,
-            discountType:      couponPopup.discountType,
-            discountAmount:    couponPopup.discountAmount,
-            minOrderAmount:    couponPopup.minOrderAmount,
-            maxDiscountAmount: couponPopup.maxDiscountAmount,
+            couponId:          couponQueue[0].couponId,
+            couponName:        couponQueue[0].couponName,
+            discountType:      couponQueue[0].discountType,
+            discountAmount:    couponQueue[0].discountAmount,
+            minOrderAmount:    couponQueue[0].minOrderAmount,
+            maxDiscountAmount: couponQueue[0].maxDiscountAmount,
           }}
           userId={userId}
           isLoggedIn={!!auth}
           onNavigate={handleNavigate}
-          onClose={() => setCouponPopup(null)}
-          onDismiss={() => setCouponPopup(null)}
+          onClose={dismissQueue}
+          onDismiss={dismissQueue}
         />
       )}
 
@@ -459,6 +469,7 @@ export default function App() {
             onNavigate={handleNavigate}
             auth={auth}
             products={auth ? (homeData?.recentViewedProducts ?? []) : []}
+            fallbackProducts={homeData?.recommendedProducts ?? []}
             wishMap={wishMap}
             setWishMap={setWishMap}
           />
@@ -466,6 +477,7 @@ export default function App() {
             onNavigate={handleNavigate}
             auth={auth}
             products={auth ? (homeData?.purchasedProducts ?? []) : []}
+            fallbackProducts={homeData?.recommendedProducts ?? []}
             wishMap={wishMap}
             setWishMap={setWishMap}
           />
