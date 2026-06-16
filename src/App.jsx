@@ -369,6 +369,7 @@ export default function App() {
     <>
       {couponQueue.length > 0 && (
         <CouponPopup
+          key={couponQueue[0].couponId}
           coupon={{
             couponId:          couponQueue[0].couponId,
             couponName:        couponQueue[0].couponName,
