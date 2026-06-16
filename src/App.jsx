@@ -44,9 +44,7 @@ function clearAuth() {
   localStorage.removeItem('role')
   localStorage.removeItem('userId')
   localStorage.removeItem('userSeqId')
-  const pendingCoupon = sessionStorage.getItem('pendingCouponPopup')
   sessionStorage.clear()
-  if (pendingCoupon) sessionStorage.setItem('pendingCouponPopup', pendingCoupon)
 }
 
 export default function App() {
@@ -152,20 +150,6 @@ export default function App() {
       getHome().then(data => setHomeData(data)).catch(() => {})
     }
   }, [page, auth, authLoading])
-
-  // ── 회원가입 유도 쿠폰 팝업: 가입 완료 후 동일 쿠폰 팝업 재표시 ──
-  useEffect(() => {
-    if (authLoading || !auth) return
-    let saved = null
-    try {
-      const raw = sessionStorage.getItem('pendingCouponPopup')
-      if (raw) saved = JSON.parse(raw)
-    } catch {}
-    if (saved?.couponId) {
-      addToQueue(saved)
-    }
-    sessionStorage.removeItem('pendingCouponPopup')
-  }, [auth, authLoading])
 
   // ── 쿠폰 팝업: pending 조회 ──
   useEffect(() => {
@@ -352,9 +336,6 @@ export default function App() {
     }
     if (target === 'login' || target === 'register') {
       setCouponQueue([])
-    }
-    if (page === 'register' && target !== 'register') {
-      sessionStorage.removeItem('pendingCouponPopup')
     }
     window.scrollTo(0, 0)
     sessionStorage.setItem('page', target)
