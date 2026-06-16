@@ -367,7 +367,7 @@ export default function App() {
 
   return (
     <>
-      {couponQueue.length > 0 && (
+      {couponQueue.length > 0 && page !== 'login' && page !== 'register' && (
         <CouponPopup
           key={couponQueue[0].couponId}
           coupon={{
