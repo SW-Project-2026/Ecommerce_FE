@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { couponDetail, couponDownload } from '../api/coupons'
 import { couponReceived } from '../api/snippets'
 
@@ -7,6 +7,7 @@ export default function PromotionCouponPage({ couponId, onNavigate, userId = nul
   const [couponData,  setCouponData]  = useState(null)
   const [errorMsg,    setErrorMsg]    = useState(null)
   const [downloading, setDownloading] = useState(false)
+  const isDownloadingRef = useRef(false)
 
   useEffect(() => {
     if (!couponId) { setErrorMsg('유효하지 않은 쿠폰입니다.'); setStep('error'); return }
@@ -16,7 +17,8 @@ export default function PromotionCouponPage({ couponId, onNavigate, userId = nul
   }, [couponId])
 
   async function handleDownload() {
-    if (downloading) return
+    if (isDownloadingRef.current) return
+    isDownloadingRef.current = true
     setDownloading(true)
     try {
       const downloadData = await couponDownload({ couponId })
@@ -36,6 +38,7 @@ export default function PromotionCouponPage({ couponId, onNavigate, userId = nul
       setErrorMsg(err.message ?? '쿠폰 발급에 실패했습니다.')
       setStep('error')
     } finally {
+      isDownloadingRef.current = false
       setDownloading(false)
     }
   }
