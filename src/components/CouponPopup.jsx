@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { couponDownload } from "../api/coupons";
 import { couponReceived } from "../api/snippets";
 
 export default function CouponPopup({ coupon, onClose, onDismiss, userId = null, isLoggedIn = false, onNavigate }) {
   const [downloaded, setDownloaded] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const isDownloadingRef = useRef(false);
 
   const info = coupon ?? {};
 
@@ -13,7 +14,7 @@ export default function CouponPopup({ coupon, onClose, onDismiss, userId = null,
     : <>{info.discountAmount?.toLocaleString()}<span style={{ fontSize: 28, fontWeight: 500 }}>원 할인</span></>
 
   const handleDownload = async () => {
-    if (downloaded || downloading) return;
+    if (downloaded || isDownloadingRef.current) return;
 
     if (!isLoggedIn) {
       onClose?.()
@@ -22,6 +23,7 @@ export default function CouponPopup({ coupon, onClose, onDismiss, userId = null,
     }
 
     if (!coupon?.couponId) return;
+    isDownloadingRef.current = true;
     setDownloading(true);
     try {
       const downloadData = await couponDownload({ couponId: coupon.couponId });
@@ -38,6 +40,7 @@ export default function CouponPopup({ coupon, onClose, onDismiss, userId = null,
     } catch (err) {
       alert(err.message ?? "쿠폰 다운로드에 실패했습니다.");
     } finally {
+      isDownloadingRef.current = false;
       setDownloading(false);
     }
   };
