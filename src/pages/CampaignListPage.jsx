@@ -87,7 +87,7 @@ export default function CampaignListPage() {
 
   const [editCoupon,      setEditCoupon]      = useState(null);
   const [editAd,          setEditAd]          = useState(null);
-  const [selectedUserId,  setSelectedUserId]  = useState(null);
+  const [selectedUserId,  setSelectedUserId]  = useState(() => sessionStorage.getItem('adminUserId') ?? null);
 
   const [campaignData, setCampaignData] = useState([]);
   const [loading,      setLoading]      = useState(false);
@@ -118,6 +118,7 @@ export default function CampaignListPage() {
     sessionStorage.removeItem('adminCampaignOpen')
     sessionStorage.removeItem('adminCouponOpen')
     sessionStorage.removeItem('adminAdOpen')
+    sessionStorage.removeItem('adminUserId')
     window.location.href = '/'
   }
 
@@ -347,6 +348,7 @@ export default function CampaignListPage() {
         <DashboardPage
           onNavigateToCustomer={(userId) => {
             setSelectedUserId(userId);
+            sessionStorage.setItem('adminUserId', userId);
             navigateTo("개인 고객 대시보드");
           }}
         />
