@@ -263,6 +263,7 @@ export default function App() {
       const clientUuid = getOrCreateUUID()
       fetch(`${FLUENTD_URL}/api/notifications/pending?clientUuid=${clientUuid}`, { method: 'DELETE' })
         .catch(() => {})
+      setCouponQueue([])
       sessionStorage.setItem('page', 'home')
       window.location.reload()
     }
@@ -329,6 +330,10 @@ export default function App() {
     }
     if (target === 'promotion-coupon') {
       setPromotionCouponId(payload)
+      if (payload) {
+        dismissedIds.current.add(payload)
+        setCouponQueue(prev => prev.filter(c => c.couponId !== payload))
+      }
     }
     if (target === 'mypage') {
       setMypageTab(payload ?? 'home')
